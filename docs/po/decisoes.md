@@ -121,3 +121,81 @@ Derivada da relação esforço/risco medida em `docs/codebase/13-acoplamento-pla
 
 Os itens 1–4 são de baixo risco e não dependem de decisão pendente: **podem começar a
 qualquer momento**. Os itens 5–7 dependem do desenho da camada de plataforma.
+
+---
+
+## DEC-007 — Objetivo final inclui criação de personagem completa · VIGENTE
+**2026-08-11**
+
+O alvo do projeto é **APK executável e testado, com criação de personagem completa**.
+
+Isso não altera o recorte do MVP (DEC-003) — altera o que ele significa. O MVP-leitor passa
+a ser **marco intermediário**, não destino. A criação de personagem (as 4 telas de método de
+construção, os 45 diálogos de seleção, `CharacterCreate`) entra no escopo obrigatório, na
+Etapa 8 do plano.
+
+Reforça a natureza de piloto do MVP: como o destino inclui as 45 telas de seleção, a
+abstração de solicitação de escolha ao usuário construída no MVP deixa de ser preparação
+especulativa e passa a ser caminho crítico.
+
+---
+
+## DEC-008 — Projetos do porte ficam em `src/`, isolados do build legado · VIGENTE
+**2026-08-11**
+
+Os projetos novos ficam em `src/`, com um `Directory.Build.props` **nessa pasta**, não na
+raiz.
+
+**Por quê:** o MSBuild para a busca no primeiro `Directory.Build.props` que encontra subindo
+a árvore. Colocado em `src/`, ele se aplica a todo projeto do porte e a nenhum projeto
+legado — `Chummer/`, `ChummerHub/` e `Chummer.Tests/` continuam compilando exatamente como
+antes. Um `Directory.Build.props` na raiz injetaria propriedades net9 no projeto net48 e
+quebraria o build legado, que é justamente o gerador dos artefatos dourados (DEC-004).
+
+Supersede o layout de pastas na raiz descrito na primeira versão do `CLAUDE.md`.
+
+---
+
+## DEC-009 — A regra "núcleo sem UI" é imposta pelo compilador · VIGENTE
+**2026-08-11**
+
+`Chummer.Core` tem alvo `net9.0`, **não** `net9.0-windows`. Consequência: `System.Windows.Forms`
+e `System.Drawing.Common` não existem no projeto, e qualquer código acoplado a WinForms
+arrastado para dentro dele **falha na compilação**.
+
+Verificado na prática nesta iteração: uma sonda com `using System.Windows.Forms` produziu
+`error CS0234` e derrubou o build, como desejado. A sonda foi removida em seguida.
+
+**Por que importa:** durante a extração dos ~350.000 LOC do `Backend/`, a tentação de
+"resolver depois" um acoplamento é constante. Com o alvo sem sufixo `-windows`, não há
+"depois" — o compilador recusa. A regra deixa de depender de disciplina.
+
+---
+
+## DEC-010 — `global.json` passa a `rollForward: latestMajor` · VIGENTE
+**2026-08-11**
+
+Era `latestFeature` sobre 8.0.401, o que aceita apenas SDKs 8.0.4xx e recusa o SDK 9
+necessário ao porte.
+
+`latestMajor` mantém 8.0.401 como piso — o CI legado (`nightly-build.yml`, que instala
+`8.0.x`) continua satisfeito — e libera o SDK 9 para os projetos do porte. Alternativa
+descartada: instalar os dois SDKs lado a lado, que resolveria o mesmo problema com mais
+peça móvel.
+
+---
+
+## DEC-011 — CI do porte em Linux, separado do build legado · VIGENTE
+**2026-08-11**
+
+Novo workflow `.github/workflows/port-build.yml`, em `ubuntu-latest`, compilando
+`Chummer.Port.sln`.
+
+Roda em push para `master` e `claude/**` e em pull request, com filtro de caminho — não
+dispara para mudanças que só tocam documentação. O build legado continua exclusivamente no
+Windows, sem alteração.
+
+**Efeito colateral relevante:** antes desta iteração, **nenhum workflow do repositório
+disparava em pull request** (CodeQL só em push para master com filtro em `.sln`/`.csproj`,
+nightly por cron, notificação por release). O PR #1 tinha zero verificações. A partir de
+agora há CI de verdade nos PRs do porte.

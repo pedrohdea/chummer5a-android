@@ -106,6 +106,22 @@ Se puder, coloque em `Chummer.Tests/TestFiles/` ou me mande que eu incorporo.
 
 ---
 
+## PEND-009 — Métodos de construção de personagem no escopo final · ABERTA
+**Criada:** 2026-08-11 · **Premissa:** PREM-011 · **Reversão:** 🟡 médio
+
+O objetivo final inclui criação de personagem completa (DEC-007). O Chummer suporta
+**quatro** métodos de construção: Prioridade, Soma-para-Dez, Karma e Life Modules.
+
+Todos os quatro são obrigatórios, ou algum pode ficar para depois? Cada um tem tela própria
+e regras próprias — Life Modules em particular tem um arquivo de dados de 396 KB e
+documentação separada (`Chummer/Documentation/Lifemodule.md`).
+
+Se você jogar só com um deles, a entrega da criação de personagem sai muito mais cedo.
+
+**Resposta:**
+
+---
+
 ## PEND-008 — Escopo de edição do MVP · ABERTA
 **Criada:** 2026-08-11 · **Premissa:** PREM-009 · **Reversão:** 🟡 médio
 

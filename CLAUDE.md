@@ -78,6 +78,7 @@ Resumo. O registro completo, com motivos e alternativas descartadas, está em
 | Stack de UI | **Avalonia** | XAML com databinding sobre `INotifyPropertyChanged`, que o domínio já implementa; dá Android + Linux + Windows do mesmo código; MAUI não entrega desktop Linux |
 | Escopo da v1 | **MVP-piloto: leitor/gerenciador de sessão** | criação de personagem é ~70% da UI e ~20% do valor numa mesa |
 | Natureza do MVP | **piloto, não protótipo** | o MVP é a arquitetura final com menos telas; nada nele é descartável |
+| **Objetivo final** | **APK executável e testado, com criação de personagem completa** | o MVP é marco intermediário, não destino (DEC-007) |
 
 O MVP abre `.chum5`/`.chum5lz`, exibe o personagem completo, edita estado de sessão (dano,
 karma, nuyen, munição, edge), salva de volta e mostra a ficha impressa via XSLT → `WebView`.
@@ -90,17 +91,40 @@ export PDF, tradutor.
 ### Layout de projetos alvo
 
 ```
-Chummer.Core/          net9.0           domínio puro — SEM UI, SEM System.Drawing
-Chummer.Data/          net9.0           data/ lang/ sheets/ customdata/ como assets
-Chummer.UI/            net9.0           Avalonia: ViewModels e Views compartilhados
-Chummer.Android/       net9.0-android
-Chummer.Desktop/       net9.0           mesma UI no desktop — depurar sem emulador
-Chummer/               net48            WinForms legado, congelado; removido ao final
-Chummer.Tests/         net9.0           roda contra Chummer.Core
+src/Directory.Build.props            propriedades comuns — fica em src/, NUNCA na raiz
+src/Chummer.Core/       net9.0       domínio puro — SEM UI, SEM System.Drawing
+src/Chummer.Data/       net9.0       data/ lang/ sheets/ customdata/ como assets
+src/Chummer.UI/         net9.0       Avalonia: ViewModels e Views compartilhados
+src/Chummer.Android/    net9.0-android
+src/Chummer.Desktop/    net9.0       mesma UI no desktop — depurar sem emulador
+Chummer/                net48        WinForms legado, congelado; removido ao final
+Chummer.Tests/          net48        legado; gera os artefatos dourados no CI Windows
 ```
+
+Solução do porte: **`Chummer.Port.sln`** (só projetos portáveis, compila em Linux). A
+`Chummer.sln` original segue intocada e exige Windows.
 
 Duas regras invioláveis: **`Chummer.Core` nunca referencia UI**, e `Chummer.Desktop` existe
 para validar o porte sem emulador.
+
+`Directory.Build.props` **em `src/` e não na raiz** é deliberado (DEC-008): na raiz, ele
+injetaria propriedades net9 no projeto legado net48 e quebraria o build que gera os
+artefatos dourados.
+
+A primeira regra é imposta pelo compilador, não por disciplina (DEC-009): `Chummer.Core`
+tem alvo `net9.0` sem sufixo `-windows`, então `System.Windows.Forms` não existe ali.
+Código acoplado a WinForms arrastado para dentro **falha na compilação**. Não adicione
+`<UseWindowsForms>`, `<UseWPF>` nem alvo `-windows` a esse projeto.
+
+### Ambiente de build
+
+```bash
+./scripts/setup-dev.sh              # SDK .NET + verificação
+./scripts/setup-dev.sh --android    # + workload Android (para gerar APK)
+```
+
+O container é efêmero: **toda dependência de toolchain vai nesse script**, nunca num
+comando avulso. CI do porte: `.github/workflows/port-build.yml` (Linux).
 
 ## Antes de mexer em qualquer coisa
 

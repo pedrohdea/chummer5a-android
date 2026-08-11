@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Chummer</RootNamespace>
+    <AssemblyName>Chummer.Core</AssemblyName>
+  </PropertyGroup>
+
+  <!--
+    REGRA INVIOLÁVEL: Chummer.Core não referencia interface gráfica.
+
+    O alvo é net9.0 e não net9.0-windows, o que torna a regra mecânica em vez de
+    convencional: System.Windows.Forms e System.Drawing.Common simplesmente não existem
+    aqui. Uma tentativa de arrastar código acoplado a WinForms falha na compilação, que é
+    exatamente o comportamento desejado durante a extração do núcleo.
+
+    Não adicione <UseWindowsForms>, <UseWPF> nem TargetFramework com sufixo -windows.
+    Ver CLAUDE.md e docs/codebase/13-acoplamento-plataforma.md.
+  -->
+
+</Project>

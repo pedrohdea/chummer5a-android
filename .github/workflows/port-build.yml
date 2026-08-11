@@ -1,0 +1,61 @@
+name: Port Build (Linux)
+
+# Build do porte para Android. Roda em Linux, ao contrário do build legado, que exige
+# Windows (net48 + WinForms). É este workflow que garante mecanicamente a regra inviolável
+# do projeto: Chummer.Core tem alvo net9.0 e não net9.0-windows, então qualquer código
+# acoplado a WinForms arrastado para dentro dele falha na compilação.
+
+on:
+  push:
+    branches:
+      - master
+      - 'claude/**'
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'Chummer.Port.sln'
+      - 'global.json'
+      - '.github/workflows/port-build.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'Chummer.Port.sln'
+      - 'global.json'
+      - '.github/workflows/port-build.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: port-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-port-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: ${{ runner.os }}-nuget-port-
+
+      - name: Restore
+        run: dotnet restore Chummer.Port.sln
+
+      - name: Build
+        run: dotnet build Chummer.Port.sln --no-restore --configuration Release

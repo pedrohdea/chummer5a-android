@@ -138,3 +138,22 @@ caso de uso e o principal mecanismo de validação.
 
 **🔴** Qualquer mudança de formato precisa de decisão explícita do PO, com plano de
 migração.
+
+---
+
+## PREM-011 — Os quatro métodos de construção entram no escopo final · ATIVA 🟡
+**Criada:** 2026-08-11 · **Pendência:** PEND-009
+
+Prioridade, Soma-para-Dez, Karma e Life Modules, todos.
+
+**Por quê:** "criação de personagem completa" foi o termo usado pelo PO, e o significado
+literal é o escopo inteiro. Assumir o menor escopo arriscaria entregar algo que o PO
+consideraria incompleto.
+
+**Ordem de implementação:** Prioridade primeiro (é o método padrão e o mais usado), depois
+Soma-para-Dez (compartilha quase toda a mecânica com Prioridade), depois Karma, e Life
+Modules por último — é o mais isolado dos quatro e o de dados mais volumosos.
+
+**Se derrubada** (só um ou dois métodos): a ordem acima já entrega os mais prováveis
+primeiro, então derrubar a premissa mais tarde só **encurta** o trabalho restante. Custo de
+reversão baixo na prática, apesar da marca 🟡.

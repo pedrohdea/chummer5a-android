@@ -1,0 +1,32 @@
+<Project>
+
+  <!--
+    Propriedades comuns aos projetos do porte.
+
+    Este arquivo fica em src/ e NÃO na raiz do repositório, deliberadamente: o MSBuild
+    para a busca no primeiro Directory.Build.props que encontra subindo a árvore. Mantendo
+    o arquivo aqui, ele se aplica a todo projeto novo sob src/ e a nenhum projeto legado
+    (Chummer/, ChummerHub/, Chummer.Tests/, ...), que continuam compilando exatamente como
+    antes. Mover isto para a raiz quebraria o build legado.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    InvariantGlobalization fica explicitamente em false: o Chummer ordena e compara
+    strings traduzidas em seis idiomas. Sem ICU, a ordenação muda silenciosamente e o
+    teste diferencial contra o build legado acusa divergências que não são regressões.
+    Ver docs/po/decisoes.md, DEC-004.
+  -->
+
+</Project>
