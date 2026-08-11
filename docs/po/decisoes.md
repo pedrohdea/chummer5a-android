@@ -281,3 +281,43 @@ de DEC-013 pelo CI** antes de mover os outros 160 arquivos.
 verificado localmente; o efeito do link no projeto legado só pode ser confirmado pelo CI
 Windows. Por isso o primeiro lote é pequeno.
 
+---
+
+## DEC-015 — O build legado funciona neste fork · VIGENTE (risco encerrado)
+**2026-08-11**
+
+Registro de um risco que estava aberto e foi resolvido por evidência, não por suposição.
+
+**O risco:** toda a estratégia de teste (DEC-004) depende de o build legado net48 rodar em
+CI Windows para gerar os artefatos dourados. Ao investigar o CodeQL, descobriu-se que o
+`nightly-build.yml` usava `dotnet build` — que falha neste projeto — e que **nunca havia
+executado neste fork**. Ou seja, não havia nenhuma evidência de que a `Chummer.sln`
+compilasse aqui.
+
+**A evidência que encerrou o risco:** o job `Analyze (csharp)` do CodeQL compila a
+`Chummer.sln` inteira em `windows-latest`. Sequência de execuções:
+
+| Commit | Resultado | Causa |
+|---|---|---|
+| `756145f1` | falha | caminho fixo do MSBuild do Visual Studio (herdado do upstream) |
+| `dd2dddf3` | falha | troca para `dotnet build` + SDK 10 selecionado por `latestMajor` |
+| `36b3889c` | falha | `dotnet build` com SDK 8.0.423 — **provou que a causa não era o SDK** |
+| `0606f716` | **sucesso** | `microsoft/setup-msbuild` |
+| `9723622f`, `0ea3c56d` | **sucesso** | — |
+
+Três execuções verdes consecutivas a partir do commit que introduziu o `setup-msbuild`.
+**A `Chummer.sln` compila neste fork.** Os artefatos dourados são viáveis e DEC-004 está de
+pé.
+
+**A causa raiz, que vale além do CodeQL:** o `Chummer.csproj` tem alvo net48 e 108 arquivos
+`.resx` com recursos binários. A tarefa `GenerateResource` que vem no dotnet CLI não os
+serializa sem `GenerateResourceUsePreserializedResources` e falha com `MSB3823`. O MSBuild
+do Visual Studio os processa nativamente.
+
+**Consequência aplicada:** o `nightly-build.yml` recebeu o mesmo tratamento
+(`setup-msbuild` + `msbuild` no lugar de `dotnet build`), porque tinha exatamente o mesmo
+defeito latente.
+
+**Consequência para o futuro:** o job que gerar os artefatos dourados **precisa usar MSBuild
+do Visual Studio**, não `dotnet build`. Fica registrado aqui para não ser redescoberto.
+
