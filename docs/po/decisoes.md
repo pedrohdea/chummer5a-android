@@ -260,7 +260,7 @@ duplicados.
 
 ---
 
-## DEC-014 — Ordem de migração: os limpos primeiro · VIGENTE
+## DEC-014 — Ordem de migração: os limpos primeiro · SUPERSEDIDA por DEC-016
 **2026-08-11**
 
 O censo (DEC-004 / `docs/codebase/14-censo-de-erros.md`) revelou que **171 dos 245 arquivos
@@ -280,6 +280,19 @@ de DEC-013 pelo CI** antes de mover os outros 160 arquivos.
 **Limite de verificação:** o build `net48` não roda em Linux. O `Chummer.Core` foi
 verificado localmente; o efeito do link no projeto legado só pode ser confirmado pelo CI
 Windows. Por isso o primeiro lote é pequeno.
+
+**Derrubada em 2026-08-11, por medição.** A premissa central — de que os 171 arquivos
+limpos poderiam migrar em lotes — é falsa. Compilados isoladamente, produzem **368 erros**:
+referenciam tipos que moram nos 74 arquivos sujos.
+
+O erro de raciocínio foi confundir duas coisas diferentes: "compila limpo **junto com todo
+o `Backend/`**" (o que o censo mediu) com "compila limpo **sozinho**" (o que a migração
+exige). O censo nunca mediu fechamento por dependência.
+
+O primeiro lote (`Backend/Enums`) sobreviveu porque enums sem nenhum `using` são
+genuinamente folhas. Foi sorte de escolha, não validação da estratégia.
+
+Substituída por DEC-016.
 
 ---
 
@@ -320,4 +333,54 @@ defeito latente.
 
 **Consequência para o futuro:** o job que gerar os artefatos dourados **precisa usar MSBuild
 do Visual Studio**, não `dotnet build`. Fica registrado aqui para não ser redescoberto.
+
+---
+
+## DEC-016 — Consertar em lugar, mover uma vez · VIGENTE
+**2026-08-11**
+
+A extração do núcleo passa a ter duas fases separadas no tempo:
+
+**Fase 1 — consertar em lugar.** Os 74 arquivos com erro são corrigidos **dentro de
+`Chummer/Backend/`**, onde estão hoje. O critério de progresso é o próprio censo:
+`./scripts/censo-erros.sh` recompila todo o `Backend/` sob net9.0 e devolve o número de
+erros. A fase termina quando o número chega a zero.
+
+**Fase 2 — mover uma vez.** Com todo o `Backend/` compilando sob net9.0, o movimento para
+`src/Chummer.Core/` vira uma operação mecânica única, sem risco de conjunto aberto.
+
+**Por que isto e não a migração em lotes:** o domínio é um grafo fortemente conectado —
+`Character` sozinho instancia 30 tipos. Não existe sequência de lotes fechados por
+dependência que não seja, na prática, "quase tudo de uma vez". Tentar migrar em ondas
+produziria centenas de erros artificiais a cada onda, indistinguíveis dos erros reais.
+
+**O que se ganha:**
+- cada conserto é verificável isoladamente, pelo delta do censo;
+- o build legado continua verde o tempo todo, porque nada se move;
+- o número de erros vira uma **barra de progresso honesta** da Etapa 2;
+- o movimento final é mecânico, e um diff de "arquivo movido" é trivial de revisar.
+
+**O que se perde:** o `Chummer.Core` fica quase vazio por mais tempo. É custo cosmético — o
+progresso real é medido pelo censo, não pelo tamanho da pasta.
+
+**O que fica de pé de DEC-014:** a ordem de ataque dos 74 arquivos, que continua valendo —
+interfaces primeiro pelo efeito cascata, depois a fronteira de imagem, depois equipamento,
+e `Character.cs` por último.
+
+---
+
+## DEC-017 — Toda etapa termina com reavaliação do plano · VIGENTE
+**2026-08-11**
+
+Pedido do PO, e o projeto já provou que é necessário. A última subetapa de cada etapa em
+`docs/po/plano.md` é **reavaliar o plano na totalidade**: conferir se a medição contradiz o
+planejado, se alguma etapa seguinte mudou de tamanho, se alguma premissa deve cair por
+evidência, se a ordem ainda é a certa e se o maior risco continua sendo o mesmo.
+
+**Por que não é formalidade:** em menos de um dia de trabalho, três reavaliações mudaram o
+rumo — o achado dos 30 tipos na Etapa 0 fixou o recorte do MVP, o censo da Etapa 1 reduziu
+o trabalho estimado da Etapa 2 em 38%, e a medição de fechamento por dependência derrubou
+DEC-014 antes de ela custar caro.
+
+O resultado de cada reavaliação fica no histórico de `plano.md`.
 

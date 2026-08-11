@@ -137,6 +137,13 @@ da raiz, o SDK errado é selecionado e o build legado quebra com `MSB3823`.
 O container é efêmero: **toda dependência de toolchain vai nesse script**, nunca num
 comando avulso. CI do porte: `.github/workflows/port-build.yml` (Linux).
 
+## O plano
+
+**`docs/po/plano.md`** — as 10 etapas, com estado. Toda etapa termina com a subetapa
+**reavaliar o plano na totalidade** (DEC-017), e o resultado de cada reavaliação fica no
+histórico do próprio arquivo. Não pule: das quatro reavaliações feitas até agora, três
+mudaram o rumo.
+
 ## Antes de mexer em qualquer coisa
 
 Leia **`docs/codebase/`** — 14 documentos que descrevem o estado atual do código, com
