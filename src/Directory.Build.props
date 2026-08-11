@@ -12,6 +12,12 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
+    <!--
+      ATENÇÃO: enquanto DEC-013 valer (um arquivo, duas compilações), todo código de
+      Chummer.Core é TAMBÉM compilado pelo projeto legado net48, que não fixa LangVersion e
+      portanto usa C# 7.3. Recursos de C# 8 ou superior no núcleo quebram o build legado —
+      que é o gerador dos artefatos dourados. Ver DEC-027.
+    -->
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

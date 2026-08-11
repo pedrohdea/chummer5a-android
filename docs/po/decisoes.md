@@ -681,3 +681,79 @@ atribuições que recebem o retorno do `Timekeeper`.
 
 **Resultado medido:** 142 → **132 erros**.
 
+---
+
+## DEC-026 — `IUserInteraction`: o domínio pergunta, a plataforma responde · VIGENTE
+**2026-08-11**
+
+Depois das extrações mecânicas, o censo mostrou que **o que resta é um único problema de
+design**. Os identificadores dominantes nos arquivos ainda acoplados:
+
+| Identificador | Ocorrências |
+|---|---|
+| `ThreadSafeForm` | 335 |
+| `DialogResult` | 193 |
+| `MessageBoxIcon` | 104 |
+| `MessageBoxButtons` | 101 |
+
+Concentrados em `AddImprovementCollection` e sua irmã assíncrona (160 cada) e em
+`Character.cs` (133).
+
+**Isto não é defeito a eliminar.** As regras de Shadowrun genuinamente perguntam ao usuário
+no meio de um cálculo — *"escolha um atributo para receber +1"*, *"confirma remover esta
+qualidade?"*. A pergunta é regra de jogo. O que muda é **quem responde**.
+
+### O desenho
+
+`Chummer.Core/Interaction/`:
+
+- `PromptButtons`, `PromptIcon`, `PromptResult`, `PromptDefaultButton` — equivalentes
+  neutros dos enums do WinForms;
+- `IUserInteraction` — `ShowMessageAsync` e `ShowScrollableMessageAsync`;
+- `UserInteraction` — **fachada estática** com implementação instalável;
+- `SilentUserInteraction` — objeto nulo que responde `DefaultResult` sem perguntar nada.
+
+**Por que fachada estática e não injeção de dependência:** o domínio já chama
+`Program.ShowMessageBox(...)` estaticamente em centenas de pontos. Manter a forma estática
+torna a migração uma substituição quase mecânica, em vez de exigir injetar um serviço em
+classes de dezenas de milhares de linhas. Mesmo padrão de `Timekeeper.ActivityFactory`
+(DEC-025), que funcionou.
+
+**Objeto nulo em vez de `null`:** `SilentUserInteraction` é o valor inicial. Testes e
+cenários headless funcionam sem travar esperando um usuário que não existe. E
+`DefaultResult` é `OK`, não `Cancel` nem `None`, porque quem chama costuma testar
+`== Cancel` para abortar — devolver `Cancel` faria operações legítimas abortarem em silêncio.
+
+`Chummer/Controls/Infrastructure/WinFormsUserInteraction.cs` traduz as solicitações para as
+caixas existentes, e `Program.cs` a instala no arranque. Comportamento do legado preservado.
+
+**Ainda por fazer:** os ~300 pontos de chamada, e a metade de *seleção* (os diálogos
+`Select*`), que é mais variada e ganha desenho próprio.
+
+---
+
+## DEC-027 — O núcleo está preso a C# 7.3 enquanto DEC-013 valer · VIGENTE
+**2026-08-11**
+
+Descoberto ao escrever a primeira classe de verdade no `Chummer.Core`: `Nullable` está
+habilitado em `src/Directory.Build.props` e uma propriedade estática mutável exigia
+anotação `?`.
+
+O problema é que **todo arquivo do `Chummer.Core` é também compilado pelo projeto legado**
+(DEC-013, uma fonte, duas compilações). O `Chummer.csproj` não fixa `LangVersion`, e para
+alvo `net48` o padrão é **C# 7.3** — que não tem tipos de referência anuláveis, `using`
+declaration, expressões `switch` nem `??=`.
+
+Confirmado por varredura: o código legado não usa **nenhum** recurso de C# 8 ou superior.
+
+**Consequência prática:** enquanto a compilação dupla existir, código novo no núcleo fica em
+C# 7.3. Resolvi o caso concreto com **padrão de objeto nulo**, que dispensa anotações e é
+melhor desenho — mas a restrição vale para tudo.
+
+**Alternativa descartada:** fixar `LangVersion` alto no projeto legado. Mexer no build que
+gera os artefatos dourados para conveniência do núcleo inverte a prioridade certa.
+
+A restrição **cai sozinha** ao fim da Etapa 2, quando o `Backend/` for movido e o projeto
+legado deixar de linkar o núcleo. Registrado como comentário em `src/Directory.Build.props`
+para não ser redescoberto por acidente.
+
