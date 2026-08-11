@@ -13,14 +13,12 @@ on:
     paths:
       - 'src/**'
       - 'scripts/**'
-      - 'Chummer.Port.sln'
       - 'global.json'
       - '.github/workflows/port-build.yml'
   pull_request:
     paths:
       - 'src/**'
       - 'scripts/**'
-      - 'Chummer.Port.sln'
       - 'global.json'
       - '.github/workflows/port-build.yml'
   workflow_dispatch:
@@ -54,8 +52,13 @@ jobs:
           key: ${{ runner.os }}-nuget-port-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
           restore-keys: ${{ runner.os }}-nuget-port-
 
+      # Os passos rodam com src/ como diretório de trabalho de propósito: o dotnet resolve
+      # o global.json a partir do diretório de trabalho, não do caminho do projeto.
+      # src/global.json exige o SDK 9; o da raiz exige o SDK 8 do build legado.
       - name: Restore
+        working-directory: src
         run: dotnet restore Chummer.Port.sln
 
       - name: Build
+        working-directory: src
         run: dotnet build Chummer.Port.sln --no-restore --configuration Release

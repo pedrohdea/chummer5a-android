@@ -71,8 +71,12 @@ fi
 # ---------------------------------------------------------------------------
 # Verificação
 # ---------------------------------------------------------------------------
-log "Restaurando e compilando Chummer.Port.sln"
-cd "$(dirname "$0")/.."
+# A compilação roda DE DENTRO de src/, e isso é essencial: o dotnet resolve o global.json
+# a partir do diretório de trabalho, não do caminho do projeto. src/global.json exige o
+# SDK 9; o global.json da raiz exige o SDK 8 usado pelo build legado. Rodar isto da raiz
+# selecionaria o SDK errado.
+log "Restaurando e compilando src/Chummer.Port.sln"
+cd "$(dirname "$0")/../src"
 dotnet build Chummer.Port.sln --nologo
 
 log "Ambiente pronto"

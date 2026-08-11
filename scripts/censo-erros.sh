@@ -68,6 +68,12 @@ cat > "$PROBE_DIR/Probe.csproj" <<'CSPROJ'
   <ItemGroup>
     <Compile Include="$(ChummerBackend)/**/*.cs" />
     <Compile Include="$(ChummerSevenZip)/**/*.cs" />
+    <!--
+      Annotations.cs vive em Chummer/Properties/, fora do Backend/, mas define os atributos
+      (NotNull, ItemNotNull, ...) usados por todo o Backend. Sem ele, o censo se enche de
+      milhares de CS0246 que são artefato da sondagem e não acoplamento de plataforma.
+    -->
+    <Compile Include="$(ChummerAnnotations)" />
   </ItemGroup>
 </Project>
 CSPROJ
@@ -77,10 +83,16 @@ set +e
 dotnet build "$PROBE_DIR/Probe.csproj" \
     -p:ChummerBackend="$REPO_ROOT/Chummer/Backend" \
     -p:ChummerSevenZip="$REPO_ROOT/Chummer/7zip" \
+    -p:ChummerAnnotations="$REPO_ROOT/Chummer/Properties/Annotations.cs" \
     --nologo -v:n 2>&1 | tee "$WORK_DIR/build.log" > /dev/null
 set -e
 
-grep -oE '^[^(]+\([0-9]+,[0-9]+\): error [A-Z]+[0-9]+: .*' "$WORK_DIR/build.log" \
+# O MSBuild emite cada erro duas vezes, uma com prefixo de nó ("  1>arquivo.cs(...)") e
+# outra sem ("      arquivo.cs(...)"). Normalizar espaço à esquerda E o prefixo de nó é o
+# que faz o sort -u realmente deduplicar; sem isso o total sai exatamente dobrado.
+# O caminho do .csproj no fim de cada linha também é removido: é constante e só polui.
+sed -E 's/^[[:space:]]+//; s/^[0-9]+>//; s/ \[[^]]*\.csproj\]$//' "$WORK_DIR/build.log" \
+    | grep -oE '^[^(]+\([0-9]+,[0-9]+\): error [A-Z]+[0-9]+: .*' \
     | sed "s|$REPO_ROOT/||" | sort -u > "$WORK_DIR/erros.txt" || true
 
 TOTAL=$(wc -l < "$WORK_DIR/erros.txt")

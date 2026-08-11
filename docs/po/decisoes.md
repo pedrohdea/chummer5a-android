@@ -172,16 +172,38 @@ Verificado na prática nesta iteração: uma sonda com `using System.Windows.For
 
 ---
 
-## DEC-010 — `global.json` passa a `rollForward: latestMajor` · VIGENTE
+## DEC-010 — `global.json` passa a `rollForward: latestMajor` · SUPERSEDIDA por DEC-012
 **2026-08-11**
 
-Era `latestFeature` sobre 8.0.401, o que aceita apenas SDKs 8.0.4xx e recusa o SDK 9
-necessário ao porte.
+~~`latestMajor` mantém 8.0.401 como piso e libera o SDK 9 para o porte.~~
 
-`latestMajor` mantém 8.0.401 como piso — o CI legado (`nightly-build.yml`, que instala
-`8.0.x`) continua satisfeito — e libera o SDK 9 para os projetos do porte. Alternativa
-descartada: instalar os dois SDKs lado a lado, que resolveria o mesmo problema com mais
-peça móvel.
+**Estava errada, e quebrou o CI.** `latestMajor` não significa "aceite 8 ou mais" — significa
+**"use o major mais novo disponível na máquina"**. No runner do GitHub, que tem o SDK 10
+pré-instalado, o build legado passou a ser compilado com SDK 10 mesmo com um
+`setup-dotnet` fixando `8.0.x`: o `rollForward` anula o pin. O resultado foi `MSB3823`
+("Non-string resources require GenerateResourceUsePreserializedResources"), porque o SDK 10
+não processa `.resx` com recursos binários de um projeto net48.
+
+Substituída por DEC-012.
+
+---
+
+## DEC-012 — Dois `global.json`, um por mundo · VIGENTE
+**2026-08-11**
+
+- **Raiz:** `8.0.401` / `latestFeature` — exatamente como o upstream. O build legado, que
+  gera os artefatos dourados, fica intocado e reproduzível.
+- **`src/global.json`:** `9.0.100` / `latestFeature` — o mundo do porte.
+
+O `dotnet` resolve o `global.json` **a partir do diretório de trabalho**, não do caminho do
+projeto. Por isso `Chummer.Port.sln` foi movida para dentro de `src/`, e tanto
+`scripts/setup-dev.sh` quanto `port-build.yml` compilam com `src/` como diretório de
+trabalho. Rodar da raiz selecionaria o SDK errado.
+
+Verificado: na raiz o `dotnet` exige 8.0.4xx; em `src/` resolve 9.0.316.
+
+**A lição que fica:** o `global.json` da raiz é território do build legado. O porte não
+mexe nele. Qualquer necessidade de SDK novo se resolve dentro de `src/`.
 
 ---
 

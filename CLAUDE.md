@@ -121,7 +121,13 @@ Código acoplado a WinForms arrastado para dentro **falha na compilação**. Nã
 ```bash
 ./scripts/setup-dev.sh              # SDK .NET + verificação
 ./scripts/setup-dev.sh --android    # + workload Android (para gerar APK)
+./scripts/censo-erros.sh            # mede o acoplamento do Backend sob net9.0
 ```
+
+**Dois `global.json`, e a distinção é crítica** (DEC-012): a raiz fixa o SDK 8 do build
+legado e **o porte não mexe nela**; `src/global.json` fixa o SDK 9. O `dotnet` resolve o
+`global.json` pelo **diretório de trabalho**, então compile sempre de dentro de `src/` —
+da raiz, o SDK errado é selecionado e o build legado quebra com `MSB3823`.
 
 O container é efêmero: **toda dependência de toolchain vai nesse script**, nunca num
 comando avulso. CI do porte: `.github/workflows/port-build.yml` (Linux).
@@ -134,6 +140,7 @@ números medidos. Especialmente:
 - `docs/codebase/02-glossario.md` — sem o glossário e a notação húngara, o `Backend/` é ilegível
 - `docs/codebase/13-acoplamento-plataforma.md` — o inventário do que prende ao Windows, com a ordem de ataque
 - `docs/codebase/06-motor-regras.md` — o subsistema de Improvements, que é o coração das regras
+- `docs/codebase/14-censo-de-erros.md` — a medição: 733 erros, dos quais só 451 são domínio
 
 Documentação do upstream que continua válida: `Chummer/docs/wiki/` (autoria de dados
 customizados), `Chummer/docs/XPathConditionSystem.md`.

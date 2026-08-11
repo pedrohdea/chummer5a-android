@@ -21,6 +21,7 @@ para que as etapas de refatoração partam de um mapa confiável em vez de supos
 | 11 | [Projetos Satélite](11-projetos-satelite.md) | Técnico — Hub, plugins, utilitários |
 | 12 | [Build, CI e Dependências](12-build-ci.md) | Técnico — como se compila hoje |
 | 13 | [Acoplamento à Plataforma](13-acoplamento-plataforma.md) | Técnico — **inventário Windows-only** |
+| 14 | [Censo de Erros](14-censo-de-erros.md) | Técnico — **medição: 733 erros ao compilar o Backend sob net9.0** |
 
 ## Documentação que já existia no projeto
 
