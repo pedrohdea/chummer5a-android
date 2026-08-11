@@ -132,12 +132,18 @@ def inicio_com_docs(linhas, i):
 def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
     linhas = open(caminho, encoding='utf-8-sig').read().split('\n')
 
-    m = re.search(r'^(\s*)(public|internal)(\s+sealed)?(\s+abstract)?\s+class\s+(\w+)',
-                  '\n'.join(linhas), re.M)
+    # Reconhece class, static class, sealed/abstract class, struct e readonly struct.
+    # `static class` e `struct` também aceitam `partial`, então a mesma técnica vale.
+    RE_DECL = re.compile(
+        r'^(?P<ind>\s*)(?P<acc>public|internal)'
+        r'(?P<mods>(?:\s+(?:sealed|abstract|static|readonly|unsafe))*)'
+        r'\s+(?P<kind>class|struct)\s+(?P<nome>\w+)', re.M)
+    m = RE_DECL.search('\n'.join(linhas))
     if not m:
-        print(f'  {caminho}: declaração de classe não encontrada, ignorado')
+        print(f'  {caminho}: declaração de tipo não encontrada, ignorado')
         return None
-    tipo = m.group(5)
+    tipo = m.group('nome')
+    kind = m.group('kind')
 
     # Localiza os membros dependentes de UI.
     marcados, i = [], 0
@@ -214,8 +220,9 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
     for l in restantes:
         if l.startswith('using System.Windows.Forms;') and not ainda_usa_ui:
             continue
-        l = re.sub(r'^(\s*)(public|internal)((?:\s+sealed)?(?:\s+abstract)?)\s+class\s+' + tipo + r'\b',
-                   r'\1\2\3 partial class ' + tipo, l)
+        l = re.sub(r'^(\s*)(public|internal)((?:\s+(?:sealed|abstract|static|readonly|unsafe))*)'
+                   r'\s+(class|struct)\s+' + tipo + r'\b',
+                   r'\1\2\3 partial \4 ' + tipo, l)
         dominio.append(l)
     if not balanceado(dominio):
         print(f'  {tipo}: ABORTADO — chaves não fecham no que sobrou')
@@ -234,7 +241,9 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
     # com uma chave de fechamento a mais e produz CS1022 — foi o primeiro defeito que o
     # verificador de sintaxe pegou.
     corpo = '\n'.join(licenca) + '\n' + nota + '\n' + '\n'.join(usings) + '\n\n' + ns + '\n{\n'
-    corpo += f'    public partial class {tipo}\n    {{\n'
+    mods = m.group('mods').strip()
+    decl = ' '.join(x for x in ['public', mods, 'partial', kind, tipo] if x)
+    corpo += f'    {decl}\n    {{\n'
     corpo += '\n'.join(extraidas).rstrip() + '\n    }\n}\n'
     open(saida, 'w', encoding='utf-8').write(corpo)
 
