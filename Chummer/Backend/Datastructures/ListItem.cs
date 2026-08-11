@@ -133,11 +133,11 @@ namespace Chummer
 
     #region Sorting Classes
 
-    public static class CompareTreeNodes
+    public static partial class CompareTreeNodes
     {
     }
 
-    public static class CompareListViewItems
+    public static partial class CompareListViewItems
     {
     }
 

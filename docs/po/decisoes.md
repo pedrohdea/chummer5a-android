@@ -780,3 +780,38 @@ A metade síncrona morre na Etapa 5, junto com todo o resto do caminho síncrono
 `Program.ShowMessageBox*` → `UserInteraction.Show*`, e os enums do WinForms para os
 equivalentes neutros. Censo: 95 → **89 erros**.
 
+---
+
+## DEC-029 — Um arquivo pode declarar vários tipos; a ferramenta precisa saber disso · VIGENTE
+**2026-08-11**
+
+O CI acusou `CS0117: 'CompareTreeNodes' does not contain a definition for 'CompareText'` em
+15 pontos. Causa: `scripts/extrair-ui.py` **assumia um tipo por arquivo**.
+
+`ListItem.cs` declara **seis** tipos — `ListItem`, `CompareTreeNodes`, `CompareListViewItems`,
+`CompareListItems`, `ListViewColumnSorter`, `DataGridViewColumnSorter`. A ferramenta pegava
+a primeira declaração e reemitia **todos** os membros extraídos dentro dela. `CompareText`,
+que pertence a `CompareTreeNodes`, foi parar dentro de `partial struct ListItem`.
+
+O domínio ficou correto — os membros saíram do lugar certo. Quem quebrou foi a metade de
+UI, que os colocou no tipo errado.
+
+**Por que não foi pego antes:** o `Chummer.Core` não compila `Controls/`, e o verificador de
+sintaxe só checa que o arquivo está **bem formado** — e estava. Colocar um método no tipo
+errado é erro **semântico**, não sintático. Só o build net48 completo detecta.
+
+**Auditoria feita antes de consertar:** dos 35 tipos extraídos, quatro vieram de arquivos com
+mais de um tipo — `ListItem`, `LanguageManager`, `Drugs` e `WeaponMount`. Nos três últimos,
+os membros extraídos pertenciam de fato ao primeiro tipo, então só o `ListItem` estava
+corrompido. Consertar às cegas os quatro teria sido pior que auditar.
+
+**Correção da ferramenta:** ela agora mapeia todos os tipos do arquivo com suas linhas de
+início, atribui cada membro extraído ao tipo que o contém, e emite **uma `partial` por
+tipo**. Também passou a reconhecer `partial` como modificador — sem isso ela recusava
+arquivos já processados, o que ao menos falhava de forma segura.
+
+**A lição, e ela é a terceira do mesmo tipo:** meu verificador de sintaxe cobre o que a
+geração automática quebra **na forma**, mas não o que ela quebra **no sentido**. Enquanto o
+build net48 só existir no CI, erros semânticos em `Controls/` terão latência de minutos. É
+custo aceito e conhecido — não custo surpresa.
+

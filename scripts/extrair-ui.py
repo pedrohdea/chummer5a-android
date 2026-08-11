@@ -21,6 +21,11 @@ Uso:
 
 Segurança: a extração é abortada se as chaves de qualquer uma das metades não fecharem.
 Vale mais recusar do que produzir um arquivo sutilmente quebrado numa base de 350 mil linhas.
+
+A ferramenta é CIENTE DE TIPO: um arquivo pode declarar vários tipos no mesmo namespace, e
+cada membro extraído é reemitido dentro do tipo a que realmente pertence. A primeira versão
+assumia um tipo por arquivo e enfiou membros de CompareTreeNodes e CompareListViewItems
+dentro de `partial struct ListItem` — erro que só o build net48 no CI pegou. Ver DEC-029.
 """
 
 import os
@@ -136,14 +141,32 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
     # `static class` e `struct` também aceitam `partial`, então a mesma técnica vale.
     RE_DECL = re.compile(
         r'^(?P<ind>\s*)(?P<acc>public|internal)'
-        r'(?P<mods>(?:\s+(?:sealed|abstract|static|readonly|unsafe))*)'
+        r'(?P<mods>(?:\s+(?:sealed|abstract|static|readonly|unsafe|partial))*)'
         r'\s+(?P<kind>class|struct)\s+(?P<nome>\w+)', re.M)
-    m = RE_DECL.search('\n'.join(linhas))
-    if not m:
+    # Mapeia TODOS os tipos do arquivo, com a linha em que cada um começa. Um arquivo pode
+    # declarar vários tipos no mesmo namespace, e cada membro precisa voltar ao seu.
+    tipos = []   # (linha_inicio, nome, kind, modificadores)
+    for i, l in enumerate(linhas):
+        md = RE_DECL.match(l)
+        if md:
+            # `partial` é removido dos modificadores guardados: ele é reinserido na posição
+            # certa ao emitir a metade de UI, e mantê-lo aqui produziria `partial partial`.
+            mods_limpos = ' '.join(x for x in md.group('mods').split() if x != 'partial')
+            tipos.append((i, md.group('nome'), md.group('kind'), mods_limpos))
+    if not tipos:
         print(f'  {caminho}: declaração de tipo não encontrada, ignorado')
         return None
-    tipo = m.group('nome')
-    kind = m.group('kind')
+    tipo = tipos[0][1]
+
+    def dono(indice):
+        """Qual tipo contém a linha `indice`."""
+        atual = tipos[0]
+        for t in tipos:
+            if t[0] <= indice:
+                atual = t
+            else:
+                break
+        return atual
 
     # Localiza os membros dependentes de UI.
     marcados, i = [], 0
@@ -158,7 +181,7 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
                 if '{' in limpa(linhas[k]) or '=>' in linhas[k]:
                     break
             if RE_TIPO_UI.search(limpa(' '.join(assinatura))):
-                marcados.append((inicio_com_docs(linhas, i), fim))
+                marcados.append((inicio_com_docs(linhas, i), fim, dono(i)))
             i = fim
         else:
             i += 1
@@ -170,16 +193,20 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
     # Funde intervalos que se tocam e recorta.
     marcados.sort()
     fundidos = [list(marcados[0])]
-    for a, b in marcados[1:]:
-        if a <= fundidos[-1][1]:
+    for a, b, d in marcados[1:]:
+        if a <= fundidos[-1][1] and d == fundidos[-1][2]:
             fundidos[-1][1] = max(fundidos[-1][1], b)
         else:
-            fundidos.append([a, b])
+            fundidos.append([a, b, d])
 
+    # Agrupa por tipo dono, preservando a ordem de declaração.
+    por_tipo = {}
     extraidas, restantes, corte = [], [], 0
-    for a, b in fundidos:
+    for a, b, d in fundidos:
         restantes.extend(linhas[corte:a])
-        extraidas.extend(linhas[a:b])
+        trecho = linhas[a:b]
+        extraidas.extend(trecho)
+        por_tipo.setdefault(d, []).extend(trecho)
         corte = b
     restantes.extend(linhas[corte:])
 
@@ -220,9 +247,14 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
     for l in restantes:
         if l.startswith('using System.Windows.Forms;') and not ainda_usa_ui:
             continue
-        l = re.sub(r'^(\s*)(public|internal)((?:\s+(?:sealed|abstract|static|readonly|unsafe))*)'
-                   r'\s+(class|struct)\s+' + tipo + r'\b',
-                   r'\1\2\3 partial \4 ' + tipo, l)
+        # Todo tipo que teve membro extraído precisa virar parcial na metade de domínio.
+        for _, nome_t, kind_t, _mods in tipos:
+            if nome_t in {d[1] for d in por_tipo}:
+                if re.match(r'^\s*(public|internal).*\bpartial\s+' + kind_t + r'\s+' + nome_t + r'\b', l):
+                    continue          # já é parcial
+                l = re.sub(r'^(\s*)(public|internal)((?:\s+(?:sealed|abstract|static|readonly|unsafe))*)'
+                           r'\s+(' + kind_t + r')\s+' + nome_t + r'\b',
+                           r'\1\2\3 partial \4 ' + nome_t, l)
         dominio.append(l)
     if not balanceado(dominio):
         print(f'  {tipo}: ABORTADO — chaves não fecham no que sobrou')
@@ -241,10 +273,11 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
     # com uma chave de fechamento a mais e produz CS1022 — foi o primeiro defeito que o
     # verificador de sintaxe pegou.
     corpo = '\n'.join(licenca) + '\n' + nota + '\n' + '\n'.join(usings) + '\n\n' + ns + '\n{\n'
-    mods = m.group('mods').strip()
-    decl = ' '.join(x for x in ['public', mods, 'partial', kind, tipo] if x)
-    corpo += f'    {decl}\n    {{\n'
-    corpo += '\n'.join(extraidas).rstrip() + '\n    }\n}\n'
+    for (_, nome_t, kind_t, mods_t), trecho in por_tipo.items():
+        decl = ' '.join(x for x in ['public', mods_t, 'partial', kind_t, nome_t] if x)
+        corpo += f'    {decl}\n    {{\n'
+        corpo += '\n'.join(trecho).rstrip() + '\n    }\n\n'
+    corpo = corpo.rstrip() + '\n}\n'
     open(saida, 'w', encoding='utf-8').write(corpo)
 
     print(f'  {tipo}: {len(extraidas)} linhas extraídas -> {saida}')

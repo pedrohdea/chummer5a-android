@@ -30,7 +30,7 @@ using System.Windows.Forms;
 
 namespace Chummer
 {
-    public readonly partial struct ListItem
+    public static partial class CompareTreeNodes
     {
         /// <summary>
         /// Sort TreeNodes in alphabetical order, ignoring [].
@@ -45,6 +45,10 @@ namespace Chummer
             }
             return ty == null ? 1 : string.Compare(tx.Text.FastEscape('[', ']'), ty.Text.FastEscape('[', ']'), false, GlobalSettings.CultureInfo);
         }
+    }
+
+    public static partial class CompareListViewItems
+    {
         /// <summary>
         /// Sort ListViewItems in reverse chronological order.
         /// </summary>
