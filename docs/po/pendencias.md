@@ -8,7 +8,7 @@ Status: `ABERTA` · `RESPONDIDA` · `OBSOLETA`
 
 ---
 
-## PEND-001 — Aparelhos-alvo · ABERTA
+## PEND-001 — Aparelhos-alvo · RESPONDIDA
 **Criada:** 2026-08-11 · **Premissa:** PREM-003 · **Reversão:** 🔴 alto
 
 Qual o aparelho mais fraco que precisa rodar bem? Interessa a versão mínima do Android e,
@@ -20,7 +20,14 @@ Se o alvo incluir aparelhos de 3 GB de RAM, a estratégia de carga de dados muda
 "carrega tudo e cacheia" para "carrega sob demanda com índice" — e isso é decisão
 estrutural, cara de mudar depois.
 
-**Resposta:**
+**Resposta (2026-08-11):** apenas o celular atual do PO. Sem exigência de aparelho fraco e
+sem necessidade de rodar nos aparelhos dos outros jogadores.
+
+**Efeito:** PREM-003 confirmada e **rebaixada de 🔴 para 🟢**. A estratégia "carrega tudo e
+cacheia", que é a que o Chummer já usa, fica mantida. Deixa de existir frente bloqueada.
+
+**Pendente ainda:** o modelo do aparelho, para o spike de desempenho da Etapa 4 (QA-002).
+Não bloqueia — na falta do modelo, meço no desktop e reporto o consumo absoluto.
 
 ---
 
@@ -106,7 +113,7 @@ Se puder, coloque em `Chummer.Tests/TestFiles/` ou me mande que eu incorporo.
 
 ---
 
-## PEND-009 — Métodos de construção de personagem no escopo final · ABERTA
+## PEND-009 — Métodos de construção de personagem no escopo final · RESPONDIDA
 **Criada:** 2026-08-11 · **Premissa:** PREM-011 · **Reversão:** 🟡 médio
 
 O objetivo final inclui criação de personagem completa (DEC-007). O Chummer suporta
@@ -118,11 +125,16 @@ documentação separada (`Chummer/Documentation/Lifemodule.md`).
 
 Se você jogar só com um deles, a entrega da criação de personagem sai muito mais cedo.
 
-**Resposta:**
+**Resposta (2026-08-11):** **apenas Prioridade.**
+
+**Efeito:** PREM-011 **derrubada**, e é a melhor notícia do projeto até agora. Saem do
+escopo: Soma-para-Dez, Karma e Life Modules — este último sozinho traz 396 KB de dados,
+regras próprias e documentação separada. Saem também as telas `SelectBuildMethod`,
+`SelectMetatypeKarma` e `SelectLifeModule`; fica `SelectMetatypePriority`.
 
 ---
 
-## PEND-008 — Escopo de edição do MVP · ABERTA
+## PEND-008 — Escopo de edição do MVP · RESPONDIDA
 **Criada:** 2026-08-11 · **Premissa:** PREM-009 · **Reversão:** 🟡 médio
 
 O MVP é um leitor/gerenciador de sessão. Está definido que ele edita: dano físico e de
@@ -136,4 +148,14 @@ de fora e podem ser essenciais na prática:
 - anotações rápidas durante a partida
 - rolagem de dados integrada (existe `DiceRoller` no desktop)
 
-**Resposta:**
+**Resposta (2026-08-11):** **tudo.** Dano/Edge/munição, karma/nuyen, magias sustentadas e
+rolagem de dados.
+
+**Efeito:** PREM-009 **ampliada**. O MVP cresce em duas frentes:
+- **Magias sustentadas** — barato. `Character` já tem a coleção `SustainedObjects` e o
+  controle `SustainedObjectControl` no desktop mostra o que a tela precisa ter.
+- **Rolagem de dados** — mais trabalho, mas autocontido e sem impacto arquitetural. Existe
+  `DiceRoller` e `InitiativeRoller` no desktop como referência de requisito, além de
+  `ThreadSafeCachedRandom` e `XoshiroPRNG.Net` já no núcleo.
+
+Nenhum dos dois toca a arquitetura do piloto; ambos são incrementos sobre ela.

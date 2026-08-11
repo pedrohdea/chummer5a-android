@@ -81,12 +81,17 @@ Resumo. O registro completo, com motivos e alternativas descartadas, está em
 | **Objetivo final** | **APK executável e testado, com criação de personagem completa** | o MVP é marco intermediário, não destino (DEC-007) |
 
 O MVP abre `.chum5`/`.chum5lz`, exibe o personagem completo, edita estado de sessão (dano,
-karma, nuyen, munição, edge), salva de volta e mostra a ficha impressa via XSLT → `WebView`.
-Recarregar arma entra deliberadamente: é o único item que exercita o padrão de solicitação
-de escolha ao usuário, que destrava os 45 diálogos de seleção depois.
+karma, nuyen, munição, edge, **magias sustentadas**, **rolagem de dados** — PREM-013), salva
+de volta e mostra a ficha impressa via XSLT → `WebView`. Recarregar arma entra
+deliberadamente: é o único item que exercita o padrão de solicitação de escolha ao usuário,
+que destrava os 45 diálogos de seleção depois.
 
 Fora do MVP: criação de personagem, compras/avanço, plugins/MEF, sync com ChummerHub,
 export PDF, tradutor.
+
+**Criação de personagem cobre apenas o método Prioridade** (PREM-012). Soma-para-Dez, Karma
+e Life Modules estão fora do escopo do projeto — mas o `Character` continua **abrindo**
+personagens criados por qualquer método, o que PREM-010 exige.
 
 ### Layout de projetos alvo
 

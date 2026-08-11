@@ -99,20 +99,23 @@ jobs:
     #   If the Autobuild fails above, remove it and uncomment the following three lines.
     #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
 
-    # Compila com o dotnet CLI, sem caminho fixo para o MSBuild.exe do Visual Studio.
+    # O Chummer legado precisa do MSBuild completo do Visual Studio, e não do `dotnet build`.
     #
-    # O passo anterior invocava
-    #   C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\bin\MSBuild.exe
-    # que deixou de existir nas imagens atuais do runner windows-latest, derrubando o job
-    # com "The term ... is not recognized" logo após um restore bem-sucedido.
+    # Motivo: Chummer.csproj tem alvo net48 e 108 arquivos .resx com recursos binários
+    # (ícones e imagens). A tarefa GenerateResource do MSBuild que vem no dotnet CLI não
+    # serializa recursos não-string sem GenerateResourceUsePreserializedResources, e falha
+    # com MSB3823. O MSBuild do Visual Studio processa esses recursos nativamente.
     #
-    # Esta é a mesma invocação que o nightly-build.yml já usa para compilar a Chummer.sln
-    # (projetos SDK-style com alvo net48 compilam pelo dotnet CLI), o que elimina a
-    # dependência de uma edição específica do Visual Studio estar instalada.
+    # O passo original já usava o MSBuild do Visual Studio, mas por caminho fixo
+    #   C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\...\MSBuild.exe
+    # que deixou de existir nas imagens atuais do runner. setup-msbuild localiza o MSBuild
+    # via vswhere e o coloca no PATH, preservando a intenção original sem a fragilidade.
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
     - run: |
         echo "Run, Build Application using script"
-        dotnet restore ./Chummer.sln
-        dotnet build ./Chummer.sln --configuration Release --no-restore --verbosity minimal
+        msbuild -restore -t:Build -p:Configuration=Release -verbosity:minimal ./Chummer.sln
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

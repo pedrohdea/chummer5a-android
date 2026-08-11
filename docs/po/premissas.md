@@ -44,7 +44,7 @@ com atualização deliberada do artefato dourado.
 
 ---
 
-## PREM-003 — Alvo: Android 8.0 (API 26) ou superior, 4 GB de RAM · ATIVA 🔴
+## PREM-003 — Alvo: Android 8.0 (API 26) ou superior, 4 GB de RAM · CONFIRMADA 🟢
 **Criada:** 2026-08-11 · **Pendência:** PEND-001
 
 Assumido até haver resposta. Com isso, a estratégia de dados é a atual do Chummer:
@@ -53,9 +53,12 @@ Assumido até haver resposta. Com isso, a estratégia de dados é a atual do Chu
 **Se derrubada para baixo** (aparelhos de 2–3 GB): a carga de dados precisa virar acesso
 sob demanda com índice, o que é retrabalho estrutural de semanas.
 
-**🔴 Por isso:** enquanto PEND-001 estiver aberta, **não construo otimizações de memória em
-cima desta premissa**. O spike 1.4 (medir carga dos 21 MB) roda no aparelho mais fraco que
-eu tiver acesso, e o resultado alimenta a decisão.
+**Confirmada em 2026-08-11:** o PO respondeu que o alvo é apenas o celular atual dele, sem
+exigência de aparelho fraco. A premissa deixa de ser 🔴 e vira 🟢: a estratégia "carrega
+tudo e cacheia" fica mantida, e não há mais frente bloqueada.
+
+Continua valendo medir o consumo real no spike da Etapa 4 (QA-002) — não para decidir
+arquitetura, mas para saber se a experiência é aceitável.
 
 ---
 
@@ -141,7 +144,7 @@ migração.
 
 ---
 
-## PREM-011 — Os quatro métodos de construção entram no escopo final · ATIVA 🟡
+## PREM-011 — Os quatro métodos de construção entram no escopo final · DERRUBADA
 **Criada:** 2026-08-11 · **Pendência:** PEND-009
 
 Prioridade, Soma-para-Dez, Karma e Life Modules, todos.
@@ -154,6 +157,39 @@ consideraria incompleto.
 Soma-para-Dez (compartilha quase toda a mecânica com Prioridade), depois Karma, e Life
 Modules por último — é o mais isolado dos quatro e o de dados mais volumosos.
 
-**Se derrubada** (só um ou dois métodos): a ordem acima já entrega os mais prováveis
-primeiro, então derrubar a premissa mais tarde só **encurta** o trabalho restante. Custo de
-reversão baixo na prática, apesar da marca 🟡.
+**Derrubada em 2026-08-11:** o PO respondeu **apenas Prioridade**. Como previsto, derrubar
+esta premissa só encurtou trabalho — nada do que foi feito precisou ser refeito.
+
+Substituída por PREM-012.
+
+---
+
+## PREM-012 — Criação de personagem cobre apenas o método Prioridade · CONFIRMADA 🟢
+**Criada:** 2026-08-11 · **Pendência:** PEND-009 (respondida)
+
+Fora do escopo: Soma-para-Dez, Karma e Life Modules.
+
+**Consequência no código:** entra `SelectMetatypePriority` e os dados de `priorities.xml`
+(152 KB). Ficam de fora as telas `SelectBuildMethod`, `SelectMetatypeKarma` e
+`SelectLifeModule`, e os 396 KB de `lifemodules.xml`.
+
+**Ressalva:** o `Character` continua carregando personagens criados por qualquer método —
+o `CharacterBuildMethod` é gravado no `.chum5` e precisa ser lido corretamente para não
+quebrar PREM-010. O que sai do escopo é **criar** por esses métodos, não **abrir**.
+
+---
+
+## PREM-013 — MVP inclui magias sustentadas e rolagem de dados · CONFIRMADA 🟢
+**Criada:** 2026-08-11 · **Pendência:** PEND-008 (respondida)
+
+O PO respondeu "tudo" ao escopo de edição em sessão. O MVP passa a cobrir, além de
+dano/Edge/munição e karma/nuyen:
+
+- **Magias sustentadas** — `Character.SustainedObjects` já existe; `SustainedObjectControl`
+  no desktop serve de referência de requisito.
+- **Rolagem de dados** — autocontido, sem impacto arquitetural. `DiceRoller` e
+  `InitiativeRoller` no desktop são a referência; `ThreadSafeCachedRandom` e
+  `XoshiroPRNG.Net` já estão no núcleo.
+
+**Efeito líquido no cronograma:** somado a PREM-012, o escopo total **encolheu**. Três
+métodos de construção a menos valem muito mais que dois recursos de sessão a mais.
