@@ -17,6 +17,7 @@
  *  https://github.com/chummer5a/chummer5a
  */
 
+using System.Windows.Forms;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

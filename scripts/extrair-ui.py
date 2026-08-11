@@ -196,10 +196,23 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
     usings = [l for l in linhas if l.startswith('using ')]
     ns = next((l for l in linhas if l.startswith('namespace')), 'namespace Chummer')
 
-    # --- metade de domínio: `partial` na classe, sem o using de WinForms ---
+    # --- metade de domínio: `partial` na classe ---
+    #
+    # O `using System.Windows.Forms` só é removido se o que sobrou realmente não usar mais
+    # nada de WinForms. A detecção de membros olha a ASSINATURA; um método como
+    # `Remove(bool blnConfirmDelete)` não tem tipo de UI na assinatura mas usa
+    # `MessageBoxButtons` no corpo, e portanto continua precisando do using.
+    #
+    # Remover o using cedo demais quebrou o build net48 em 17 arquivos, e — pior — fez o
+    # censo parecer melhor do que a realidade, escondendo acoplamento que continua lá.
+    corpo_restante = '\n'.join(restantes).split('namespace ', 1)[-1]
+    ainda_usa_ui = RE_TIPO_UI.search(corpo_restante) or re.search(
+        r'\b(MessageBoxButtons|MessageBoxIcon|MessageBoxDefaultButton|Cursors|SendKeys|Clipboard)\b',
+        corpo_restante)
+
     dominio = []
     for l in restantes:
-        if l.startswith('using System.Windows.Forms;'):
+        if l.startswith('using System.Windows.Forms;') and not ainda_usa_ui:
             continue
         l = re.sub(r'^(\s*)(public|internal)((?:\s+sealed)?(?:\s+abstract)?)\s+class\s+' + tipo + r'\b',
                    r'\1\2\3 partial class ' + tipo, l)
