@@ -757,3 +757,26 @@ A restrição **cai sozinha** ao fim da Etapa 2, quando o `Backend/` for movido 
 legado deixar de linkar o núcleo. Registrado como comentário em `src/Directory.Build.props`
 para não ser redescoberto por acidente.
 
+---
+
+## DEC-028 — A dualidade sync/async da interação é deliberada e temporária · VIGENTE
+**2026-08-11**
+
+`IUserInteraction` expõe `ShowMessage` e `ShowMessageAsync`, duplicando cada operação.
+
+**Por que não só a assíncrona:** o domínio tem **73 pontos de chamada síncronos** e 74
+assíncronos. Converter os síncronos agora exigiria tornar assíncronos os métodos que os
+contêm, e os que chamam esses, em cascata — que é exatamente o trabalho da **Etapa 5**
+(eliminar `DoEvents` e as 279 execuções síncronas de código async).
+
+Misturar as duas coisas seria ruim por um motivo específico: se a extração do núcleo e o
+saneamento assíncrono viajarem no mesmo commit, uma regressão de regra detectada pelo teste
+diferencial fica **impossível de atribuir** a uma causa. A separação existe para manter cada
+divergência diagnosticável.
+
+A metade síncrona morre na Etapa 5, junto com todo o resto do caminho síncrono.
+
+**Migração feita:** 542 substituições em 30 arquivos —
+`Program.ShowMessageBox*` → `UserInteraction.Show*`, e os enums do WinForms para os
+equivalentes neutros. Censo: 95 → **89 erros**.
+

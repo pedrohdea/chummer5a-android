@@ -470,7 +470,7 @@ namespace Chummer
                     frmPickItem.MyForm.AllowAutoSelect = !string.IsNullOrEmpty(ForcedValue);
 
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -529,7 +529,7 @@ namespace Chummer
                         frmPickItem.MyForm.SelectedItem = _objCharacter.MagicTradition.SourceIDString;
 
                         // Make sure the dialogue window was not canceled.
-                        if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                         {
                             throw new AbortedException();
                         }
@@ -609,7 +609,7 @@ namespace Chummer
                         frmPickSkillGroup.MyForm.ExcludeCategory = strExclude;
 
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickSkillGroup.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickSkillGroup.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -844,7 +844,7 @@ namespace Chummer
                     frmPickSkillGroup.MyForm.ExcludeCategory = strExclude;
 
                 // Make sure the dialogue window was not canceled.
-                if (frmPickSkillGroup.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                if (frmPickSkillGroup.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                 {
                     throw new AbortedException();
                 }
@@ -951,7 +951,7 @@ namespace Chummer
                                            }))
                                 {
                                     // Make sure the dialogue window was not canceled.
-                                    if (frmPickAttribute.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                                    if (frmPickAttribute.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                                     {
                                         throw new AbortedException();
                                     }
@@ -1106,7 +1106,7 @@ namespace Chummer
                                }))
                     {
                         // Make sure the dialogue window was not canceled.
-                        if (frmPickAttribute.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (frmPickAttribute.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                         {
                             throw new AbortedException();
                         }
@@ -1201,7 +1201,7 @@ namespace Chummer
             }))
             {
                 // Make sure the dialogue window was not canceled.
-                if (frmPickLimit.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                if (frmPickLimit.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                 {
                     throw new AbortedException();
                 }
@@ -1327,7 +1327,7 @@ namespace Chummer
                 }))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickAttribute.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickAttribute.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -1383,7 +1383,7 @@ namespace Chummer
                     }
 
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickSkill.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickSkill.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -1463,7 +1463,7 @@ namespace Chummer
                            }))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickAttribute.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickAttribute.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -1519,7 +1519,7 @@ namespace Chummer
                     }
 
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickSkill.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickSkill.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -1558,7 +1558,7 @@ namespace Chummer
                 frmPickSpell.MyForm.IgnoreRequirements = bonusNode.Attributes?["ignorerequirements"]?.InnerTextIsTrueString() == true;
 
                 // Make sure the dialogue window was not canceled.
-                if (frmPickSpell.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                if (frmPickSpell.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                 {
                     throw new AbortedException();
                 }
@@ -1588,7 +1588,7 @@ namespace Chummer
                        }))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickText.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickText.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                         throw new AbortedException();
 
                     strExtra = frmPickText.MyForm.SelectedValue;
@@ -1637,7 +1637,7 @@ namespace Chummer
                        }))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickText.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickText.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -1684,7 +1684,7 @@ namespace Chummer
                 using (ThreadSafeForm<SelectComplexForm> frmPickComplexForm = ThreadSafeForm<SelectComplexForm>.Get(() => new SelectComplexForm(_objCharacter)))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickComplexForm.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickComplexForm.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -1956,7 +1956,7 @@ namespace Chummer
                 using (ThreadSafeForm<SelectAIProgram> frmPickProgram = ThreadSafeForm<SelectAIProgram>.Get(() => new SelectAIProgram(_objCharacter)))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickProgram.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickProgram.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -1979,7 +1979,7 @@ namespace Chummer
                        }))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickText.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickText.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -2022,7 +2022,7 @@ namespace Chummer
                 using (ThreadSafeForm<SelectAIProgram> frmPickProgram = ThreadSafeForm<SelectAIProgram>.Get(() => new SelectAIProgram(_objCharacter, false, true)))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickProgram.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickProgram.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -2045,7 +2045,7 @@ namespace Chummer
                        }))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickText.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickText.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -2098,8 +2098,8 @@ namespace Chummer
 
             if (lstSelectedContacts.Count == 0)
             {
-                Program.ShowScrollableMessageBox(LanguageManager.GetString("Message_NoContactFound"),
-                    LanguageManager.GetString("MessageTitle_NoContactFound"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UserInteraction.ShowScrollableMessage(LanguageManager.GetString("Message_NoContactFound"),
+                    LanguageManager.GetString("MessageTitle_NoContactFound"), PromptButtons.OK, PromptIcon.Error);
                 throw new AbortedException();
             }
 
@@ -2109,7 +2109,7 @@ namespace Chummer
                 //Black magic LINQ to cast content of list to another type
                 frmSelect.MyForm.SetGeneralItemsMode(lstSelectedContacts.Select(x => new ListItem(count++.ToString(GlobalSettings.InvariantCultureInfo), x.Name)));
 
-                if (frmSelect.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                if (frmSelect.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     throw new AbortedException();
 
                 Contact objSelectedContact = int.TryParse(frmSelect.MyForm.SelectedItem, out int intIndex)
@@ -2305,7 +2305,7 @@ namespace Chummer
                                        }))
                         {
                             // Make sure the dialogue window was not canceled.
-                            if (frmPickAttribute.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                            if (frmPickAttribute.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                             {
                                 throw new AbortedException();
                             }
@@ -3575,7 +3575,7 @@ namespace Chummer
                             frmPickCategory.MyForm.ForceItem(ForcedValue);
                         }
 
-                        if (frmPickCategory.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (frmPickCategory.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                         {
                             throw new AbortedException();
                         }
@@ -3671,7 +3671,7 @@ namespace Chummer
                     frmPickWeapon.MyForm.ForceItem(ForcedValue);
 
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickWeapon.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickWeapon.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -3699,7 +3699,7 @@ namespace Chummer
             }))
             {
                 // Make sure the dialogue window was not canceled.
-                if (frmPickMentorSpirit.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                if (frmPickMentorSpirit.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                 {
                     throw new AbortedException();
                 }
@@ -3745,7 +3745,7 @@ namespace Chummer
             }))
             {
                 // Make sure the dialogue window was not canceled.
-                if (frmPickMentorSpirit.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                if (frmPickMentorSpirit.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                 {
                     throw new AbortedException();
                 }
@@ -3954,7 +3954,7 @@ namespace Chummer
                 if (!string.IsNullOrEmpty(ForcedValue))
                     frmPickSide.MyForm.ForceValue(ForcedValue);
                 // Make sure the dialogue window was not canceled.
-                else if (frmPickSide.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                else if (frmPickSide.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                 {
                     throw new AbortedException();
                 }
@@ -4073,7 +4073,7 @@ namespace Chummer
                                     frmPickPower.MyForm.LimitToPowers = strLimitToPowers;
 
                                 // Make sure the dialogue window was not canceled.
-                                if (frmPickPower.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                                if (frmPickPower.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                                     throw new AbortedException();
 
                                 objXmlPower = xmlDocument.TryGetNodeByNameOrId("/chummer/powers/power", frmPickPower.MyForm.SelectedPower)
@@ -4184,7 +4184,7 @@ namespace Chummer
 
                         if (lstArts.Count == 0)
                         {
-                            Program.ShowScrollableMessageBox(string.Format(GlobalSettings.CultureInfo,
+                            UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
                                 LanguageManager.GetString(
                                     "Message_Improvement_EmptySelectionListNamed"),
                                 SourceName));
@@ -4195,7 +4195,7 @@ namespace Chummer
                         {
                             frmPickItem.MyForm.SetGeneralItemsMode(lstArts);
                             // Don't do anything else if the form was canceled.
-                            if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                            if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                                 throw new AbortedException();
 
                             objXmlSelectedArt = objXmlDocument.TryGetNodeByNameOrId("/chummer/powers/power", frmPickItem.MyForm.SelectedItem)
@@ -4212,7 +4212,7 @@ namespace Chummer
                     using (ThreadSafeForm<SelectArt> frmPickArt = ThreadSafeForm<SelectArt>.Get(() => new SelectArt(_objCharacter, SelectArt.Mode.Art)))
                     {
                         // Don't do anything else if the form was canceled.
-                        if (frmPickArt.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (frmPickArt.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                             throw new AbortedException();
 
                         objXmlSelectedArt = objXmlDocument.TryGetNodeByNameOrId("/chummer/powers/power", frmPickArt.MyForm.SelectedItem)
@@ -4288,7 +4288,7 @@ namespace Chummer
 
                         if (lstMetamagics.Count == 0)
                         {
-                            Program.ShowScrollableMessageBox(string.Format(GlobalSettings.CultureInfo,
+                            UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
                                 LanguageManager.GetString(
                                     "Message_Improvement_EmptySelectionListNamed"),
                                 SourceName));
@@ -4299,7 +4299,7 @@ namespace Chummer
                         {
                             frmPickItem.MyForm.SetGeneralItemsMode(lstMetamagics);
                             // Don't do anything else if the form was canceled.
-                            if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                            if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                                 throw new AbortedException();
 
                             objXmlSelectedMetamagic = objXmlDocument.TryGetNodeByNameOrId("/chummer/metamagics/metamagic", frmPickItem.MyForm.SelectedItem)
@@ -4325,7 +4325,7 @@ namespace Chummer
                     using (ThreadSafeForm<SelectMetamagic> frmPickMetamagic = ThreadSafeForm<SelectMetamagic>.Get(() => new SelectMetamagic(_objCharacter, objGrade)))
                     {
                         // Don't do anything else if the form was canceled.
-                        if (frmPickMetamagic.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (frmPickMetamagic.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                             throw new AbortedException();
 
                         objXmlSelectedMetamagic = objXmlDocument.TryGetNodeByNameOrId("/chummer/metamagics/metamagic", frmPickMetamagic.MyForm.SelectedMetamagic)
@@ -4402,7 +4402,7 @@ namespace Chummer
 
                         if (lstEchoes.Count == 0)
                         {
-                            Program.ShowScrollableMessageBox(string.Format(GlobalSettings.CultureInfo,
+                            UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
                                 LanguageManager.GetString(
                                     "Message_Improvement_EmptySelectionListNamed"),
                                 SourceName));
@@ -4413,7 +4413,7 @@ namespace Chummer
                         {
                             frmPickItem.MyForm.SetGeneralItemsMode(lstEchoes);
                             // Don't do anything else if the form was canceled.
-                            if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                            if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                                 throw new AbortedException();
 
                             xmlSelectedEcho = objXmlDocument.TryGetNodeByNameOrId("/chummer/echoes/echo", frmPickItem.MyForm.SelectedItem)
@@ -4439,7 +4439,7 @@ namespace Chummer
                     using (ThreadSafeForm<SelectMetamagic> frmPickMetamagic = ThreadSafeForm<SelectMetamagic>.Get(() => new SelectMetamagic(_objCharacter, objGrade)))
                     {
                         // Don't do anything else if the form was canceled.
-                        if (frmPickMetamagic.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (frmPickMetamagic.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                             throw new AbortedException();
 
                         xmlSelectedEcho = objXmlDocument.TryGetNodeByNameOrId("/chummer/echoes/echo", frmPickMetamagic.MyForm.SelectedMetamagic)
@@ -5174,7 +5174,7 @@ namespace Chummer
                 {
                     frmPickItem.MyForm.SetGeneralItemsMode(lstCritters);
 
-                    if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -5212,7 +5212,7 @@ namespace Chummer
                     }
 
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -5285,7 +5285,7 @@ namespace Chummer
                         }
 
                         // Make sure the dialogue window was not canceled.
-                        if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                         {
                             throw new AbortedException();
                         }
@@ -5345,7 +5345,7 @@ namespace Chummer
                     }
 
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -5382,7 +5382,7 @@ namespace Chummer
                     }
 
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickText.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickText.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -5415,7 +5415,7 @@ namespace Chummer
                     {
                         if (lstWeapons.Count == 0)
                         {
-                            Program.ShowScrollableMessageBox(string.Format(GlobalSettings.CultureInfo,
+                            UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
                                                                  LanguageManager.GetString(
                                                                      "Message_Improvement_EmptySelectionListNamed"),
                                                                  SourceName));
@@ -5438,7 +5438,7 @@ namespace Chummer
                             }
 
                             // Make sure the dialogue window was not canceled.
-                            if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                            if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                             {
                                 throw new AbortedException();
                             }
@@ -5509,7 +5509,7 @@ namespace Chummer
                 }))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickPower.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickPower.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -5617,7 +5617,7 @@ namespace Chummer
 
                 if (lstItems.Count == 0)
                 {
-                    Program.ShowScrollableMessageBox(string.Format(GlobalSettings.CultureInfo,
+                    UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
                                                                   LanguageManager.GetString(
                                                                       "Message_Improvement_EmptySelectionListNamed"),
                                                                   SourceName));
@@ -5631,7 +5631,7 @@ namespace Chummer
                 {
                     frmPickItem.MyForm.SetGeneralItemsMode(lstItems);
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -5674,7 +5674,7 @@ namespace Chummer
                             frmSelect.MyForm.ForceItem(strText);
                         }
 
-                        if (frmSelect.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (frmSelect.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                         {
                             throw new AbortedException();
                         }
@@ -5757,7 +5757,7 @@ namespace Chummer
 
                 if (lstQualities.Count == 0)
                 {
-                    Program.ShowScrollableMessageBox(string.Format(GlobalSettings.CultureInfo,
+                    UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
                                                                   LanguageManager.GetString(
                                                                       "Message_Improvement_EmptySelectionListNamed"),
                                                                   SourceName));
@@ -5771,7 +5771,7 @@ namespace Chummer
                     frmPickItem.MyForm.SetGeneralItemsMode(lstQualities);
 
                     // Don't do anything else if the form was canceled.
-                    if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                         throw new AbortedException();
                     objXmlSelectedQuality = objXmlDocument.TryGetNodeByNameOrId(
                         "/chummer/qualities/quality", frmPickItem.MyForm.SelectedItem);
@@ -5810,7 +5810,7 @@ namespace Chummer
 
                     if (lstQualities.Count == 0)
                     {
-                        Program.ShowScrollableMessageBox(string.Format(GlobalSettings.CultureInfo,
+                        UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
                                                              LanguageManager.GetString(
                                                                  "Message_Improvement_EmptySelectionListNamed"),
                                                              SourceName));
@@ -5823,7 +5823,7 @@ namespace Chummer
                         frmPickItem.MyForm.SetGeneralItemsMode(lstQualities);
 
                         // Don't do anything else if the form was canceled.
-                        if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                             throw new AbortedException();
                         if (frmPickItem.MyForm.SelectedItem != "None")
                         {
@@ -5968,7 +5968,7 @@ namespace Chummer
                 }))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickSpellCategory.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickSpellCategory.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -6004,7 +6004,7 @@ namespace Chummer
                     frmPickSpellCategory.MyForm.SetExcludeCategories(bonusNode.Attributes?["exclude"]?.InnerTextViaPool().SplitNoAlloc(',', StringSplitOptions.RemoveEmptyEntries));
 
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickSpellCategory.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickSpellCategory.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -6032,7 +6032,7 @@ namespace Chummer
                 }))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -6061,7 +6061,7 @@ namespace Chummer
                 }))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -6206,7 +6206,7 @@ namespace Chummer
                                 LanguageManager.GetString("String_Improvement_SelectSpiritType"),
                                 _strFriendlyName)
                             : LanguageManager.GetString("String_Improvement_SelectSpiritTypeGeneric");
-                        if (frmSelect.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (frmSelect.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                         {
                             throw new AbortedException();
                         }
@@ -6401,7 +6401,7 @@ namespace Chummer
                         frmPickItem.MyForm.SetGeneralItemsMode(lstSkills);
 
                         // Make sure the dialogue window was not canceled.
-                        if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                         {
                             throw new AbortedException();
                         }
@@ -6969,7 +6969,7 @@ namespace Chummer
                         frmPickItem.MyForm.SetDropdownItemsMode(lstActions);
 
                         // Make sure the dialogue window was not canceled.
-                        if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                         {
                             throw new AbortedException();
                         }
@@ -7094,7 +7094,7 @@ namespace Chummer
 
                 // Make sure the dialogue window was not canceled.
                 string strSelected = frmPickItem.MyForm.SelectedName;
-                if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel || string.IsNullOrEmpty(strSelected))
+                if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel || string.IsNullOrEmpty(strSelected))
                 {
                     throw new AbortedException();
                 }

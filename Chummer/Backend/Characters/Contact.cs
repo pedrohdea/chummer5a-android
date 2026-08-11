@@ -3194,12 +3194,12 @@ namespace Chummer
 
                         if (blnError && blnShowError)
                         {
-                            Program.ShowScrollableMessageBox(
+                            UserInteraction.ShowScrollableMessage(
                                 string.Format(GlobalSettings.CultureInfo,
                                               LanguageManager.GetString("Message_FileNotFound", token: token),
                                               FileName),
-                                LanguageManager.GetString("MessageTitle_FileNotFound", token: token), MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
+                                LanguageManager.GetString("MessageTitle_FileNotFound", token: token), PromptButtons.OK,
+                                PromptIcon.Error);
                         }
                     }
 
@@ -3306,14 +3306,14 @@ namespace Chummer
 
                         if (blnError && blnShowError)
                         {
-                            await Program.ShowScrollableMessageBoxAsync(
+                            await UserInteraction.ShowScrollableMessageAsync(
                                 string.Format(GlobalSettings.CultureInfo,
                                     await LanguageManager.GetStringAsync("Message_FileNotFound", token: token)
                                         .ConfigureAwait(false),
                                     FileName),
                                 await LanguageManager.GetStringAsync("MessageTitle_FileNotFound", token: token)
-                                    .ConfigureAwait(false), MessageBoxButtons.OK,
-                                MessageBoxIcon.Error, token: token).ConfigureAwait(false);
+                                    .ConfigureAwait(false), PromptButtons.OK,
+                                PromptIcon.Error, token: token).ConfigureAwait(false);
                         }
                     }
 

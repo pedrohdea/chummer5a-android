@@ -615,7 +615,7 @@ namespace Chummer.Backend.Equipment
                                    }))
                         {
                             frmSelect.MyForm.SetGeneralItemsMode(lstQualities);
-                            if (frmSelect.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                            if (frmSelect.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
                             {
                                 _guiID = Guid.Empty;
                                 return;
@@ -698,7 +698,7 @@ namespace Chummer.Backend.Equipment
                                    }, token).ConfigureAwait(false))
                         {
                             frmSelect.MyForm.SetGeneralItemsMode(lstQualities);
-                            if (await frmSelect.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
+                            if (await frmSelect.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == PromptResult.Cancel)
                             {
                                 _guiID = Guid.Empty;
                                 return;

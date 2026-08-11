@@ -17,7 +17,6 @@
  *  https://github.com/chummer5a/chummer5a
  */
 
-using System.Windows.Forms;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -496,9 +495,9 @@ namespace Chummer
 
             // No character-created limits found, which means it comes from an improvement.
             // TODO: ImprovementSource exists for a reason.
-            Program.ShowScrollableMessageBox(LanguageManager.GetString("Message_CannotDeleteLimitModifier"),
+            UserInteraction.ShowScrollableMessage(LanguageManager.GetString("Message_CannotDeleteLimitModifier"),
                                              LanguageManager.GetString("MessageTitle_CannotDeleteLimitModifier"),
-                                             MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                             PromptButtons.OK, PromptIcon.Information);
             return false;
         }
 
@@ -514,10 +513,10 @@ namespace Chummer
 
             // No character-created limits found, which means it comes from an improvement.
             // TODO: ImprovementSource exists for a reason.
-            await Program.ShowScrollableMessageBoxAsync(
+            await UserInteraction.ShowScrollableMessageAsync(
                 await LanguageManager.GetStringAsync("Message_CannotDeleteLimitModifier", token: token).ConfigureAwait(false),
                 await LanguageManager.GetStringAsync("MessageTitle_CannotDeleteLimitModifier", token: token).ConfigureAwait(false),
-                MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
             return false;
         }
     }

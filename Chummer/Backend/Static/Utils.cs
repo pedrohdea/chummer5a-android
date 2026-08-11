@@ -467,7 +467,7 @@ namespace Chummer
                     catch (Exception ex)
                     {
                         if (blnShowErrors)
-                            Program.ShowScrollableMessageBox(ex.ToString(), icon: MessageBoxIcon.Error);
+                            UserInteraction.ShowScrollableMessage(ex.ToString(), icon: PromptIcon.Error);
                         continue;
                     }
                 }
@@ -476,12 +476,12 @@ namespace Chummer
                 if (File.Exists(strDestinationPath))
                 {
                     if (blnShowErrors)
-                        Program.ShowScrollableMessageBox(
+                        UserInteraction.ShowScrollableMessage(
                             string.Format(GlobalSettings.CultureInfo,
                                           LanguageManager.GetString("Message_DuplicateFile", token: token), strFile,
                                           strDestinationFolder),
                             LanguageManager.GetString("MessageTitle_DuplicateFile", token: token),
-                            icon: MessageBoxIcon.Error);
+                            icon: PromptIcon.Error);
                     continue;
                 }
                 token.ThrowIfCancellationRequested();
@@ -492,7 +492,7 @@ namespace Chummer
                 catch (Exception ex)
                 {
                     if (blnShowErrors)
-                        Program.ShowScrollableMessageBox(ex.ToString(), icon: MessageBoxIcon.Error);
+                        UserInteraction.ShowScrollableMessage(ex.ToString(), icon: PromptIcon.Error);
                 }
             }
         }
@@ -657,23 +657,23 @@ namespace Chummer
                             if (blnSync)
                             {
                                 // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                                if (Program.ShowScrollableMessageBox(
+                                if (UserInteraction.ShowScrollableMessage(
                                         string.Format(GlobalSettings.CultureInfo,
                                             // ReSharper disable once MethodHasAsyncOverload
                                             LanguageManager.GetString("Message_Prompt_Delete_Existing_File",
                                                 token: token), strPath),
-                                        buttons: MessageBoxButtons.YesNo, icon: MessageBoxIcon.Warning) !=
-                                    DialogResult.Yes)
+                                        buttons: PromptButtons.YesNo, icon: PromptIcon.Warning) !=
+                                    PromptResult.Yes)
                                     return false;
                             }
-                            else if (await Program.ShowScrollableMessageBoxAsync(
+                            else if (await UserInteraction.ShowScrollableMessageAsync(
                                          string.Format(GlobalSettings.CultureInfo,
                                              await LanguageManager.GetStringAsync(
                                                      "Message_Prompt_Delete_Existing_File", token: token)
                                                  .ConfigureAwait(false), strPath),
-                                         buttons: MessageBoxButtons.YesNo, icon: MessageBoxIcon.Warning,
+                                         buttons: PromptButtons.YesNo, icon: PromptIcon.Warning,
                                          token: token).ConfigureAwait(false) !=
-                                     DialogResult.Yes)
+                                     PromptResult.Yes)
                                 return false;
                         }
                         else
@@ -705,13 +705,13 @@ namespace Chummer
                         if (blnSync)
                         {
                             // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                            Program.ShowScrollableMessageBox(
+                            UserInteraction.ShowScrollableMessage(
                                 // ReSharper disable once MethodHasAsyncOverload
                                 LanguageManager.GetString("Message_Insufficient_Permissions_Warning", token: token));
                         }
                         else
                         {
-                            await Program.ShowScrollableMessageBoxAsync(
+                            await UserInteraction.ShowScrollableMessageAsync(
                                 await LanguageManager
                                     .GetStringAsync("Message_Insufficient_Permissions_Warning", token: token)
                                     .ConfigureAwait(false), token: token).ConfigureAwait(false);
@@ -811,23 +811,23 @@ namespace Chummer
                     if (blnSync)
                     {
                         // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                        if (Program.ShowScrollableMessageBox(
+                        if (UserInteraction.ShowScrollableMessage(
                                 string.Format(GlobalSettings.CultureInfo,
                                     // ReSharper disable once MethodHasAsyncOverload
                                     LanguageManager.GetString("Message_Prompt_Delete_Existing_File",
                                         token: token), strPath),
-                                buttons: MessageBoxButtons.YesNo, icon: MessageBoxIcon.Warning) !=
-                            DialogResult.Yes)
+                                buttons: PromptButtons.YesNo, icon: PromptIcon.Warning) !=
+                            PromptResult.Yes)
                             return false;
                     }
-                    else if (await Program.ShowScrollableMessageBoxAsync(
+                    else if (await UserInteraction.ShowScrollableMessageAsync(
                                  string.Format(GlobalSettings.CultureInfo,
                                      await LanguageManager.GetStringAsync(
                                              "Message_Prompt_Delete_Existing_File", token: token)
                                          .ConfigureAwait(false), strPath),
-                                 buttons: MessageBoxButtons.YesNo, icon: MessageBoxIcon.Warning,
+                                 buttons: PromptButtons.YesNo, icon: PromptIcon.Warning,
                                  token: token).ConfigureAwait(false) !=
-                             DialogResult.Yes)
+                             PromptResult.Yes)
                         return false;
                 }
                 else
@@ -896,8 +896,8 @@ namespace Chummer
                 string caption
                     = await LanguageManager.GetStringAsync("MessageTitle_Options_CloseForms", strLanguage, token: token).ConfigureAwait(false);
                 token.ThrowIfCancellationRequested();
-                if (await Program.ShowScrollableMessageBoxAsync(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question, token: token).ConfigureAwait(false)
-                    != DialogResult.Yes)
+                if (await UserInteraction.ShowScrollableMessageAsync(text, caption, PromptButtons.YesNo, PromptIcon.Question, token: token).ConfigureAwait(false)
+                    != PromptResult.Yes)
                     return;
             }
 
@@ -930,7 +930,7 @@ namespace Chummer
                         string strCharacterName = await objOpenCharacterForm.CharacterObject
                                                                             .GetCharacterNameAsync(token)
                                                                             .ConfigureAwait(false);
-                        if (await Program.ShowScrollableMessageBoxAsync(
+                        if (await UserInteraction.ShowScrollableMessageAsync(
                                 string.Format(objCulture,
                                     await LanguageManager.GetStringAsync(
                                             "Message_UnsavedChanges", strLanguage,
@@ -939,7 +939,7 @@ namespace Chummer
                                 await LanguageManager
                                     .GetStringAsync("MessageTitle_UnsavedChanges", strLanguage, token: token)
                                     .ConfigureAwait(false),
-                                MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, token: token).ConfigureAwait(false) != DialogResult.Yes)
+                                PromptButtons.YesNoCancel, PromptIcon.Question, token: token).ConfigureAwait(false) != PromptResult.Yes)
                         {
                             return;
                         }

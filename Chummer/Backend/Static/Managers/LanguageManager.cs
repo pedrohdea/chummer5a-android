@@ -28,7 +28,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 
@@ -172,9 +171,9 @@ namespace Chummer
                                         Environment.NewLine + Environment.NewLine + objNewLanguage.ErrorMessage;
                     if (blnSync)
                         // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                        Program.ShowScrollableMessageBox(strMessage, "Cannot Load Language", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        UserInteraction.ShowScrollableMessage(strMessage, "Cannot Load Language", PromptButtons.OK, PromptIcon.Error);
                     else
-                        await Program.ShowScrollableMessageBoxAsync(strMessage, "Cannot Load Language", MessageBoxButtons.OK, MessageBoxIcon.Error, token: token).ConfigureAwait(false);
+                        await UserInteraction.ShowScrollableMessageAsync(strMessage, "Cannot Load Language", PromptButtons.OK, PromptIcon.Error, token: token).ConfigureAwait(false);
                     objNewLanguage.ErrorAlreadyShown = true;
                 }
 
@@ -611,10 +610,10 @@ namespace Chummer
             }
 
             // Display the message.
-            await Program.ShowScrollableMessageBoxAsync(
+            await UserInteraction.ShowScrollableMessageAsync(
                 !string.IsNullOrEmpty(strMessage) ? strMessage : "Language file is OK.",
-                "Language File Contents", MessageBoxButtons.OK,
-                MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                "Language File Contents", PromptButtons.OK,
+                PromptIcon.Information, token: token).ConfigureAwait(false);
         }
 
         // List of arrays for XPaths to search for extras. Item1 is Document, Item2 is XPath, Item3 is the Name getter, Item4 is the Translate getter.

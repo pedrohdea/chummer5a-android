@@ -437,7 +437,7 @@ namespace Chummer.Backend.Equipment
                                    }))
                             {
                                 // ReSharper disable once MethodHasAsyncOverload
-                                if (frmPickNumber.ShowDialogSafe(_objCharacter, token) == DialogResult.Cancel)
+                                if (frmPickNumber.ShowDialogSafe(_objCharacter, token) == PromptResult.Cancel)
                                 {
                                     _guiID = Guid.Empty;
                                     return;
@@ -461,7 +461,7 @@ namespace Chummer.Backend.Equipment
                                        AllowCancel = false
                                    }, token).ConfigureAwait(false))
                             {
-                                if (await frmPickNumber.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
+                                if (await frmPickNumber.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == PromptResult.Cancel)
                                 {
                                     _guiID = Guid.Empty;
                                     return;

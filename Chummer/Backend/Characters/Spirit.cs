@@ -1150,14 +1150,14 @@ namespace Chummer
                                     !x.Fettered))
                         {
                             // Once created, new sprites/spirits are added as Unbound first. We're not permitted to have more than 1 at a time, but we only count ones that have services.
-                            Program.ShowScrollableMessageBox(
+                            UserInteraction.ShowScrollableMessage(
                                 LanguageManager.GetString(EntityType == SpiritType.Sprite
                                                               ? "Message_UnregisteredSpriteLimit"
                                                               : "Message_UnboundSpiritLimit"),
                                 LanguageManager.GetString(EntityType == SpiritType.Sprite
                                                               ? "MessageTitle_UnregisteredSpriteLimit"
                                                               : "MessageTitle_UnboundSpiritLimit"),
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                PromptButtons.OK, PromptIcon.Information);
                             return;
                         }
                     }
@@ -1172,14 +1172,14 @@ namespace Chummer
 
                         if (value > intSkillValue)
                         {
-                            Program.ShowScrollableMessageBox(
+                            UserInteraction.ShowScrollableMessage(
                                 LanguageManager.GetString(EntityType == SpiritType.Spirit
                                                               ? "Message_SpiritServices"
                                                               : "Message_SpriteServices"),
                                 LanguageManager.GetString(EntityType == SpiritType.Spirit
                                                               ? "MessageTitle_SpiritServices"
-                                                              : "MessageTitle_SpriteServices"), MessageBoxButtons.OK,
-                                MessageBoxIcon.Information);
+                                                              : "MessageTitle_SpriteServices"), PromptButtons.OK,
+                                PromptIcon.Information);
                             value = intSkillValue;
                         }
                     }
@@ -1245,14 +1245,14 @@ namespace Chummer
                                 && !await x.GetFetteredAsync(token).ConfigureAwait(false), token: token).ConfigureAwait(false))
                     {
                         // Once created, new sprites/spirits are added as Unbound first. We're not permitted to have more than 1 at a time, but we only count ones that have services.
-                        await Program.ShowScrollableMessageBoxAsync(
+                        await UserInteraction.ShowScrollableMessageAsync(
                             await LanguageManager.GetStringAsync(eType == SpiritType.Sprite
                                 ? "Message_UnregisteredSpriteLimit"
                                 : "Message_UnboundSpiritLimit", token: token).ConfigureAwait(false),
                             await LanguageManager.GetStringAsync(eType == SpiritType.Sprite
                                 ? "MessageTitle_UnregisteredSpriteLimit"
                                 : "MessageTitle_UnboundSpiritLimit", token: token).ConfigureAwait(false),
-                            MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                            PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
                         return;
                     }
                 }
@@ -1269,14 +1269,14 @@ namespace Chummer
 
                     if (value > intSkillValue)
                     {
-                        await Program.ShowScrollableMessageBoxAsync(
+                        await UserInteraction.ShowScrollableMessageAsync(
                             await LanguageManager.GetStringAsync(eType == SpiritType.Spirit
                                 ? "Message_SpiritServices"
                                 : "Message_SpriteServices", token: token).ConfigureAwait(false),
                             await LanguageManager.GetStringAsync(eType == SpiritType.Spirit
                                 ? "MessageTitle_SpiritServices"
-                                : "MessageTitle_SpriteServices", token: token).ConfigureAwait(false), MessageBoxButtons.OK,
-                            MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                                : "MessageTitle_SpriteServices", token: token).ConfigureAwait(false), PromptButtons.OK,
+                            PromptIcon.Information, token: token).ConfigureAwait(false);
                         value = intSkillValue;
                     }
                 }
@@ -1405,13 +1405,13 @@ namespace Chummer
                     {
                         string strExpression = CharacterObject.ProcessAttributesInXPathForTooltip(
                             CharacterObject.Settings.BoundSpiritExpression);
-                        Program.ShowScrollableMessageBox(
+                        UserInteraction.ShowScrollableMessage(
                             string.Format(GlobalSettings.CultureInfo,
                                 LanguageManager.GetString("Message_BoundSpiritLimit"),
                                 strExpression,
                                 CharacterObject.BoundSpiritLimit),
                             LanguageManager.GetString("MessageTitle_BoundSpiritLimit"),
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            PromptButtons.OK, PromptIcon.Information);
                         return;
                     }
                     if (CharacterObject.Created && !value && ServicesOwed > 0 && !Fettered
@@ -1421,14 +1421,14 @@ namespace Chummer
                                                            !x.Fettered))
                     {
                         // Once created, new sprites/spirits are added as Unbound first. We're not permitted to have more than 1 at a time, but we only count ones that have services.
-                        Program.ShowScrollableMessageBox(
+                        UserInteraction.ShowScrollableMessage(
                             LanguageManager.GetString(EntityType == SpiritType.Sprite
                                                           ? "Message_UnregisteredSpriteLimit"
                                                           : "Message_UnboundSpiritLimit"),
                             LanguageManager.GetString(EntityType == SpiritType.Sprite
                                                           ? "MessageTitle_UnregisteredSpriteLimit"
                                                           : "MessageTitle_UnboundSpiritLimit"),
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            PromptButtons.OK, PromptIcon.Information);
                         return;
                     }
 
@@ -1496,13 +1496,13 @@ namespace Chummer
                 {
                     string strExpression = await CharacterObject.ProcessAttributesInXPathForTooltipAsync(
                         await (await CharacterObject.GetSettingsAsync(token).ConfigureAwait(false)).GetBoundSpiritExpressionAsync(token).ConfigureAwait(false), token: token).ConfigureAwait(false);
-                    await Program.ShowScrollableMessageBoxAsync(
+                    await UserInteraction.ShowScrollableMessageAsync(
                         string.Format(GlobalSettings.CultureInfo,
                             await LanguageManager.GetStringAsync("Message_BoundSpiritLimit", token: token).ConfigureAwait(false),
                             strExpression,
                             await CharacterObject.GetBoundSpiritLimitAsync(token).ConfigureAwait(false)),
                         await LanguageManager.GetStringAsync("MessageTitle_BoundSpiritLimit", token: token).ConfigureAwait(false),
-                        MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                        PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
                     return;
                 }
                 if (await CharacterObject.GetCreatedAsync(token).ConfigureAwait(false) && !value && await GetServicesOwedAsync(token).ConfigureAwait(false) > 0 && !await GetFetteredAsync(token).ConfigureAwait(false)
@@ -1514,14 +1514,14 @@ namespace Chummer
                         && !await x.GetFetteredAsync(token).ConfigureAwait(false), token: token).ConfigureAwait(false))
                 {
                     // Once created, new sprites/spirits are added as Unbound first. We're not permitted to have more than 1 at a time, but we only count ones that have services.
-                    await Program.ShowScrollableMessageBoxAsync(
+                    await UserInteraction.ShowScrollableMessageAsync(
                         await LanguageManager.GetStringAsync(eType == SpiritType.Sprite
                             ? "Message_UnregisteredSpriteLimit"
                             : "Message_UnboundSpiritLimit", token: token).ConfigureAwait(false),
                         await LanguageManager.GetStringAsync(eType == SpiritType.Sprite
                             ? "MessageTitle_UnregisteredSpriteLimit"
                             : "MessageTitle_UnboundSpiritLimit", token: token).ConfigureAwait(false),
-                        MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                        PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
                     return;
                 }
 
@@ -1993,14 +1993,14 @@ namespace Chummer
                                      !x.Fettered))
                     {
                         // Once created, new sprites/spirits are added as Unbound first. We're not permitted to have more than 1 at a time, but we only count ones that have services.
-                        Program.ShowScrollableMessageBox(
+                        UserInteraction.ShowScrollableMessage(
                             LanguageManager.GetString(EntityType == SpiritType.Sprite
                                 ? "Message_UnregisteredSpriteLimit"
                                 : "Message_UnboundSpiritLimit"),
                             LanguageManager.GetString(EntityType == SpiritType.Sprite
                                 ? "MessageTitle_UnregisteredSpriteLimit"
                                 : "MessageTitle_UnboundSpiritLimit"),
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            PromptButtons.OK, PromptIcon.Information);
                         return;
                     }
                 }
@@ -2042,14 +2042,14 @@ namespace Chummer
                                      !x.Fettered))
                     {
                         // Once created, new sprites/spirits are added as Unbound first. We're not permitted to have more than 1 at a time, but we only count ones that have services.
-                        Program.ShowScrollableMessageBox(
+                        UserInteraction.ShowScrollableMessage(
                             LanguageManager.GetString(EntityType == SpiritType.Sprite
                                 ? "Message_UnregisteredSpriteLimit"
                                 : "Message_UnboundSpiritLimit"),
                             LanguageManager.GetString(EntityType == SpiritType.Sprite
                                 ? "MessageTitle_UnregisteredSpriteLimit"
                                 : "MessageTitle_UnboundSpiritLimit"),
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            PromptButtons.OK, PromptIcon.Information);
                         return;
                     }
 
@@ -2164,14 +2164,14 @@ namespace Chummer
                              .ConfigureAwait(false))
                 {
                     // Once created, new sprites/spirits are added as Unbound first. We're not permitted to have more than 1 at a time, but we only count ones that have services.
-                    await Program.ShowScrollableMessageBoxAsync(
+                    await UserInteraction.ShowScrollableMessageAsync(
                         await LanguageManager.GetStringAsync(eEntityType == SpiritType.Sprite
                             ? "Message_UnregisteredSpriteLimit"
                             : "Message_UnboundSpiritLimit", token: token).ConfigureAwait(false),
                         await LanguageManager.GetStringAsync(eEntityType == SpiritType.Sprite
                             ? "MessageTitle_UnregisteredSpriteLimit"
                             : "MessageTitle_UnboundSpiritLimit", token: token).ConfigureAwait(false),
-                        MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                        PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
                     return;
                 }
             }
@@ -2226,14 +2226,14 @@ namespace Chummer
                                  && !await x.GetFetteredAsync(token).ConfigureAwait(false), token: token).ConfigureAwait(false))
                 {
                     // Once created, new sprites/spirits are added as Unbound first. We're not permitted to have more than 1 at a time, but we only count ones that have services.
-                    await Program.ShowScrollableMessageBoxAsync(
+                    await UserInteraction.ShowScrollableMessageAsync(
                         await LanguageManager.GetStringAsync(eEntityType == SpiritType.Sprite
                             ? "Message_UnregisteredSpriteLimit"
                             : "Message_UnboundSpiritLimit", token: token).ConfigureAwait(false),
                         await LanguageManager.GetStringAsync(eEntityType == SpiritType.Sprite
                             ? "MessageTitle_UnregisteredSpriteLimit"
                             : "MessageTitle_UnboundSpiritLimit", token: token).ConfigureAwait(false),
-                        MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                        PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
                     return;
                 }
 
@@ -2771,12 +2771,12 @@ namespace Chummer
 
                         if (blnError && blnShowError)
                         {
-                            Program.ShowScrollableMessageBox(
+                            UserInteraction.ShowScrollableMessage(
                                 string.Format(GlobalSettings.CultureInfo,
                                               LanguageManager.GetString("Message_FileNotFound", token: token),
                                               FileName),
-                                LanguageManager.GetString("MessageTitle_FileNotFound", token: token), MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
+                                LanguageManager.GetString("MessageTitle_FileNotFound", token: token), PromptButtons.OK,
+                                PromptIcon.Error);
                         }
                     }
 
@@ -2884,14 +2884,14 @@ namespace Chummer
 
                         if (blnError && blnShowError)
                         {
-                            await Program.ShowScrollableMessageBoxAsync(
+                            await UserInteraction.ShowScrollableMessageAsync(
                                 string.Format(GlobalSettings.CultureInfo,
                                     await LanguageManager.GetStringAsync("Message_FileNotFound", token: token)
                                         .ConfigureAwait(false),
                                     strFileName),
                                 await LanguageManager.GetStringAsync("MessageTitle_FileNotFound", token: token)
-                                    .ConfigureAwait(false), MessageBoxButtons.OK,
-                                MessageBoxIcon.Error, token: token).ConfigureAwait(false);
+                                    .ConfigureAwait(false), PromptButtons.OK,
+                                PromptIcon.Error, token: token).ConfigureAwait(false);
                         }
                     }
 

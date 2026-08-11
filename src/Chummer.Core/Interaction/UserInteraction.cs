@@ -54,6 +54,26 @@ namespace Chummer
         /// </summary>
         public static PromptResult DefaultResult { get; set; } = PromptResult.OK;
 
+        public static PromptResult ShowMessage(
+            string strMessage,
+            string strCaption = "",
+            PromptButtons eButtons = PromptButtons.OK,
+            PromptIcon eIcon = PromptIcon.None,
+            PromptDefaultButton eDefaultButton = PromptDefaultButton.Button1)
+        {
+            return Current.ShowMessage(strMessage, strCaption, eButtons, eIcon, eDefaultButton);
+        }
+
+        public static PromptResult ShowScrollableMessage(
+            string strMessage,
+            string strCaption = "",
+            PromptButtons eButtons = PromptButtons.OK,
+            PromptIcon eIcon = PromptIcon.None,
+            PromptDefaultButton eDefaultButton = PromptDefaultButton.Button1)
+        {
+            return Current.ShowScrollableMessage(strMessage, strCaption, eButtons, eIcon, eDefaultButton);
+        }
+
         public static Task<PromptResult> ShowMessageAsync(
             string strMessage,
             string strCaption = "",
@@ -83,6 +103,18 @@ namespace Chummer
     /// </summary>
     public sealed class SilentUserInteraction : IUserInteraction
     {
+        public PromptResult ShowMessage(string strMessage, string strCaption,
+            PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton)
+        {
+            return UserInteraction.DefaultResult;
+        }
+
+        public PromptResult ShowScrollableMessage(string strMessage, string strCaption,
+            PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton)
+        {
+            return UserInteraction.DefaultResult;
+        }
+
         public Task<PromptResult> ShowMessageAsync(string strMessage, string strCaption,
             PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton,
             CancellationToken token)

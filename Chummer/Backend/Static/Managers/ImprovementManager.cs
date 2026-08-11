@@ -1914,7 +1914,7 @@ namespace Chummer
                                                     // ReSharper disable once MethodHasAsyncOverload
                                                     ? frmPickSkill.ShowDialogSafe(objCharacter, token)
                                                     : await frmPickSkill.ShowDialogSafeAsync(objCharacter, token).ConfigureAwait(false)) ==
-                                                DialogResult.Cancel)
+                                                PromptResult.Cancel)
                                             {
                                                 throw new AbortedException();
                                             }
@@ -2193,7 +2193,7 @@ namespace Chummer
                                 // ReSharper disable once MethodHasAsyncOverload
                                 ? frmPickSkill.ShowDialogSafe(objCharacter, token)
                                 : await frmPickSkill.ShowDialogSafeAsync(objCharacter, token).ConfigureAwait(false)) ==
-                            DialogResult.Cancel)
+                            PromptResult.Cancel)
                         {
                             throw new AbortedException();
                         }
@@ -2271,7 +2271,7 @@ namespace Chummer
                 if ((blnSync
                         ? frmPickSkillGroup.ShowDialogSafe(objCharacter, token)
                         : await frmPickSkillGroup.ShowDialogSafeAsync(objCharacter, token).ConfigureAwait(false)) ==
-                    DialogResult.Cancel)
+                    PromptResult.Cancel)
                 {
                     throw new AbortedException();
                 }
@@ -2448,7 +2448,7 @@ namespace Chummer
                                                     ? frmPickText.ShowDialogSafe(objCharacter, token)
                                                     : await frmPickText.ShowDialogSafeAsync(objCharacter, token)
                                                         .ConfigureAwait(false))
-                                                == DialogResult.Cancel)
+                                                == PromptResult.Cancel)
                                             {
                                                 if (blnSync)
                                                     // ReSharper disable once MethodHasAsyncOverload
@@ -2621,7 +2621,7 @@ namespace Chummer
                                                     ? frmSelect.ShowDialogSafe(objCharacter, token)
                                                     : await frmSelect.ShowDialogSafeAsync(objCharacter, token)
                                                         .ConfigureAwait(false);
-                                                if (eReturn == DialogResult.Cancel)
+                                                if (eReturn == PromptResult.Cancel)
                                                 {
                                                     if (blnSync)
                                                         // ReSharper disable once MethodHasAsyncOverload
@@ -6596,7 +6596,7 @@ namespace Chummer
                         : await LanguageManager.GetStringAsync("String_Improvement_SelectSpiritTypeGeneric", token: token)
                             .ConfigureAwait(false);
                     await frmSelect.MyForm.DoThreadSafeAsync(x => x.Description = strDescription, token).ConfigureAwait(false);
-                    if (await frmSelect.ShowDialogSafeAsync(objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
+                    if (await frmSelect.ShowDialogSafeAsync(objCharacter, token).ConfigureAwait(false) == PromptResult.Cancel)
                         return string.Empty;
                     return await frmSelect.MyForm.DoThreadSafeFuncAsync(x => x.SelectedItem, token).ConfigureAwait(false);
                 }

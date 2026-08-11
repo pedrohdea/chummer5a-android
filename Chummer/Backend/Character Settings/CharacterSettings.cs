@@ -1686,7 +1686,7 @@ namespace Chummer
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    Program.ShowScrollableMessageBox(LanguageManager.GetString("Message_Insufficient_Permissions_Warning", token: token));
+                    UserInteraction.ShowScrollableMessage(LanguageManager.GetString("Message_Insufficient_Permissions_Warning", token: token));
                     return false;
                 }
             }
@@ -2432,7 +2432,7 @@ namespace Chummer
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    await Program.ShowScrollableMessageBoxAsync(await LanguageManager
+                    await UserInteraction.ShowScrollableMessageAsync(await LanguageManager
                         .GetStringAsync(
                             "Message_Insufficient_Permissions_Warning", token: token)
                         .ConfigureAwait(false), token: token).ConfigureAwait(false);
@@ -3396,22 +3396,22 @@ namespace Chummer
                     catch (Exception e) when ((e is IOException) || (e is XmlException))
                     {
                         if (blnShowDialogs)
-                            Program.ShowScrollableMessageBox(
+                            UserInteraction.ShowScrollableMessage(
                                 LanguageManager.GetString("Message_CharacterOptions_CannotLoadCharacter", token: token),
                                 LanguageManager.GetString("MessageText_CharacterOptions_CannotLoadCharacter", token: token),
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
+                                PromptButtons.OK,
+                                PromptIcon.Error);
                         return false;
                     }
                 }
                 else
                 {
                     if (blnShowDialogs)
-                        Program.ShowScrollableMessageBox(
+                        UserInteraction.ShowScrollableMessage(
                             LanguageManager.GetString("Message_CharacterOptions_CannotLoadCharacter", token: token),
                             LanguageManager.GetString("MessageText_CharacterOptions_CannotLoadCharacter", token: token),
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Error);
+                            PromptButtons.OK,
+                            PromptIcon.Error);
                     return false;
                 }
 
@@ -4247,22 +4247,22 @@ namespace Chummer
                     catch (Exception e) when ((e is IOException) || (e is XmlException))
                     {
                         if (blnShowDialogs)
-                            await Program.ShowScrollableMessageBoxAsync(
+                            await UserInteraction.ShowScrollableMessageAsync(
                                 await LanguageManager.GetStringAsync("Message_CharacterOptions_CannotLoadCharacter", token: token).ConfigureAwait(false),
                                 await LanguageManager.GetStringAsync("MessageText_CharacterOptions_CannotLoadCharacter", token: token).ConfigureAwait(false),
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Error, token: token).ConfigureAwait(false);
+                                PromptButtons.OK,
+                                PromptIcon.Error, token: token).ConfigureAwait(false);
                         return false;
                     }
                 }
                 else
                 {
                     if (blnShowDialogs)
-                        await Program.ShowScrollableMessageBoxAsync(
+                        await UserInteraction.ShowScrollableMessageAsync(
                             await LanguageManager.GetStringAsync("Message_CharacterOptions_CannotLoadCharacter", token: token).ConfigureAwait(false),
                             await LanguageManager.GetStringAsync("MessageText_CharacterOptions_CannotLoadCharacter", token: token).ConfigureAwait(false),
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Error, token: token).ConfigureAwait(false);
+                            PromptButtons.OK,
+                            PromptIcon.Error, token: token).ConfigureAwait(false);
                     return false;
                 }
 

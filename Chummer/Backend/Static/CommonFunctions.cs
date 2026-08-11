@@ -1945,8 +1945,8 @@ namespace Chummer
         public static bool ConfirmDelete(string strMessage, CancellationToken token = default)
         {
             return !GlobalSettings.ConfirmDelete ||
-                   Program.ShowScrollableMessageBox(strMessage, LanguageManager.GetString("MessageTitle_Delete", token: token),
-                       MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+                   UserInteraction.ShowScrollableMessage(strMessage, LanguageManager.GetString("MessageTitle_Delete", token: token),
+                       PromptButtons.YesNo, PromptIcon.Question) == PromptResult.Yes;
         }
 
         /// <summary>
@@ -1956,8 +1956,8 @@ namespace Chummer
         {
             token.ThrowIfCancellationRequested();
             return !GlobalSettings.ConfirmDelete ||
-                   await Program.ShowScrollableMessageBoxAsync(strMessage, await LanguageManager.GetStringAsync("MessageTitle_Delete", token: token).ConfigureAwait(false),
-                       MessageBoxButtons.YesNo, MessageBoxIcon.Question, token: token).ConfigureAwait(false) == DialogResult.Yes;
+                   await UserInteraction.ShowScrollableMessageAsync(strMessage, await LanguageManager.GetStringAsync("MessageTitle_Delete", token: token).ConfigureAwait(false),
+                       PromptButtons.YesNo, PromptIcon.Question, token: token).ConfigureAwait(false) == PromptResult.Yes;
         }
 
         /// <summary>
@@ -1966,8 +1966,8 @@ namespace Chummer
         public static bool ConfirmKarmaExpense(string strMessage, CancellationToken token = default)
         {
             return !GlobalSettings.ConfirmKarmaExpense ||
-                   Program.ShowScrollableMessageBox(strMessage, LanguageManager.GetString("MessageTitle_ConfirmKarmaExpense", token: token),
-                       MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+                   UserInteraction.ShowScrollableMessage(strMessage, LanguageManager.GetString("MessageTitle_ConfirmKarmaExpense", token: token),
+                       PromptButtons.YesNo, PromptIcon.Question) == PromptResult.Yes;
         }
 
         /// <summary>
@@ -1977,8 +1977,8 @@ namespace Chummer
         {
             token.ThrowIfCancellationRequested();
             return !GlobalSettings.ConfirmKarmaExpense ||
-                   await Program.ShowScrollableMessageBoxAsync(strMessage, await LanguageManager.GetStringAsync("MessageTitle_ConfirmKarmaExpense", token: token).ConfigureAwait(false),
-                       MessageBoxButtons.YesNo, MessageBoxIcon.Question, token: token).ConfigureAwait(false) == DialogResult.Yes;
+                   await UserInteraction.ShowScrollableMessageAsync(strMessage, await LanguageManager.GetStringAsync("MessageTitle_ConfirmKarmaExpense", token: token).ConfigureAwait(false),
+                       PromptButtons.YesNo, PromptIcon.Question, token: token).ConfigureAwait(false) == PromptResult.Yes;
         }
 
         public static Task<XmlDocument> GenerateCharactersExportXml(CultureInfo objCultureInfo, string strLanguage, params Character[] lstCharacters)
@@ -2141,8 +2141,8 @@ namespace Chummer
             // The user must have specified the arguments of their PDF application in order to use this functionality.
             while (string.IsNullOrWhiteSpace(strPdfParameters) || string.IsNullOrWhiteSpace(strPdfAppPath) || !File.Exists(strPdfAppPath))
             {
-                if (!blnOpenOptions || await Program.ShowScrollableMessageBoxAsync(await LanguageManager.GetStringAsync("Message_NoPDFProgramSet", token: token).ConfigureAwait(false),
-                        await LanguageManager.GetStringAsync("MessageTitle_NoPDFProgramSet", token: token).ConfigureAwait(false), MessageBoxButtons.YesNo, MessageBoxIcon.Question, token: token).ConfigureAwait(false) != DialogResult.Yes)
+                if (!blnOpenOptions || await UserInteraction.ShowScrollableMessageAsync(await LanguageManager.GetStringAsync("Message_NoPDFProgramSet", token: token).ConfigureAwait(false),
+                        await LanguageManager.GetStringAsync("MessageTitle_NoPDFProgramSet", token: token).ConfigureAwait(false), PromptButtons.YesNo, PromptIcon.Question, token: token).ConfigureAwait(false) != PromptResult.Yes)
                     return;
                 CursorWait objCursorWait = await CursorWait.NewAsync(Program.MainForm, token: token).ConfigureAwait(false);
                 try
@@ -2153,7 +2153,7 @@ namespace Chummer
                         if (string.IsNullOrWhiteSpace(strPdfAppPath) || !File.Exists(strPdfAppPath))
                             // ReSharper disable once AccessToDisposedClosure
                             await frmOptions.MyForm.DoLinkPdfReader(token).ConfigureAwait(false);
-                        if (await frmOptions.ShowDialogSafeAsync(Program.MainForm, token).ConfigureAwait(false) != DialogResult.OK)
+                        if (await frmOptions.ShowDialogSafeAsync(Program.MainForm, token).ConfigureAwait(false) != PromptResult.OK)
                             return;
                         strPdfParameters = GlobalSettings.PdfParameters;
                         strPdfAppPath = GlobalSettings.PdfAppPath;
@@ -2238,8 +2238,8 @@ namespace Chummer
             {
                 if (!blnOpenOptions)
                     return;
-                if (await Program.ShowScrollableMessageBoxAsync(string.Format(GlobalSettings.CultureInfo, await LanguageManager.GetStringAsync("Message_NoLinkedPDF", token: token).ConfigureAwait(false), await LanguageBookLongAsync(strBook, token: token).ConfigureAwait(false)),
-                        await LanguageManager.GetStringAsync("MessageTitle_NoLinkedPDF", token: token).ConfigureAwait(false), MessageBoxButtons.YesNo, MessageBoxIcon.Question, token: token).ConfigureAwait(false) != DialogResult.Yes)
+                if (await UserInteraction.ShowScrollableMessageAsync(string.Format(GlobalSettings.CultureInfo, await LanguageManager.GetStringAsync("Message_NoLinkedPDF", token: token).ConfigureAwait(false), await LanguageBookLongAsync(strBook, token: token).ConfigureAwait(false)),
+                        await LanguageManager.GetStringAsync("MessageTitle_NoLinkedPDF", token: token).ConfigureAwait(false), PromptButtons.YesNo, PromptIcon.Question, token: token).ConfigureAwait(false) != PromptResult.Yes)
                     return;
                 CursorWait objCursorWait = await CursorWait.NewAsync(Program.MainForm, token: token).ConfigureAwait(false);
                 try
@@ -2249,7 +2249,7 @@ namespace Chummer
                     {
                         // ReSharper disable once AccessToDisposedClosure
                         await frmOptions.MyForm.DoLinkPdf(objBookInfo.Code, token).ConfigureAwait(false);
-                        if (await frmOptions.ShowDialogSafeAsync(Program.MainForm, token).ConfigureAwait(false) != DialogResult.OK)
+                        if (await frmOptions.ShowDialogSafeAsync(Program.MainForm, token).ConfigureAwait(false) != PromptResult.OK)
                             return;
                         uriPath = null;
                         try

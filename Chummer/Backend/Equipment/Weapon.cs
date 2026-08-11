@@ -622,7 +622,7 @@ namespace Chummer.Backend.Equipment
                                        }))
                             {
                                 // ReSharper disable once MethodHasAsyncOverload
-                                if (frmPickNumber.ShowDialogSafe(_objCharacter, token) == DialogResult.Cancel)
+                                if (frmPickNumber.ShowDialogSafe(_objCharacter, token) == PromptResult.Cancel)
                                 {
                                     _guiID = Guid.Empty;
                                     return;
@@ -651,7 +651,7 @@ namespace Chummer.Backend.Equipment
                                        }, token).ConfigureAwait(false))
                             {
                                 if (await frmPickNumber.ShowDialogSafeAsync(_objCharacter, token)
-                                        .ConfigureAwait(false) == DialogResult.Cancel)
+                                        .ConfigureAwait(false) == PromptResult.Cancel)
                                 {
                                     _guiID = Guid.Empty;
                                     return;
@@ -13501,29 +13501,29 @@ namespace Chummer.Backend.Equipment
                 // Cyberweapons cannot be removed through here and must be done by removing the piece of Cyberware.
                 if (Cyberware)
                 {
-                    Program.ShowScrollableMessageBox(
+                    UserInteraction.ShowScrollableMessage(
                         LanguageManager.GetString("Message_CannotRemoveCyberweapon"),
                         LanguageManager.GetString("MessageTitle_CannotRemoveCyberweapon"),
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        PromptButtons.OK, PromptIcon.Information);
                     return false;
                 }
 
                 // Qualities cannot be removed through here and must be done by removing the piece of Cyberware.
                 if (Category.StartsWith("Quality", StringComparison.Ordinal))
                 {
-                    Program.ShowScrollableMessageBox(
+                    UserInteraction.ShowScrollableMessage(
                         LanguageManager.GetString("Message_CannotRemoveQualityWeapon"),
                         LanguageManager.GetString("MessageTitle_CannotRemoveQualityWeapon"),
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        PromptButtons.OK, PromptIcon.Information);
                     return false;
                 }
 
                 if (Category == "Gear")
                 {
-                    Program.ShowScrollableMessageBox(
+                    UserInteraction.ShowScrollableMessage(
                         LanguageManager.GetString(ParentVehicle != null ? "Message_CannotRemoveGearWeaponVehicle" : "Message_CannotRemoveGearWeapon"),
                         LanguageManager.GetString("MessageTitle_CannotRemoveGearWeapon"),
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        PromptButtons.OK, PromptIcon.Information);
                     return false;
                 }
 

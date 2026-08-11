@@ -1051,7 +1051,7 @@ namespace Chummer
                                () => new SelectMartialArt(objCharacter), token).ConfigureAwait(false))
                     {
                         if (await frmPickMartialArt.ShowDialogSafeAsync(objCharacter, token).ConfigureAwait(false) ==
-                            DialogResult.Cancel)
+                            PromptResult.Cancel)
                             return blnReturn;
 
                         blnAddAgain = frmPickMartialArt.MyForm.AddAgain;
@@ -1071,14 +1071,14 @@ namespace Chummer
                                 int intKarmaCost = objMartialArt.Cost;
                                 if (intKarmaCost > await objCharacter.GetKarmaAsync(token).ConfigureAwait(false))
                                 {
-                                    await Program.ShowScrollableMessageBoxAsync(
+                                    await UserInteraction.ShowScrollableMessageAsync(
                                         await LanguageManager.GetStringAsync("Message_NotEnoughKarma", token: token)
                                             .ConfigureAwait(false),
                                         await LanguageManager
                                             .GetStringAsync("MessageTitle_NotEnoughKarma", token: token)
                                             .ConfigureAwait(false),
-                                        MessageBoxButtons.OK,
-                                        MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                                        PromptButtons.OK,
+                                        PromptIcon.Information, token: token).ConfigureAwait(false);
                                     await ImprovementManager.RemoveImprovementsAsync(
                                         objCharacter, Improvement.ImprovementSource.MartialArt,
                                         objMartialArt.InternalId,

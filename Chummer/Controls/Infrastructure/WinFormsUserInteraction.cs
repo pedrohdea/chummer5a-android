@@ -33,6 +33,20 @@ namespace Chummer
     /// </summary>
     public sealed class WinFormsUserInteraction : IUserInteraction
     {
+        public PromptResult ShowMessage(string strMessage, string strCaption,
+            PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton)
+        {
+            return ToPromptResult(Program.ShowMessageBox(
+                strMessage, strCaption, ToButtons(eButtons), ToIcon(eIcon), ToDefaultButton(eDefaultButton)));
+        }
+
+        public PromptResult ShowScrollableMessage(string strMessage, string strCaption,
+            PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton)
+        {
+            return ToPromptResult(Program.ShowScrollableMessageBox(
+                strMessage, strCaption, ToButtons(eButtons), ToIcon(eIcon), ToDefaultButton(eDefaultButton)));
+        }
+
         public async Task<PromptResult> ShowMessageAsync(string strMessage, string strCaption,
             PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton,
             CancellationToken token)

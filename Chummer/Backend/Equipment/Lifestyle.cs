@@ -650,7 +650,7 @@ namespace Chummer.Backend.Equipment
                                 frmSelect.MyForm.SetGeneralItemsMode(lstQualities);
                                 // ReSharper disable once MethodHasAsyncOverload
                                 if ((blnSync ? frmSelect.ShowDialogSafe(_objCharacter, token) : await frmSelect.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false))
-                                    == DialogResult.Cancel)
+                                    == PromptResult.Cancel)
                                 {
                                     _guiID = Guid.Empty;
                                     return;
@@ -4571,10 +4571,10 @@ namespace Chummer.Backend.Equipment
                 decimal decAmount = await GetTotalMonthlyCostAsync(token: token).ConfigureAwait(false);
                 if (decAmount > await _objCharacter.GetNuyenAsync(token).ConfigureAwait(false))
                 {
-                    await Program.ShowScrollableMessageBoxAsync(
+                    await UserInteraction.ShowScrollableMessageAsync(
                         await LanguageManager.GetStringAsync("Message_NotEnoughNuyen", token: token).ConfigureAwait(false),
                         await LanguageManager.GetStringAsync("MessageTitle_NotEnoughNuyen", token: token).ConfigureAwait(false),
-                        MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                        PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
                     return;
                 }
 

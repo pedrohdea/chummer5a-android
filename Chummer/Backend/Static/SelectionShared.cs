@@ -23,7 +23,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using Chummer.Backend.Attributes;
@@ -231,25 +230,25 @@ namespace Chummer
                         if (blnSync)
                         {
                             // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                            Program.ShowScrollableMessageBox(
+                            UserInteraction.ShowScrollableMessage(
                                 string.Format(GlobalSettings.CultureInfo,
                                     // ReSharper disable once MethodHasAsyncOverload
                                     LanguageManager.GetString("Message_SelectGeneric_ChargenRestriction", token: token),
                                     strLocalName),
                                 // ReSharper disable once MethodHasAsyncOverload
                                 string.Format(GlobalSettings.CultureInfo, LanguageManager.GetString("MessageTitle_SelectGeneric_Restriction", token: token), strLocalName),
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                PromptButtons.OK, PromptIcon.Information);
                         }
                         else
                         {
-                            await Program.ShowScrollableMessageBoxAsync(
+                            await UserInteraction.ShowScrollableMessageAsync(
                                 string.Format(GlobalSettings.CultureInfo,
                                     await LanguageManager.GetStringAsync("Message_SelectGeneric_ChargenRestriction", token: token)
                                         .ConfigureAwait(false),
                                     strLocalName),
                                 string.Format(GlobalSettings.CultureInfo, await LanguageManager.GetStringAsync("MessageTitle_SelectGeneric_Restriction", token: token)
                                     .ConfigureAwait(false), strLocalName),
-                                MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                                PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
                         }
                     }
 
@@ -266,25 +265,25 @@ namespace Chummer
                         if (blnSync)
                         {
                             // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                            Program.ShowScrollableMessageBox(
+                            UserInteraction.ShowScrollableMessage(
                                 string.Format(GlobalSettings.CultureInfo,
                                     // ReSharper disable once MethodHasAsyncOverload
                                     LanguageManager.GetString("Message_SelectGeneric_CareerOnlyRestriction", token: token),
                                     strLocalName),
                                 // ReSharper disable once MethodHasAsyncOverload
                                 string.Format(GlobalSettings.CultureInfo, LanguageManager.GetString("MessageTitle_SelectGeneric_Restriction", token: token), strLocalName),
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                PromptButtons.OK, PromptIcon.Information);
                         }
                         else
                         {
-                            await Program.ShowScrollableMessageBoxAsync(
+                            await UserInteraction.ShowScrollableMessageAsync(
                                 string.Format(GlobalSettings.CultureInfo,
                                     await LanguageManager.GetStringAsync("Message_SelectGeneric_CareerOnlyRestriction", token: token)
                                         .ConfigureAwait(false),
                                     strLocalName),
                                 string.Format(GlobalSettings.CultureInfo, await LanguageManager.GetStringAsync("MessageTitle_SelectGeneric_Restriction", token: token)
                                     .ConfigureAwait(false), strLocalName),
-                                MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                                PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
                         }
                     }
 
@@ -299,25 +298,25 @@ namespace Chummer
                         if (blnSync)
                         {
                             // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                            Program.ShowScrollableMessageBox(
+                            UserInteraction.ShowScrollableMessage(
                                 string.Format(GlobalSettings.CultureInfo,
                                     // ReSharper disable once MethodHasAsyncOverload
                                     LanguageManager.GetString("Message_SelectGeneric_PriorityRestriction", token: token),
                                     strLocalName),
                                 // ReSharper disable once MethodHasAsyncOverload
                                 string.Format(GlobalSettings.CultureInfo, LanguageManager.GetString("MessageTitle_SelectGeneric_Restriction", token: token), strLocalName),
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                PromptButtons.OK, PromptIcon.Information);
                         }
                         else
                         {
-                            await Program.ShowScrollableMessageBoxAsync(
+                            await UserInteraction.ShowScrollableMessageAsync(
                                 string.Format(GlobalSettings.CultureInfo,
                                     await LanguageManager.GetStringAsync("Message_SelectGeneric_PriorityRestriction", token: token)
                                         .ConfigureAwait(false),
                                     strLocalName),
                                 string.Format(GlobalSettings.CultureInfo, await LanguageManager.GetStringAsync("MessageTitle_SelectGeneric_Restriction", token: token)
                                     .ConfigureAwait(false), strLocalName),
-                                MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                                PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
                         }
                     }
 
@@ -625,25 +624,25 @@ namespace Chummer
                             if (blnSync)
                             {
                                 // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                                Program.ShowScrollableMessageBox(
+                                UserInteraction.ShowScrollableMessage(
                                     string.Format(GlobalSettings.CultureInfo,
                                         // ReSharper disable once MethodHasAsyncOverload
                                         LanguageManager.GetString("Message_SelectGeneric_Limit", token: token),
                                         strLocalName, intLimit == 0 ? 1 : intLimit),
                                     // ReSharper disable once MethodHasAsyncOverload
                                     string.Format(GlobalSettings.CultureInfo, LanguageManager.GetString("MessageTitle_SelectGeneric_Limit", token: token), strLocalName),
-                                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    PromptButtons.OK, PromptIcon.Information);
                             }
                             else
                             {
-                                await Program.ShowScrollableMessageBoxAsync(
+                                await UserInteraction.ShowScrollableMessageAsync(
                                     string.Format(GlobalSettings.CultureInfo,
                                         await LanguageManager.GetStringAsync("Message_SelectGeneric_Limit", token: token)
                                             .ConfigureAwait(false),
                                         strLocalName, intLimit == 0 ? 1 : intLimit),
                                     string.Format(GlobalSettings.CultureInfo, await LanguageManager.GetStringAsync("MessageTitle_SelectGeneric_Limit", token: token)
                                         .ConfigureAwait(false), strLocalName),
-                                    MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                                    PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
                             }
                         }
 
@@ -675,25 +674,25 @@ namespace Chummer
                                 if (blnSync)
                                 {
                                     // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                                    Program.ShowScrollableMessageBox(
+                                    UserInteraction.ShowScrollableMessage(
                                         string.Format(GlobalSettings.CultureInfo,
                                             // ReSharper disable once MethodHasAsyncOverload
                                             LanguageManager.GetString("Message_SelectGeneric_Restriction", token: token),
                                             strLocalName) + strName,
                                         // ReSharper disable once MethodHasAsyncOverload
                                         string.Format(GlobalSettings.CultureInfo, LanguageManager.GetString("MessageTitle_SelectGeneric_Restriction", token: token), strLocalName),
-                                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                        PromptButtons.OK, PromptIcon.Information);
                                 }
                                 else
                                 {
-                                    await Program.ShowScrollableMessageBoxAsync(
+                                    await UserInteraction.ShowScrollableMessageAsync(
                                         string.Format(GlobalSettings.CultureInfo,
                                             await LanguageManager.GetStringAsync("Message_SelectGeneric_Restriction", token: token)
                                                 .ConfigureAwait(false),
                                             strLocalName) + strName,
                                         string.Format(GlobalSettings.CultureInfo, await LanguageManager.GetStringAsync("MessageTitle_SelectGeneric_Restriction", token: token)
                                             .ConfigureAwait(false), strLocalName),
-                                        MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                                        PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
                                 }
                             }
 
@@ -820,25 +819,25 @@ namespace Chummer
                             if (blnSync)
                             {
                                 // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                                Program.ShowScrollableMessageBox(
+                                UserInteraction.ShowScrollableMessage(
                                     string.Format(GlobalSettings.CultureInfo,
                                         // ReSharper disable once MethodHasAsyncOverload
                                         LanguageManager.GetString("Message_SelectGeneric_Restriction", token: token),
                                         strLocalName) + sbdRequirement.ToString(),
                                     // ReSharper disable once MethodHasAsyncOverload
                                     string.Format(GlobalSettings.CultureInfo, LanguageManager.GetString("MessageTitle_SelectGeneric_Restriction", token: token), strLocalName),
-                                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    PromptButtons.OK, PromptIcon.Information);
                             }
                             else
                             {
-                                await Program.ShowScrollableMessageBoxAsync(
+                                await UserInteraction.ShowScrollableMessageAsync(
                                     string.Format(GlobalSettings.CultureInfo,
                                         await LanguageManager.GetStringAsync("Message_SelectGeneric_Restriction", token: token)
                                             .ConfigureAwait(false),
                                         strLocalName) + sbdRequirement.ToString(),
                                     string.Format(GlobalSettings.CultureInfo, await LanguageManager.GetStringAsync("MessageTitle_SelectGeneric_Restriction", token: token)
                                         .ConfigureAwait(false), strLocalName),
-                                    MessageBoxButtons.OK, MessageBoxIcon.Information, token: token).ConfigureAwait(false);
+                                    PromptButtons.OK, PromptIcon.Information, token: token).ConfigureAwait(false);
                             }
                         }
 

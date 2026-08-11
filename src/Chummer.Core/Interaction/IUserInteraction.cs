@@ -39,6 +39,32 @@ namespace Chummer
     public interface IUserInteraction
     {
         /// <summary>
+        /// Versão síncrona de <see cref="ShowMessageAsync"/>.
+        ///
+        /// Existe porque o domínio tem 73 pontos de chamada síncronos, e convertê-los a
+        /// async agora misturaria a extração do núcleo (Etapa 2) com o saneamento do modelo
+        /// assíncrono (Etapa 5). A dualidade é deliberada e temporária: a Etapa 5 remove a
+        /// metade síncrona junto com as outras 279 execuções síncronas de código async.
+        /// Ver DEC-028.
+        /// </summary>
+        PromptResult ShowMessage(
+            string strMessage,
+            string strCaption = "",
+            PromptButtons eButtons = PromptButtons.OK,
+            PromptIcon eIcon = PromptIcon.None,
+            PromptDefaultButton eDefaultButton = PromptDefaultButton.Button1);
+
+        /// <summary>
+        /// Versão síncrona de <see cref="ShowScrollableMessageAsync"/>. Ver DEC-028.
+        /// </summary>
+        PromptResult ShowScrollableMessage(
+            string strMessage,
+            string strCaption = "",
+            PromptButtons eButtons = PromptButtons.OK,
+            PromptIcon eIcon = PromptIcon.None,
+            PromptDefaultButton eDefaultButton = PromptDefaultButton.Button1);
+
+        /// <summary>
         /// Mostra uma mensagem e devolve o que o usuário respondeu.
         /// </summary>
         Task<PromptResult> ShowMessageAsync(
