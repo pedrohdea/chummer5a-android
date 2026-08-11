@@ -26,8 +26,12 @@ sem necessidade de rodar nos aparelhos dos outros jogadores.
 **Efeito:** PREM-003 confirmada e **rebaixada de 🔴 para 🟢**. A estratégia "carrega tudo e
 cacheia", que é a que o Chummer já usa, fica mantida. Deixa de existir frente bloqueada.
 
-**Pendente ainda:** o modelo do aparelho, para o spike de desempenho da Etapa 4 (QA-002).
-Não bloqueia — na falta do modelo, meço no desktop e reporto o consumo absoluto.
+**Complemento (2026-08-11):** o PO informou o modelo — **Samsung Galaxy A56** (Exynos 1580,
+6/8/12 GB conforme variante, Android 15). Pendência **encerrada**.
+
+O aparelho é confortável, mas ver PREM-003: o risco real não é a RAM do dispositivo e sim o
+limite de heap por processo que o Android impõe, que fica na casa das centenas de MB
+independentemente do total instalado.
 
 ---
 

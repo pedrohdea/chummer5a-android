@@ -44,7 +44,7 @@ com atualização deliberada do artefato dourado.
 
 ---
 
-## PREM-003 — Alvo: Android intermediário, 4–6 GB de RAM · CONFIRMADA 🟡
+## PREM-003 — Alvo: Samsung Galaxy A56 · CONFIRMADA 🟡
 **Criada:** 2026-08-11 · **Pendência:** PEND-001
 
 Assumido até haver resposta. Com isso, a estratégia de dados é a atual do Chummer:
@@ -61,10 +61,28 @@ tudo e cacheia" fica mantida, e não há mais frente bloqueada.
 não um aparelho folgado, como a primeira resposta sugeria. A estratégia "carrega tudo e
 cacheia" segue mantida, mas a margem é menor do que eu havia assumido.
 
-**Por isso a marca subiu de 🟢 para 🟡 e o spike de desempenho da Etapa 4 subiu de
-prioridade:** 21 MB de XML mais a árvore de objetos num aparelho intermediário precisa de
-medição real, não de extrapolação. Vou reportar tempo de abertura e pico de memória em
-números absolutos antes de dar a estratégia por boa.
+**Especificado em 2026-08-11:** **Samsung Galaxy A56**. Exynos 1580 (4 nm, núcleo principal
+a 2,91 GHz), **6, 8 ou 12 GB de RAM** conforme a variante, Android 15 com One UI 7, lançado
+em março de 2025 e com seis anos de atualizações prometidas.
+
+**A marca continua 🟡, mas por um motivo diferente do que eu supunha.** O aparelho é
+folgado; o problema não é a RAM do dispositivo, é o **limite de heap por aplicativo** que o
+Android impõe. Um aparelho com 8 GB não dá 8 GB ao processo — o limite típico fica entre
+256 e 512 MB, e `largeHeap` no manifesto empurra o teto, não o remove.
+
+O que precisa ser medido, portanto, não é "cabe na memória do celular" e sim:
+
+- quanto o DOM dos 21 MB de XML ocupa em memória gerenciada (documentos XML costumam
+  expandir várias vezes sobre o texto cru);
+- quanto disso se multiplica pelo cache do `XmlManager`, que guarda **um documento mesclado
+  por combinação de idioma × custom data** (ver `docs/codebase/05-sistema-dados.md`);
+- quanto sobra para a árvore do personagem, que num caso extremo do repositório chega a
+  5,7 MB de arquivo.
+
+Se o total se aproximar do teto de heap, a estratégia "carrega tudo e cacheia" cai e o
+acesso sob demanda com índice volta à mesa — o mesmo risco de antes, com outra causa.
+
+DEC-021 (retratos como bytes, sem decodificar) já ajuda nessa conta.
 
 ---
 

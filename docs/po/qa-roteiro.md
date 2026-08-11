@@ -40,12 +40,18 @@ mesa.
 ---
 
 ## QA-002 — Desempenho de abertura no aparelho · AGUARDANDO
-**Etapa:** 4 (assets) · **Alimenta:** PEND-001
+**Etapa:** 4 (assets) · **Aparelho:** Samsung Galaxy A56
 
-Quanto tempo leva do toque no ícone até o personagem na tela, no seu aparelho real.
+Quanto tempo leva do toque no ícone até o personagem na tela.
 
 **Critério que proponho:** até 5 s é aceitável; acima de 10 s é reprovado e obriga a mudar a
 estratégia de carga de dados.
+
+**O que eu meço junto, e importa mais:** pico de memória gerenciada contra o limite de heap
+do processo. O A56 tem RAM de sobra, mas o Android limita cada aplicativo a algo entre 256 e
+512 MB. Se o DOM dos 21 MB de XML mais o cache do `XmlManager` chegarem perto disso, o
+aplicativo é encerrado sem aviso — e isso não aparece como lentidão, aparece como o app
+fechando sozinho.
 
 ---
 
