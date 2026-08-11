@@ -518,3 +518,66 @@ ciclo.
 Implementação pendente: toca `IHasMugshots`, `Character`, `Contact`, `Spirit`,
 `CharacterCache` e `GlobalSettings`.
 
+---
+
+## DEC-022 — O censo tem dois modos, porque são dois usos · VIGENTE
+**2026-08-11**
+
+Proposta do PO: *"faça fail-fast no caso de teste para ganhar velocidade — normalmente o
+quadro parcial do erro é suficiente para gerar correções."*
+
+**Avaliação: diagnóstico certo, remédio mirando o lugar errado.** Medido antes de opinar:
+
+| Operação | Tempo |
+|---|---|
+| Censo completo, como estava | **27 s** |
+| Recompilar o mesmo projeto, sem restore | **4 s** |
+
+**23 dos 27 segundos não eram compilação.** Eram o `rm -rf`, a recriação do `.csproj` e o
+restore do NuGet que o script fazia a cada execução. Fail-fast atacaria uma fração dos 4
+segundos restantes.
+
+Some-se a isso um fato da plataforma: **o compilador C# não tem `/maxerrors`**. O limite de
+100 erros que aparece na documentação da Microsoft é do Visual Basic. Fail-fast no nível do
+`csc` não é sequer possível — só dá para truncar a saída depois, o que é apresentação e não
+desempenho.
+
+**A parte da afirmação que está certa, e importa:** ler 367 erros para achar os 3 que
+interessam é desperdício **cognitivo**, mesmo que a compilação leve 1 segundo. O gargalo
+real do laço interno é volume de saída, não tempo de máquina.
+
+### O que foi feito
+
+**Sondagem persistente.** O `.csproj` só é reescrito quando muda de conteúdo, o que permite
+ao `dotnet` reusar `obj/` e pular o restore.
+
+**Dois modos, com propósitos distintos:**
+
+```bash
+./scripts/censo-erros.sh                  # mede: relatório completo e total
+./scripts/censo-erros.sh --rapido         # guia: os primeiros erros
+./scripts/censo-erros.sh --rapido Weapon  # guia: filtrado por arquivo
+```
+
+O modo completo é a **barra de progresso da Etapa 2** e precisa do número inteiro — aplicar
+fail-fast nele destruiria exatamente aquilo para o que ele existe. O modo rápido serve ao
+laço de correção, onde o total é irrelevante.
+
+Conflacionar os dois era erro meu de desenho, e foi o que a proposta do PO expôs.
+
+### Resultado medido
+
+| Cenário | Antes | Depois |
+|---|---|---|
+| Partida fria | 27 s | 5 s |
+| Execução seguinte | 27 s | **1 s** |
+| Filtrado por arquivo | não existia | 2 s |
+
+**27× mais rápido no laço interno**, sem perder a medição completa.
+
+### A lição geral
+
+A proposta partia de uma intuição correta — havia velocidade a ganhar — e de um palpite
+sobre a causa. Medir antes de implementar mostrou que a causa era outra, e o ganho real
+acabou **muito maior** do que o que a proposta original teria produzido.
+
