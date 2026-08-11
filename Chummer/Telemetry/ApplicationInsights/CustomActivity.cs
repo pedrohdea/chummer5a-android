@@ -26,7 +26,7 @@ using Microsoft.ApplicationInsights.DataContracts;
 namespace Chummer
 {
     [CLSCompliant(false)]
-    public sealed class CustomActivity : Activity
+    public sealed class CustomActivity : Activity, ITelemetryActivity
     {
         [CLSCompliant(false)]
         //public IOperationHolder<DependencyTelemetry> myOperationDependencyHolder { get; set; }
@@ -117,6 +117,18 @@ namespace Chummer
         {
             SetParent(operationName, parentActivity);
             Start();
+        }
+
+        /// <summary>
+        /// Implementa <see cref="ITelemetryActivity"/>: nomeia tipo e alvo da operação sem
+        /// expor DependencyTelemetry, que é tipo de Application Insights, ao domínio.
+        /// </summary>
+        public void SetOperationTarget(string strType, string strTarget)
+        {
+            if (MyDependencyTelemetry == null)
+                return;
+            MyDependencyTelemetry.Type = strType;
+            MyDependencyTelemetry.Target = strTarget;
         }
 
         public void SetSuccess(bool success)

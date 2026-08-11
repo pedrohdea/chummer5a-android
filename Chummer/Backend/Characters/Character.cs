@@ -49340,8 +49340,7 @@ namespace Chummer
                     try
                     {
                         token.ThrowIfCancellationRequested();
-                        op_load.MyDependencyTelemetry.Type = "loadHeroLab";
-                        op_load.MyDependencyTelemetry.Target = strPorFile;
+                        op_load.SetOperationTarget("loadHeroLab", strPorFile);
 
                         try
                         {
