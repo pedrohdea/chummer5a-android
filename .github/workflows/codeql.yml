@@ -63,7 +63,16 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    # Fixa a versão do SDK em vez de depender do que vem pré-instalado na imagem do
+    # runner, espelhando o nightly-build.yml. Sem isto, a seleção de SDK fica à mercê da
+    # imagem e do rollForward do global.json, e o job passa a falhar sozinho quando a
+    # imagem muda.
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
@@ -90,10 +99,20 @@ jobs:
     #   If the Autobuild fails above, remove it and uncomment the following three lines.
     #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
 
+    # Compila com o dotnet CLI, sem caminho fixo para o MSBuild.exe do Visual Studio.
+    #
+    # O passo anterior invocava
+    #   C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\bin\MSBuild.exe
+    # que deixou de existir nas imagens atuais do runner windows-latest, derrubando o job
+    # com "The term ... is not recognized" logo após um restore bem-sucedido.
+    #
+    # Esta é a mesma invocação que o nightly-build.yml já usa para compilar a Chummer.sln
+    # (projetos SDK-style com alvo net48 compilam pelo dotnet CLI), o que elimina a
+    # dependência de uma edição específica do Visual Studio estar instalada.
     - run: |
         echo "Run, Build Application using script"
-        dotnet msbuild /t:Restore /p:configuration=Release ./Chummer.sln
-        & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\bin\MSBuild.exe" /t:Build /p:configuration=Release ./Chummer.sln
+        dotnet restore ./Chummer.sln
+        dotnet build ./Chummer.sln --configuration Release --no-restore --verbosity minimal
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
