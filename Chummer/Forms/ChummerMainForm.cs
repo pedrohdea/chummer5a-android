@@ -672,8 +672,8 @@ namespace Chummer
                     = await CursorWait.NewAsync(this, token: _objGenericToken).ConfigureAwait(false);
                 try
                 {
-                    using (CustomActivity opFrmChummerMain = Timekeeper.StartSyncron(
-                               "frmChummerMain_Load", null, CustomActivity.OperationType.DependencyOperation,
+                    using (CustomActivity opFrmChummerMain = (CustomActivity)Timekeeper.StartSyncron(
+                               "frmChummerMain_Load", null, TelemetryOperationType.DependencyOperation,
                                _strCurrentVersion))
                     {
                         try

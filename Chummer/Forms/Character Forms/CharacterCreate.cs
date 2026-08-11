@@ -300,8 +300,8 @@ namespace Chummer
                     try
                     {
                         Task tskAutosave = Task.CompletedTask; // Separate out the autosave task so that we can work on it while the UI is drawing
-                        using (CustomActivity op_load_frm_create = Timekeeper.StartSyncron(
-                                   "load_frm_create", null, CustomActivity.OperationType.RequestOperation,
+                        using (CustomActivity op_load_frm_create = (CustomActivity)Timekeeper.StartSyncron(
+                                   "load_frm_create", null, TelemetryOperationType.RequestOperation,
                                    CharacterObject != null ? await CharacterObject.GetFileNameAsync(GenericToken).ConfigureAwait(false) : string.Empty))
                         {
                             await this.DoThreadSafeAsync(x => x.SuspendLayout(), GenericToken).ConfigureAwait(false);
@@ -1555,7 +1555,7 @@ namespace Chummer
                                     }
 
                                     using (CustomActivity op_load_frm_create_longloads
-                                           = Timekeeper.StartSyncron("load_frm_create_longloads",
+                                           = (CustomActivity)Timekeeper.StartSyncron("load_frm_create_longloads",
                                                op_load_frm_create))
                                     {
                                         using (Timekeeper.StartSyncron(

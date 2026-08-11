@@ -6204,8 +6204,8 @@ namespace Chummer
                     LoadAsDirty = false;
                 else
                     await SetLoadAsDirtyAsync(false, token).ConfigureAwait(false);
-                using (CustomActivity loadActivity = Timekeeper.StartSyncron("clsCharacter.Load", null,
-                                                                             CustomActivity.OperationType
+                using (Activity loadActivity = Timekeeper.StartSyncron("clsCharacter.Load", null,
+                                                                             TelemetryOperationType
                                                                                  .DependencyOperation, strFileName))
                 {
                     try
@@ -49333,8 +49333,8 @@ namespace Chummer
                 XPathNavigator xmlStatBlockDocument = null;
                 XPathNavigator xmlLeadsDocument = null;
                 List<string> lstTextStatBlockLines = null;
-                using (CustomActivity op_load = Timekeeper.StartSyncron("LoadFromHeroLabFile", null,
-                                                                        CustomActivity.OperationType
+                using (Activity op_load = Timekeeper.StartSyncron("LoadFromHeroLabFile", null,
+                                                                        TelemetryOperationType
                                                                             .DependencyOperation, strPorFile))
                 {
                     try
@@ -50494,7 +50494,7 @@ namespace Chummer
                                 //Timekeeper.Finish("load_char_misc2");
                             }
 
-                            using (CustomActivity op_load_char_skills = Timekeeper.StartSyncron("load_char_skills", op_load)) //slightly messy
+                            using (Activity op_load_char_skills = Timekeeper.StartSyncron("load_char_skills", op_load)) //slightly messy
                             {
                                 SkillsSection.LoadFromHeroLab(xmlStatBlockBaseNode.SelectSingleNodeAndCacheExpression("skills", token),
                                     op_load_char_skills, token);

@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -892,7 +893,7 @@ namespace Chummer.Backend.Attributes
                 try
                 {
                     using (Timekeeper.StartSyncron("create_char_attrib", null,
-                                                       CustomActivity.OperationType.RequestOperation,
+                                                       TelemetryOperationType.RequestOperation,
                                                        charNode.InnerTextViaPool(token)))
                     {
                         CharacterAttrib objBod = GetAttributeByName("BOD", token);
@@ -1118,7 +1119,7 @@ namespace Chummer.Backend.Attributes
                 try
                 {
                     using (Timekeeper.StartSyncron("create_char_attrib", null,
-                               CustomActivity.OperationType.RequestOperation,
+                               TelemetryOperationType.RequestOperation,
                                charNode.InnerTextViaPool(token)))
                     {
                         CharacterAttrib objBod = await GetAttributeByNameAsync("BOD", token).ConfigureAwait(false);
@@ -1776,7 +1777,7 @@ namespace Chummer.Backend.Attributes
         }
 
         [CLSCompliant(false)]
-        public void LoadFromHeroLab(XPathNavigator xmlStatBlockBaseNode, CustomActivity parentActivity, CancellationToken token = default)
+        public void LoadFromHeroLab(XPathNavigator xmlStatBlockBaseNode, Activity parentActivity, CancellationToken token = default)
         {
             if (xmlStatBlockBaseNode == null)
                 return;

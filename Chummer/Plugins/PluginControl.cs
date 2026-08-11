@@ -498,7 +498,7 @@ namespace Chummer.Plugins
                 try
                 {
                     using (Timekeeper.StartSyncron("LoadPlugins", parentActivity,
-                                                       CustomActivity.OperationType.DependencyOperation,
+                                                       TelemetryOperationType.DependencyOperation,
                                                        _objMyDirectoryCatalog?.FullPath))
                         Initialize();
                 }
@@ -564,7 +564,7 @@ namespace Chummer.Plugins
                 {
                     using (Timekeeper.StartSyncron("load_plugin_GetTabPage_Career_" + plugin,
                                                        parentActivity,
-                                                       CustomActivity.OperationType.DependencyOperation,
+                                                       TelemetryOperationType.DependencyOperation,
                                                        plugin.ToString()))
                     {
                         ICollection<TabPage> pages = await plugin.GetTabPages(frmCareer, token).ConfigureAwait(false);
@@ -600,7 +600,7 @@ namespace Chummer.Plugins
                 foreach (IPlugin plugin in await GetMyActivePluginsAsync(token).ConfigureAwait(false))
                 {
                     using (Timekeeper.StartSyncron("load_plugin_GetTabPage_Create_" + plugin, parentActivity,
-                                                       CustomActivity.OperationType.DependencyOperation,
+                                                       TelemetryOperationType.DependencyOperation,
                                                        plugin.ToString()))
                     {
                         ICollection<TabPage> pages = await plugin.GetTabPages(frmCreate, token).ConfigureAwait(false);
@@ -637,7 +637,7 @@ namespace Chummer.Plugins
                 {
                     using (Timekeeper.StartSyncron("load_plugin_GetMenuItems_" + plugin,
                                                        parentActivity,
-                                                       CustomActivity.OperationType.DependencyOperation,
+                                                       TelemetryOperationType.DependencyOperation,
                                                        plugin.ToString()))
                     {
                         ICollection<ToolStripMenuItem> menuitems

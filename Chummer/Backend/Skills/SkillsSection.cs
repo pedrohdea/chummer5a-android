@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -1504,18 +1505,18 @@ namespace Chummer.Backend.Skills
             }
         }
 
-        internal void Load(XmlNode xmlSkillNode, bool blnLegacy, CustomActivity parentActivity, CancellationToken token = default)
+        internal void Load(XmlNode xmlSkillNode, bool blnLegacy, Activity parentActivity, CancellationToken token = default)
         {
             Utils.SafelyRunSynchronously(() => LoadCoreAsync(true, xmlSkillNode, blnLegacy, parentActivity, token), token);
         }
 
-        internal Task LoadAsync(XmlNode xmlSkillNode, bool blnLegacy, CustomActivity parentActivity, CancellationToken token = default)
+        internal Task LoadAsync(XmlNode xmlSkillNode, bool blnLegacy, Activity parentActivity, CancellationToken token = default)
         {
             return LoadCoreAsync(false, xmlSkillNode, blnLegacy, parentActivity, token);
         }
 
         private async Task LoadCoreAsync(bool blnSync, XmlNode xmlSkillNode, bool blnLegacy,
-                                         CustomActivity parentActivity, CancellationToken token = default)
+                                         Activity parentActivity, CancellationToken token = default)
         {
             if (xmlSkillNode == null)
                 return;
@@ -1533,7 +1534,7 @@ namespace Chummer.Backend.Skills
                 try
                 {
                     bool blnDidInitializeInLoad = false;
-                    using (CustomActivity opLoadCharSkills =
+                    using (Activity opLoadCharSkills =
                            Timekeeper.StartSyncron("load_char_skills_skillnode", parentActivity))
                     {
                         _lstSkills.RaiseListChangedEvents = false;
@@ -2593,7 +2594,7 @@ namespace Chummer.Backend.Skills
             }
         }
 
-        internal void LoadFromHeroLab(XPathNavigator xmlSkillNode, CustomActivity parentActivity, CancellationToken token = default)
+        internal void LoadFromHeroLab(XPathNavigator xmlSkillNode, Activity parentActivity, CancellationToken token = default)
         {
             using (LockObject.EnterWriteLock(token))
             {

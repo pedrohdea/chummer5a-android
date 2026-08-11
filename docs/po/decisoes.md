@@ -645,3 +645,39 @@ códigos de sintaxe.
 Mais uma entrada para o padrão de DEC-019: **a primeira versão de uma ferramenta de medição
 esteve errada de novo.** Vale como regra do projeto, não como coincidência.
 
+---
+
+## DEC-025 — Telemetria sai do domínio por fábrica plugável · VIGENTE
+**2026-08-11**
+
+`Timekeeper` vive no domínio e é chamado por `Character`, `SkillsSection` e
+`AttributeSection` para cronometrar o carregamento. Ele construía `CustomActivity`, que
+herda `System.Diagnostics.Activity` **e** traz `Microsoft.ApplicationInsights` junto — o que
+puxava telemetria para dentro do núcleo, contra PREM-005.
+
+**O que tornou a solução simples:** o domínio nunca chama membro algum da atividade. Só usa
+`using (...)` e repassa adiante. E `System.Diagnostics.Activity` **está na BCL e existe sob
+net9.0**.
+
+Portanto:
+
+- as assinaturas do domínio passam a usar `Activity`, não `CustomActivity`;
+- `Timekeeper` ganha `ActivityFactory`, uma `Func<...>` estática;
+- `Program.cs` — aplicação legada — instala a fábrica que constrói `CustomActivity`;
+- sem fábrica instalada, `StartSyncron` devolve `null` e os `using` do domínio viram
+  no-ops, que é o comportamento correto com telemetria desligada.
+
+O enum `CustomActivity.OperationType` foi extraído para `TelemetryOperationType`, em
+`Chummer.Core`, para que o domínio possa nomear o tipo de operação sem depender do pacote.
+
+**Comportamento do legado preservado integralmente:** a fábrica instalada no `Program.cs`
+reproduz exatamente o que existia antes.
+
+**Uma tentativa descartada no caminho:** trocar `CustomActivity` por `Activity` também nos
+formulários. Não funciona — `CharacterCreate` e `CharacterCareer` chamam `SetSuccess`, que é
+membro de `CustomActivity`, inclusive com `?.`, e método de extensão não pode ser invocado
+com acesso condicional. Os formulários mantiveram o tipo concreto, com um cast nas 7
+atribuições que recebem o retorno do `Timekeeper`.
+
+**Resultado medido:** 142 → **132 erros**.
+
