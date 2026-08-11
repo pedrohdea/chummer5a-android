@@ -230,3 +230,65 @@ MVP e custa semanas quando o modo mestre chegar.
 
 Fora do MVP e no projeto: `GameMasterDashboard`, `PlayerDashboard`, `InitiativeTracker`,
 `AddToken`.
+
+---
+
+## PREM-016 — Durante o MVP, o personagem é criado no desktop · ATIVA 🟢
+**Criada:** 2026-08-11 · **Pendência:** PEND-010
+
+O MVP continua sendo leitor puro. Até a Etapa 8, o Chummer desktop é a única forma de
+produzir um personagem novo, e o `.chum5` é transferido manualmente para o celular.
+
+**Se derrubada** (o MVP precisa criar): o recorte muda de forma séria — a criação por
+Prioridade entraria no MVP, com metatipo, atributos, perícias e compras iniciais. Deixaria
+de ser um MVP-leitor. Por isso a pergunta foi registrada mesmo sem resposta.
+
+---
+
+## PREM-017 — Mesa usa regras padrão; o ruleset gravado é respeitado · ATIVA 🟡
+**Criada:** 2026-08-11 · **Pendência:** PEND-013
+
+O MVP **não** ganha tela de configuração de ruleset. Mas o `CharacterSettings` gravado no
+`.chum5` é lido e respeitado integralmente — inclusive quais livros estão ligados e quais
+pacotes de custom data o personagem usa.
+
+**A distinção que sustenta esta premissa:** *editar* ruleset é caro (`EditCharacterSettings`
+é uma das telas mais complexas do desktop); *respeitar* o ruleset é obrigatório de qualquer
+forma, porque sem isso os valores calculados divergem e o teste diferencial acusa.
+
+**Se derrubada** (mesa usa custom data própria): entra o fluxo de importação de pasta
+externa, que depende do armazenamento gravável do Android. Trabalho contido, mas antecipa
+parte da Etapa 3.
+
+---
+
+## PREM-018 — APK instalável o quanto antes, mesmo incompleto · ATIVA 🟢
+**Criada:** 2026-08-11 · **Pendência:** PEND-014
+
+Assim que houver algo que abra um `.chum5` e mostre um personagem, sai APK — mesmo feio e
+parcial.
+
+**Por quê, e o motivo não é só feedback:** PREM-003 subiu para 🟡 porque o alvo é um
+aparelho intermediário e a carga de 21 MB de XML precisa de medição real. Um APK cedo é o
+**instrumento dessa medição**. Sem ele, o número da Etapa 4 é extrapolação de desktop.
+
+Ou seja: entregar cedo serve simultaneamente ao QA do PO e à decisão técnica de arquitetura
+de dados. É a opção que rende duas coisas pelo preço de uma.
+
+---
+
+## PREM-019 — Aceite em três marcos sucessivos · ATIVA 🟢
+**Criada:** 2026-08-11 · **Pendência:** PEND-015
+
+O objetivo "APK executável e testado, com criação de personagem completa" é considerado
+cumprido quando os três forem verdadeiros, nesta ordem:
+
+1. **Fidelidade** — os valores do app conferem com os do desktop para os personagens do PO
+   (QA-001). É pré-requisito dos outros dois: sem isso, jogar com o app é jogar errado.
+2. **Uso real** — uma sessão inteira jogada só com o app, sem recorrer ao papel (QA-007).
+3. **Completude** — criar um personagem do zero pelo método Prioridade, sem tocar no
+   desktop (PREM-012).
+
+**Por que nessa ordem, e não na do enunciado:** fidelidade primeiro porque é a única que
+invalida as outras se falhar. Um app bonito que calcula o pool errado é pior que nenhum app.
+

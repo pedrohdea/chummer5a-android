@@ -214,3 +214,42 @@ Gerou PEND-010.
 imediata: `Program.OpenCharacters` já é uma coleção e o núcleo suporta N personagens
 nativamente. Essa capacidade é **mantida viva no núcleo** mesmo com a UI do MVP abrindo um
 personagem por vez — preservar agora é gratuito, reintroduzir depois é caro.
+
+---
+
+## PEND-013 — Regras da casa e dados customizados · ABERTA
+**Criada:** 2026-08-11 · **Premissa:** PREM-017 · **Reversão:** 🟡 médio
+
+A mesa do PO usa regras padrão, algum dos 57 pacotes de `customdata/`, ou XML próprio?
+
+**Por que importa:** se houver custom data própria, o app precisa carregar dados de fora do
+pacote instalado, o que envolve armazenamento gravável no Android e um fluxo de importação.
+Se for tudo padrão, a tela de configuração de ruleset pode ficar para depois do MVP — é uma
+das mais complexas do desktop (`EditCharacterSettings`).
+
+**Resposta:**
+
+---
+
+## PEND-014 — Ritmo de entrega · ABERTA
+**Criada:** 2026-08-11 · **Premissa:** PREM-018 · **Reversão:** 🟢 baixo
+
+APK instalável o quanto antes mesmo incompleto, só quando o MVP estiver pronto, ou marcos
+a cada etapa?
+
+**Resposta:**
+
+---
+
+## PEND-015 — Critério de aceite do objetivo final · ABERTA
+**Criada:** 2026-08-11 · **Premissa:** PREM-019 · **Reversão:** 🟢 baixo
+
+O objetivo é "APK executável e testado". O que faz o PO dizer que está pronto: jogar uma
+sessão inteira sem recorrer ao papel, os números baterem com o desktop, criar um personagem
+do zero no celular, ou os três?
+
+**Por que importa:** define quando o projeto termina, e define o que o `qa-roteiro.md`
+precisa cobrir.
+
+**Resposta:**
+
