@@ -74,16 +74,29 @@ cat > "$PROBE_DIR/Probe.csproj" <<'CSPROJ'
       milhares de CS0246 que são artefato da sondagem e não acoplamento de plataforma.
     -->
     <Compile Include="$(ChummerAnnotations)" />
+    <!--
+      Código já migrado para o Chummer.Core precisa entrar na sondagem. Sem isto, o censo
+      compila um conjunto incompleto e reporta erros fantasma para os tipos que saíram do
+      Backend/ — medindo regressão onde houve progresso.
+    -->
+    <Compile Include="$(ChummerCore)/**/*.cs"
+             Exclude="$(ChummerCore)/bin/**/*.cs;$(ChummerCore)/obj/**/*.cs" />
   </ItemGroup>
 </Project>
 CSPROJ
 
 log "Compilando o Backend legado sob net9.0 (espera-se que falhe — esse é o ponto)"
+# O build roda a partir de $PROBE_DIR, que fica FORA da árvore do repositório. Isso é
+# essencial: o dotnet resolve o global.json pelo diretório de trabalho, e o da raiz fixa o
+# SDK 8 do build legado (DEC-012). Rodando daqui, nenhum global.json é encontrado e o SDK
+# mais recente instalado é usado, que é o que a sondagem net9.0 precisa.
+cd "$PROBE_DIR"
 set +e
 dotnet build "$PROBE_DIR/Probe.csproj" \
     -p:ChummerBackend="$REPO_ROOT/Chummer/Backend" \
     -p:ChummerSevenZip="$REPO_ROOT/Chummer/7zip" \
     -p:ChummerAnnotations="$REPO_ROOT/Chummer/Properties/Annotations.cs" \
+    -p:ChummerCore="$REPO_ROOT/src/Chummer.Core" \
     --nologo -v:n 2>&1 | tee "$WORK_DIR/build.log" > /dev/null
 set -e
 
@@ -96,6 +109,21 @@ sed -E 's/^[[:space:]]+//; s/^[0-9]+>//; s/ \[[^]]*\.csproj\]$//' "$WORK_DIR/bui
     | sed "s|$REPO_ROOT/||" | sort -u > "$WORK_DIR/erros.txt" || true
 
 TOTAL=$(wc -l < "$WORK_DIR/erros.txt")
+
+# Guarda contra falso zero.
+#
+# Se o build nem chegou a compilar — SDK errado, restore falhou, projeto inválido — o log
+# não contém erros CS e o censo reportaria "0 erros", que é indistinguível de "tudo
+# compila". Numa ferramenta cujo único propósito é medir progresso, esse falso positivo é
+# pior do que não medir: faria o porte parecer concluído.
+if [ "$TOTAL" -eq 0 ] && ! grep -q "Build succeeded" "$WORK_DIR/build.log"; then
+    echo >&2
+    echo "ERRO: nenhum erro CS encontrado, mas o build também não teve sucesso." >&2
+    echo "A compilação provavelmente nem começou. Últimas linhas do log:" >&2
+    echo >&2
+    tail -20 "$WORK_DIR/build.log" >&2
+    exit 1
+fi
 
 # ---------------------------------------------------------------------------
 # Relatório

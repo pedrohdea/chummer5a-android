@@ -384,3 +384,70 @@ DEC-014 antes de ela custar caro.
 
 O resultado de cada reavaliação fica no histórico de `plano.md`.
 
+---
+
+## DEC-018 — Interface de domínio e extensões de UI vivem em arquivos separados · VIGENTE
+**2026-08-11**
+
+Vários arquivos de `Backend/Interfaces/` contêm **duas coisas** no mesmo arquivo: uma
+interface pequena, que é domínio, e uma classe estática grande de métodos de extensão que
+manipulam `TreeView`, `ContextMenuStrip` e `Control`.
+
+O caso extremo é `IHasInternalId.cs`: **1.430 linhas**, das quais a interface ocupa 5.
+
+```csharp
+public interface IHasInternalId          // 5 linhas — domínio
+{
+    string InternalId { get; }
+}
+
+public static class InternalId           // 1.400 linhas — reconstrução de nós de TreeView
+{
+    public static async Task RefreshChildrenGears(this IHasInternalId objParent,
+        TreeView treGear, ContextMenuStrip cmsGear, ...)
+```
+
+A correção não é portar: é **separar**. A interface fica em `Backend/`, as extensões vão
+para `Chummer/Controls/Extensions/`, onde o projeto legado continua as compilando e o
+`Chummer.Core` nunca as verá.
+
+**Técnica usada quando a própria interface está dividida** (`IHasSource`): declarar
+`partial interface`, com a metade de domínio em `Backend/` e a metade que depende de
+WinForms em `Controls/Extensions/`. No projeto legado as duas voltam a ser uma interface só,
+então **nenhum implementador ou chamador precisa mudar** — o que preserva o build que gera
+os artefatos dourados.
+
+**Resultado medido:** 733 → 671 erros no censo, exatamente os 62 erros das interfaces.
+Confirma a previsão de DEC-014 de que interfaces são o alvo de melhor relação custo-benefício.
+
+**Não resolvido nesta leva:** `IHasMugshots.cs` (5 erros), cujo problema é
+`System.Drawing.Image` **dentro da própria interface**. Depende da abstração de imagem, que
+é o item 3 de DEC-006.
+
+---
+
+## DEC-019 — A ferramenta de medição precisa falhar alto · VIGENTE
+**2026-08-11**
+
+O `censo-erros.sh` teve dois defeitos descobertos ao ser usado para medir progresso real, e
+ambos produziam **medição errada em silêncio**:
+
+1. **Falso zero.** O script rodava `dotnet` a partir da raiz do repositório, cujo
+   `global.json` fixa o SDK 8 (DEC-012). O build nem começava, nenhum erro CS aparecia no
+   log, e o censo reportava **"0 erros"** — indistinguível de "todo o Backend compila".
+   Corrigido rodando de dentro do diretório de sondagem, que fica fora da árvore do
+   repositório e portanto sem `global.json`.
+
+2. **Conjunto incompleto.** A sondagem incluía apenas `Backend/`, então o código já migrado
+   para o `Chummer.Core` sumia da compilação e gerava erros fantasma nos tipos que haviam
+   saído — medindo regressão onde houve progresso. Corrigido incluindo
+   `src/Chummer.Core/**/*.cs` na sondagem.
+
+**A regra que fica:** o censo é a barra de progresso da Etapa 2, e uma barra de progresso
+que confunde "não mediu" com "está tudo certo" é pior que nenhuma. O script agora **aborta
+com erro** se não encontrar erros CS **e** o build também não tiver tido sucesso.
+
+Vale como aviso geral: nesta sessão, o primeiro número que a ferramenta de medição produziu
+esteve errado **três vezes** — 6.196 por dupla contagem e ruído de `Annotations.cs`, 0 por
+SDK errado, e 732 por conjunto incompleto. Desconfie do primeiro número.
+

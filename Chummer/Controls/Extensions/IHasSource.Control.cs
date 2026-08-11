@@ -16,21 +16,19 @@
  *  You can obtain the full source code for Chummer5a at
  *  https://github.com/chummer5a/chummer5a
  */
-using System.Drawing;
+// Separado de Backend/Interfaces/ durante a extração do núcleo (DEC-016/DEC-018).
+// A parte de domínio permanece em Backend/; esta parte depende de WinForms.
+
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Chummer
 {
-    public interface IHasNotes
+    public partial interface IHasSource
     {
-        string Notes { get; set; }
-        Task<string> GetNotesAsync(CancellationToken token = default);
-        Task SetNotesAsync(string value, CancellationToken token = default);
-        Color NotesColor { get; set; }
-        Task<Color> GetNotesColorAsync(CancellationToken token = default);
-        Task SetNotesColorAsync(Color value, CancellationToken token = default);
-        Color PreferredColor { get; }
-        Task<Color> GetPreferredColorAsync(CancellationToken token = default);
+        void SetSourceDetail(Control sourceControl);
+
+        Task SetSourceDetailAsync(Control sourceControl, CancellationToken token = default);
     }
 }

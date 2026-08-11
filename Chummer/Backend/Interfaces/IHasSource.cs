@@ -16,19 +16,14 @@
  *  You can obtain the full source code for Chummer5a at
  *  https://github.com/chummer5a/chummer5a
  */
-
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
 namespace Chummer
 {
-    public interface IHasSource
+    // Interface parcial: a metade de domínio mora aqui, a metade que depende de WinForms
+    // mora em Controls/Extensions/IHasSource.Control.cs. Declarar como partial permite
+    // separar as duas sem alterar implementadores nem chamadores no projeto legado, onde
+    // as duas metades voltam a ser uma só interface.
+    public partial interface IHasSource
     {
         SourceString SourceDetail { get; }
-
-        void SetSourceDetail(Control sourceControl);
-
-        Task SetSourceDetailAsync(Control sourceControl, CancellationToken token = default);
     }
 }
