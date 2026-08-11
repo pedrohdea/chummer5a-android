@@ -44,7 +44,7 @@ com atualização deliberada do artefato dourado.
 
 ---
 
-## PREM-003 — Alvo: Android 8.0 (API 26) ou superior, 4 GB de RAM · CONFIRMADA 🟢
+## PREM-003 — Alvo: Android intermediário, 4–6 GB de RAM · CONFIRMADA 🟡
 **Criada:** 2026-08-11 · **Pendência:** PEND-001
 
 Assumido até haver resposta. Com isso, a estratégia de dados é a atual do Chummer:
@@ -57,19 +57,25 @@ sob demanda com índice, o que é retrabalho estrutural de semanas.
 exigência de aparelho fraco. A premissa deixa de ser 🔴 e vira 🟢: a estratégia "carrega
 tudo e cacheia" fica mantida, e não há mais frente bloqueada.
 
-Continua valendo medir o consumo real no spike da Etapa 4 (QA-002) — não para decidir
-arquitetura, mas para saber se a experiência é aceitável.
+**Refinada em 2026-08-11:** o PO especificou **Android intermediário, 4–6 GB de RAM** — e
+não um aparelho folgado, como a primeira resposta sugeria. A estratégia "carrega tudo e
+cacheia" segue mantida, mas a margem é menor do que eu havia assumido.
+
+**Por isso a marca subiu de 🟢 para 🟡 e o spike de desempenho da Etapa 4 subiu de
+prioridade:** 21 MB de XML mais a árvore de objetos num aparelho intermediário precisa de
+medição real, não de extrapolação. Vou reportar tempo de abertura e pico de memória em
+números absolutos antes de dar a estratégia por boa.
 
 ---
 
-## PREM-004 — Empacotar `pt-br` e `en-us`; demais idiomas sob demanda · ATIVA 🟡
+## PREM-004 — Empacotar `pt-br` e `en-us`; demais idiomas sob demanda · CONFIRMADA 🟢
 **Criada:** 2026-08-11 · **Pendência:** PEND-002
 
 `en-us` é obrigatório: é o idioma base dos dados, e os nomes canônicos usados nos saves e na
 tradução reversa dependem dele. `pt-br` porque é o idioma do PO.
 
-**Se derrubada:** mudar quais arquivos entram nos assets e implementar (ou remover) o
-download sob demanda. Trabalho contido.
+**Confirmada em 2026-08-11:** o PO delegou a decisão ("tanto faz, decida você"). Mantida
+como está: `pt-br` + `en-us` no APK, os outros quatro fora.
 
 ---
 
@@ -193,3 +199,34 @@ dano/Edge/munição e karma/nuyen:
 
 **Efeito líquido no cronograma:** somado a PREM-012, o escopo total **encolheu**. Três
 métodos de construção a menos valem muito mais que dois recursos de sessão a mais.
+
+---
+
+## PREM-014 — Sem sincronização e sem resolução de conflito · CONFIRMADA 🟢
+**Criada:** 2026-08-11 · **Pendência:** PEND-011 (respondida)
+
+O app não sincroniza com nuvem nem trata edição concorrente do mesmo arquivo em dois
+lugares. O usuário gerencia seus arquivos.
+
+**Importante não confundir com PREM-010:** o *formato* `.chum5` continua idêntico ao do
+desktop. O que sai do escopo é a *sincronização*, não a *compatibilidade*. A distinção
+importa porque o formato é o oráculo do teste diferencial (DEC-004) — abrir mão dele
+custaria o mecanismo que detecta regressão de regra, enquanto abrir mão da sincronização
+não custa nada.
+
+---
+
+## PREM-015 — MVP é para jogador; o núcleo continua multi-personagem · CONFIRMADA 🟢
+**Criada:** 2026-08-11 · **Pendência:** PEND-012 (respondida)
+
+A UI do MVP abre **um** personagem por vez. O **núcleo** continua suportando N, porque
+`Program.OpenCharacters` já é uma coleção observável e o modo mestre está no projeto,
+apenas depois do MVP.
+
+**Regra de desenho que decorre disto:** nenhuma simplificação do núcleo pode assumir
+"existe um único personagem". Singletons implícitos, estado global por personagem e caches
+não-chaveados estão proibidos — são exatamente o tipo de atalho que parece inofensivo no
+MVP e custa semanas quando o modo mestre chegar.
+
+Fora do MVP e no projeto: `GameMasterDashboard`, `PlayerDashboard`, `InitiativeTracker`,
+`AddToken`.

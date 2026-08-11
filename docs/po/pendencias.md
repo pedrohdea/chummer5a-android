@@ -31,7 +31,7 @@ Não bloqueia — na falta do modelo, meço no desktop e reporto o consumo absol
 
 ---
 
-## PEND-002 — Idiomas empacotados no APK · ABERTA
+## PEND-002 — Idiomas empacotados no APK · RESPONDIDA
 **Criada:** 2026-08-11 · **Premissa:** PREM-004 · **Reversão:** 🟡 médio
 
 `Chummer/lang/` tem 9,7 MB para 6 idiomas. Empacotar todos infla o APK. Quais idiomas
@@ -40,7 +40,11 @@ precisam vir instalados de fábrica?
 Lembrando que são duas camadas: as frases da interface (pequenas) e a tradução do conteúdo
 de jogo (o volume). Ver `docs/codebase/10-localizacao.md`.
 
-**Resposta:**
+**Resposta (2026-08-11):** "tanto faz, decida você". Decidido: **`pt-br` + `en-us`
+embarcados**, os outros quatro fora do APK. PREM-004 confirmada.
+
+O `en-us` não é escolha de gosto: é o idioma canônico dos dados e dos saves, e a tradução
+reversa depende dele.
 
 ---
 
@@ -159,3 +163,54 @@ rolagem de dados.
   `ThreadSafeCachedRandom` e `XoshiroPRNG.Net` já no núcleo.
 
 Nenhum dos dois toca a arquitetura do piloto; ambos são incrementos sobre ela.
+
+---
+
+## PEND-010 — De onde vem o personagem antes da Etapa 8? · ABERTA
+**Criada:** 2026-08-11 · **Premissa:** PREM-014 · **Reversão:** 🟢 baixo
+
+O PO respondeu em PEND-011 que o personagem fica **só no celular**, e o desktop deixa de
+ser usado. Isso colide com duas decisões já tomadas:
+
+- o MVP é um **leitor** — não cria personagem (DEC-003);
+- criação de personagem só chega na **Etapa 8**.
+
+Enquanto a criação não existir no Android, o desktop é a única forma de produzir um
+personagem novo. Logo, "só no celular" não pode valer desde já — na melhor das hipóteses é
+o estado final do projeto, não o inicial.
+
+**A pergunta:** durante o período MVP, você vai criar os personagens no desktop e passar
+para o celular, ou o MVP precisa de alguma forma mínima de criar personagem?
+
+**Resposta:**
+
+---
+
+## PEND-011 — Circulação do personagem entre celular e desktop · RESPONDIDA
+**Criada:** 2026-08-11 · **Premissa:** PREM-010, PREM-014 · **Reversão:** 🟡 médio
+
+**Resposta (2026-08-11):** **só no celular** — o desktop deixa de ser usado.
+
+**Efeito, separando duas coisas que a resposta juntou:**
+
+| Item | Decisão | Motivo |
+|---|---|---|
+| Formato `.chum5` idêntico ao desktop | **mantido** (PREM-010 segue 🔴) | é o oráculo do teste diferencial (DEC-004): sem ele, não há como detectar regressão de regra |
+| Sincronização em nuvem e resolução de conflito | **cortado** (PREM-014) | era a parte cara da compatibilidade, e o PO não precisa dela |
+
+Manter o formato custa zero, porque o código de save está sendo portado como está. O que a
+resposta do PO de fato elimina é o trabalho de conflito de edição.
+
+Gerou PEND-010.
+
+---
+
+## PEND-012 — Modo mestre depois do MVP · RESPONDIDA
+**Criada:** 2026-08-11 · **Premissa:** PREM-015 · **Reversão:** 🟢 baixo
+
+**Resposta (2026-08-11):** o MVP é para **jogador**; o modo mestre vem depois, fora do MVP.
+
+**Efeito:** mestre está fora do **MVP**, não fora do **projeto**. Consequência de desenho
+imediata: `Program.OpenCharacters` já é uma coleção e o núcleo suporta N personagens
+nativamente. Essa capacidade é **mantida viva no núcleo** mesmo com a UI do MVP abrindo um
+personagem por vez — preservar agora é gratuito, reintroduzir depois é caro.
