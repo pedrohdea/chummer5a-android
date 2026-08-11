@@ -221,3 +221,63 @@ Windows, sem alteração.
 disparava em pull request** (CodeQL só em push para master com filtro em `.sln`/`.csproj`,
 nightly por cron, notificação por release). O PR #1 tinha zero verificações. A partir de
 agora há CI de verdade nos PRs do porte.
+
+---
+
+## DEC-013 — Uma fonte da verdade, duas compilações · VIGENTE
+**2026-08-11**
+
+Durante a Etapa 2, um arquivo migrado tem **um único arquivo-fonte** — em
+`src/Chummer.Core/` — e **duas compilações**: `net9.0` no `Chummer.Core` e `net48` no
+projeto legado, que o inclui por link.
+
+```xml
+<Compile Include="..\src\Chummer.Core\**\*.cs"
+         Exclude="..\src\Chummer.Core\bin\**\*.cs;..\src\Chummer.Core\obj\**\*.cs"
+         LinkBase="CoreLinked" />
+```
+
+**Por quê:** o `Chummer.csproj` usa globbing, então mover um arquivo para fora de
+`Chummer/` o remove do build legado. E o build legado **não pode quebrar** — é ele que gera
+os artefatos dourados do teste diferencial (DEC-004). Sem o link, migrar código e manter o
+oráculo de teste seriam objetivos incompatíveis.
+
+**A regra que isto cria:** um arquivo só migra quando compila **nos dois alvos**. O alvo
+`net9.0` sem sufixo `-windows` do `Chummer.Core` (DEC-009) garante que nada acoplado a
+WinForms atravesse a fronteira. É o mesmo mecanismo de DEC-009 aplicado à migração: o
+compilador impede o atalho.
+
+**Alternativa descartada:** copiar os arquivos e manter as duas cópias em sincronia. Numa
+migração de ~350.000 linhas, divergência silenciosa entre as cópias é questão de tempo, e
+seria descoberta pelo teste diferencial acusando uma regressão que não existe.
+
+**Ciclo de vida:** este `ItemGroup` encolhe conforme o legado é desmontado, e desaparece
+quando `Chummer/` for removido.
+
+**Detalhe que quase passou:** o glob precisa excluir `bin/` e `obj/`. Sem isso ele arrasta o
+`AssemblyInfo` gerado do `Chummer.Core` e o build legado quebra com atributos de assembly
+duplicados.
+
+---
+
+## DEC-014 — Ordem de migração: os limpos primeiro · VIGENTE
+**2026-08-11**
+
+O censo (DEC-004 / `docs/codebase/14-censo-de-erros.md`) revelou que **171 dos 245 arquivos
+de `Backend/` já compilam limpos sob net9.0** — 70% da base, sem uma linha de alteração.
+
+A migração começa por eles, não pelos problemáticos. Ganhos:
+
+- o `Chummer.Core` deixa de ser vazio e passa a ter domínio real, cedo;
+- cada lote é verificável isoladamente pelo CI;
+- os 74 arquivos com erro passam a ser atacados com o restante já do lado de cá, o que
+  reduz o acoplamento residual de cada um.
+
+**Primeiro lote executado:** `Backend/Enums/` — 11 de 11 arquivos limpos, sem dependências,
+sem `using` algum. Escolhido deliberadamente pelo tamanho: serve para **provar o mecanismo
+de DEC-013 pelo CI** antes de mover os outros 160 arquivos.
+
+**Limite de verificação:** o build `net48` não roda em Linux. O `Chummer.Core` foi
+verificado localmente; o efeito do link no projeto legado só pode ser confirmado pelo CI
+Windows. Por isso o primeiro lote é pequeno.
+
