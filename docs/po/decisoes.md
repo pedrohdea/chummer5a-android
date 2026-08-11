@@ -451,3 +451,70 @@ Vale como aviso geral: nesta sessão, o primeiro número que a ferramenta de med
 esteve errado **três vezes** — 6.196 por dupla contagem e ruído de `Annotations.cs`, 0 por
 SDK errado, e 732 por conjunto incompleto. Desconfie do primeiro número.
 
+---
+
+## DEC-020 — `Backend/` guarda domínio; infraestrutura de UI sai · VIGENTE
+**2026-08-11**
+
+Treze arquivos moravam em `Chummer/Backend/` sem serem domínio. Movidos para
+`Chummer/Controls/Infrastructure/`:
+
+| Arquivo | Erros que causava | O que é |
+|---|---|---|
+| `WinFormsExtensions.cs` | 99 | a ponte `DoThreadSafe` — conceito que não existe no destino |
+| `CenterableMessageBox.cs` | 40 | caixa de mensagem |
+| `ImageExtensions.cs` | 33 | thumbnails, encoders, `PixelFormat` — apresentação, não domínio |
+| `ColorManager.cs` | 22 | tema claro/escuro, com polling do Registro a cada 5 s |
+| `DispatcherExtensions.cs` | 17 | WPF |
+| `ThreadSafeForm.cs` | 16 | wrapper de `Form` |
+| `TooltipFactory.cs` | 14 | tooltips |
+| `ListViewItemWithValue.cs` | 14 | `ListViewItem` do WinForms |
+| `CursorWait.cs` | 9 | cursor de espera |
+| `HoverDisplayCoordinator.cs` | 7 | interação de mouse |
+| `NegatableBinding.cs` | 6 | binding do WinForms |
+| `FlagImageGetter.cs` | 2 | bandeiras de idioma |
+| `DataGridViewTextBoxColumnTranslated.cs` | 2 | coluna de grid |
+
+Mais `Backend/Helpers/Application Insights/` → `Chummer/Telemetry/ApplicationInsights/`,
+por PREM-005 (telemetria desligada, e portanto fora do núcleo).
+
+**Resultado medido:** 671 → **367 erros**. Metade dos erros restantes eliminada sem portar
+uma linha — apenas devolvendo cada arquivo ao lugar a que pertence. Nada foi apagado: o
+projeto legado compila os mesmos arquivos, só que a partir de outra pasta.
+
+**A regra que fica:** `Backend/` é domínio. Se um arquivo referencia `Control`, `TreeNode`,
+`Form`, `Image` ou `Color` **como sua razão de existir** — e não como detalhe de uma
+assinatura isolada — ele não é domínio, e a resposta certa é movê-lo, não portá-lo.
+
+---
+
+## DEC-021 — Retratos: o domínio guarda bytes, não `Image` · VIGENTE (a implementar)
+**2026-08-11**
+
+Hoje `Character.Mugshots` é `ThreadSafeList<Image>`: o carregamento decodifica base64 →
+`Image` e o salvamento re-codifica `Image` → base64.
+
+**Decisão:** o domínio passa a guardar a **string base64 / bytes** exatamente como estão no
+arquivo, e nunca decodifica. Decodificar para exibir é responsabilidade da apresentação.
+
+**Três ganhos, e o terceiro foi surpresa:**
+
+1. Remove `System.Drawing` do domínio no ponto mais profundo em que ele entra
+   (`IHasMugshots`, implementado por `Character`, `Contact` e `Spirit`).
+2. **Carregamento mais rápido** — abrir um personagem deixa de decodificar imagens. Importa
+   no Android, onde PREM-003 está 🟡 e um personagem de teste chega a 5,7 MB.
+3. **Elimina uma não-determinância conhecida do teste dourado.** O
+   `Test04_LoadThenSaveIsDeterministic` filtra explicitamente os nós `mugshot`, com o
+   comentário *"image loading and unloading is not going to be deterministic due to
+   compression algorithms"*. Guardando bytes e nunca recodificando, o round-trip vira
+   determinístico e **o filtro pode ser removido**, fortalecendo o oráculo.
+
+**Mudança de comportamento assumida:** a compressão passa a acontecer na **importação** do
+retrato, não a cada salvamento. Hoje, mudar a configuração de qualidade de imagem
+recomprime retratos antigos no próximo save. Isso não é regra de Shadowrun, então PREM-002
+não se aplica — e o novo comportamento é mais fiel, porque não degrada a imagem a cada
+ciclo.
+
+Implementação pendente: toca `IHasMugshots`, `Character`, `Contact`, `Spirit`,
+`CharacterCache` e `GlobalSettings`.
+
