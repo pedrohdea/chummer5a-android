@@ -27,7 +27,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using Chummer.Annotations;
@@ -83,7 +82,7 @@ namespace Chummer
     /// </summary>
     [HubClassTag("SourceID", true, "Name", "Extra;Type")]
     [DebuggerDisplay("{DisplayName(null, \"en-us\")}")]
-    public sealed class Quality : IHasInternalId, IHasName, IHasSourceId, IHasXmlDataNode, IHasNotes, IHasSource, INotifyMultiplePropertiesChangedAsync, IHasLockObject, IHasCharacterObject
+    public sealed partial class Quality : IHasInternalId, IHasName, IHasSourceId, IHasXmlDataNode, IHasNotes, IHasSource, INotifyMultiplePropertiesChangedAsync, IHasLockObject, IHasCharacterObject
     {
         private static readonly Lazy<Logger> s_ObjLogger = new Lazy<Logger>(LogManager.GetCurrentClassLogger);
         private static Logger Log => s_ObjLogger.Value;
@@ -2411,48 +2410,6 @@ namespace Chummer
 
         #region UI Methods
 
-        public async Task<TreeNode> CreateTreeNode(ContextMenuStrip cmsQuality, TreeView treQualities, CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            IAsyncDisposable objLocker = await LockObject.EnterReadLockAsync(token).ConfigureAwait(false);
-            try
-            {
-                token.ThrowIfCancellationRequested();
-                QualitySource eOriginSource = await GetOriginSourceAsync(token).ConfigureAwait(false);
-                if ((eOriginSource == QualitySource.BuiltIn ||
-                     eOriginSource == QualitySource.Improvement ||
-                     eOriginSource == QualitySource.QualityLevelImprovement ||
-                     eOriginSource == QualitySource.LifeModule ||
-                     eOriginSource == QualitySource.Metatype ||
-                     eOriginSource == QualitySource.MetatypeRemovable ||
-                     eOriginSource == QualitySource.MetatypeRemovedAtChargen ||
-                     eOriginSource == QualitySource.Heritage)
-                     && !string.IsNullOrEmpty(Source)
-                     && !await (await _objCharacter.GetSettingsAsync(token).ConfigureAwait(false)).BookEnabledAsync(Source, token).ConfigureAwait(false))
-                    return null;
-
-                TreeNode objNode = new TreeNode
-                {
-                    Name = InternalId,
-                    Text = await GetCurrentDisplayNameAsync(token).ConfigureAwait(false),
-                    Tag = this,
-                    ContextMenuStrip = cmsQuality,
-                    ForeColor = await GetPreferredColorAsync(token).ConfigureAwait(false),
-                    ToolTipText = (await GetNotesAsync(token).ConfigureAwait(false)).WordWrap()
-                };
-                if (await GetSuppressedAsync(token).ConfigureAwait(false))
-                {
-                    //Treenodes store their font as null when inheriting from the treeview; have to pull it from the treeview directly to set the fontstyle.
-                    objNode.NodeFont = new Font(await treQualities.DoThreadSafeFuncAsync(x => x.Font, token).ConfigureAwait(false), FontStyle.Strikeout);
-                }
-
-                return objNode;
-            }
-            finally
-            {
-                await objLocker.DisposeAsync().ConfigureAwait(false);
-            }
-        }
 
         public Color PreferredColor
         {
@@ -2968,19 +2925,7 @@ namespace Chummer
             return true;
         }
 
-        public void SetSourceDetail(Control sourceControl)
-        {
-            if (_objCachedSourceDetail.Language != GlobalSettings.Language)
-                _objCachedSourceDetail = default;
-            SourceDetail.SetControl(sourceControl);
-        }
 
-        public async Task SetSourceDetailAsync(Control sourceControl, CancellationToken token = default)
-        {
-            if (_objCachedSourceDetail.Language != GlobalSettings.Language)
-                _objCachedSourceDetail = default;
-            await (await GetSourceDetailAsync(token).ConfigureAwait(false)).SetControlAsync(sourceControl, token).ConfigureAwait(false);
-        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

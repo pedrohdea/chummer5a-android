@@ -581,3 +581,67 @@ A proposta partia de uma intuição correta — havia velocidade a ganhar — e 
 sobre a causa. Medir antes de implementar mostrou que a causa era outra, e o ganho real
 acabou **muito maior** do que o que a proposta original teria produzido.
 
+---
+
+## DEC-023 — Classes de domínio viram parciais; a metade de UI sai · VIGENTE
+**2026-08-11**
+
+As classes de `Backend/Equipment/`, `Backend/Uniques/` e as companhias de personagem
+misturam regras de Shadowrun com métodos que constroem `TreeNode`, recebem
+`TreeView`/`ContextMenuStrip` ou `Control`.
+
+**Diferente das interfaces (DEC-018), aqui os membros de UI não estão agrupados no fim do
+arquivo — estão interleaved com o domínio.** Em `Weapon.cs`, por exemplo, `Reload` (UI) vem
+antes de `UnloadGear` (domínio), que vem antes de `CreateTreeNode` (UI), que vem antes de
+`ImportHeroLabWeapon` (domínio). Cortar por linha não funciona.
+
+**Solução: `partial class`.** A metade de regras fica em `Backend/`, a metade dependente de
+WinForms vai para `Chummer/Controls/Dominio/<Tipo>.UI.cs`. No projeto legado as duas voltam
+a ser uma classe só, então **nenhum chamador precisou mudar** — mesmo princípio da
+`partial interface` de DEC-018, e igualmente protetor do build dos artefatos dourados.
+
+**Ferramenta:** `scripts/extrair-ui.py`, que separa por membro com contagem de chaves
+ciente de literais e comentários. Aplicada a 31 tipos.
+
+**Detalhe que evita um erro fácil:** `Color`, `Point`, `Size` e `Rectangle` **não** contam
+como tipos de UI. Vivem em `System.Drawing.Primitives`, que faz parte do framework
+compartilhado e existe sob net9.0. Só `Image`, `Bitmap` e `Icon` exigem
+`System.Drawing.Common`. Tratar `Color` como acoplamento teria arrastado centenas de
+membros de domínio para fora sem necessidade.
+
+**Resultado medido:** 367 → **175 erros**.
+
+---
+
+## DEC-024 — Verificador de sintaxe para o código extraído · VIGENTE
+**2026-08-11**
+
+Um furo apareceu ao usar a extração automática: **o censo compila apenas `Backend/` e
+`Chummer.Core/`.** Os arquivos gerados em `Chummer/Controls/` não eram compilados por nada
+em Linux — só pelo build net48 no CI Windows, minutos depois.
+
+Numa extração feita por script sobre 350 mil linhas, isso é inaceitável: um gerador com
+defeito produziria dezenas de arquivos quebrados antes de alguém perceber.
+
+**`scripts/verificar-sintaxe-ui.sh`** compila `Chummer/Controls/` sob net9.0 e separa os
+erros em duas famílias:
+
+- **sintaxe** → falha; o arquivo gerado está quebrado;
+- **semântica** → esperada; são os tipos de WinForms que não existem sob net9.0.
+
+Não conseguimos *compilar* esses arquivos em Linux, mas conseguimos **provar que estão bem
+formados** — que é exatamente o que a geração automática pode quebrar.
+
+**Valeu a pena de imediato:** pegou um defeito real na primeira execução. A ferramenta abria
+o `namespace` mas esquecia de emitir a declaração da `partial class`, deixando uma chave de
+fechamento sobrando (`CS1022`). Sem o verificador, isso teria ido para o CI multiplicado por
+31 arquivos.
+
+**Segundo defeito, no próprio verificador:** classificar sintaxe pela faixa `CS1xxx` é
+errado — `CS1069` ("tipo encaminhado para outro assembly") cai nela e é semântico, sendo
+justamente o erro esperado de `System.Drawing` sob net9.0. Trocado por lista explícita de
+códigos de sintaxe.
+
+Mais uma entrada para o padrão de DEC-019: **a primeira versão de uma ferramenta de medição
+esteve errada de novo.** Vale como regra do projeto, não como coincidência.
+

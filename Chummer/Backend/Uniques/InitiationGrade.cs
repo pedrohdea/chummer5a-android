@@ -24,7 +24,6 @@ using System.Globalization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml;
 using Chummer.Backend.Attributes;
 
@@ -34,7 +33,7 @@ namespace Chummer
     /// An Initiation Grade.
     /// </summary>
     [DebuggerDisplay("{" + nameof(Grade) + "}")]
-    public class InitiationGrade : IHasInternalId, IComparable, ICanRemove, IHasNotes, IHasCharacterObject
+    public partial class InitiationGrade : IHasInternalId, IComparable, ICanRemove, IHasNotes, IHasCharacterObject
     {
         private Guid _guiID;
         private bool _blnGroup;
@@ -556,20 +555,6 @@ namespace Chummer
 
         #region Methods
 
-        public async Task<TreeNode> CreateTreeNode(ContextMenuStrip cmsInitiationGrade, CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            TreeNode objNode = new TreeNode
-            {
-                ContextMenuStrip = cmsInitiationGrade,
-                Name = InternalId,
-                Text = await TextAsync(GlobalSettings.Language, token),
-                Tag = this,
-                ForeColor = await GetPreferredColorAsync(token).ConfigureAwait(false),
-                ToolTipText = (await GetNotesAsync(token).ConfigureAwait(false)).WordWrap()
-            };
-            return objNode;
-        }
 
         public int CompareTo(object obj)
         {

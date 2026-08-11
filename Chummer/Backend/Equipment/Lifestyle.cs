@@ -28,7 +28,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using Chummer.Annotations;
@@ -43,7 +42,7 @@ namespace Chummer.Backend.Equipment
     /// Lifestyle.
     /// </summary>
     [DebuggerDisplay("{DisplayName(\"en-us\")}")]
-    public sealed class Lifestyle : IHasInternalId, IHasXmlDataNode, IHasNotes, ICanRemove, IHasCustomName, IHasSourceId, IHasSource, ICanSort, INotifyMultiplePropertiesChangedAsync, IHasLockObject, IHasCost, IHasCharacterObject
+    public sealed partial class Lifestyle : IHasInternalId, IHasXmlDataNode, IHasNotes, ICanRemove, IHasCustomName, IHasSourceId, IHasSource, ICanSort, INotifyMultiplePropertiesChangedAsync, IHasLockObject, IHasCost, IHasCharacterObject
     {
         private static readonly Lazy<Logger> s_ObjLogger = new Lazy<Logger>(LogManager.GetCurrentClassLogger);
         private static Logger Log => s_ObjLogger.Value;
@@ -4639,33 +4638,6 @@ namespace Chummer.Backend.Equipment
 
         #region UI Methods
 
-        public async Task<TreeNode> CreateTreeNode(ContextMenuStrip cmsBasicLifestyle, ContextMenuStrip cmsAdvancedLifestyle, CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            IAsyncDisposable objLocker = await LockObject.EnterReadLockAsync(token).ConfigureAwait(false);
-            try
-            {
-                token.ThrowIfCancellationRequested();
-                //if (!string.IsNullOrEmpty(ParentID) && !string.IsNullOrEmpty(Source) && !_objCharacter.Settings.BookEnabled(Source))
-                //return null;
-                TreeNode objNode = new TreeNode
-                {
-                    Name = InternalId,
-                    Text = await GetCurrentDisplayNameAsync(token).ConfigureAwait(false),
-                    Tag = this,
-                    ContextMenuStrip = await GetStyleTypeAsync(token).ConfigureAwait(false) == LifestyleType.Standard
-                        ? cmsBasicLifestyle
-                        : cmsAdvancedLifestyle,
-                    ForeColor = await GetPreferredColorAsync(token).ConfigureAwait(false),
-                    ToolTipText = (await GetNotesAsync(token).ConfigureAwait(false)).WordWrap()
-                };
-                return objNode;
-            }
-            finally
-            {
-                await objLocker.DisposeAsync().ConfigureAwait(false);
-            }
-        }
 
         public Color PreferredColor =>
             !string.IsNullOrEmpty(Notes)
@@ -5140,31 +5112,7 @@ namespace Chummer.Backend.Equipment
             return true;
         }
 
-        public void SetSourceDetail(Control sourceControl)
-        {
-            using (LockObject.EnterReadLock())
-            {
-                if (_objCachedSourceDetail.Language != GlobalSettings.Language)
-                    _objCachedSourceDetail = default;
-                SourceDetail.SetControl(sourceControl);
-            }
-        }
 
-        public async Task SetSourceDetailAsync(Control sourceControl, CancellationToken token = default)
-        {
-            IAsyncDisposable objLocker = await LockObject.EnterReadLockAsync(token).ConfigureAwait(false);
-            try
-            {
-                token.ThrowIfCancellationRequested();
-                if (_objCachedSourceDetail.Language != GlobalSettings.Language)
-                    _objCachedSourceDetail = default;
-                await (await GetSourceDetailAsync(token).ConfigureAwait(false)).SetControlAsync(sourceControl, token).ConfigureAwait(false);
-            }
-            finally
-            {
-                await objLocker.DisposeAsync().ConfigureAwait(false);
-            }
-        }
 
         /// <inheritdoc />
         public void Dispose()

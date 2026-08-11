@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml;
 
 namespace Chummer
@@ -32,7 +31,7 @@ namespace Chummer
     /// A Skill Limit Modifier.
     /// </summary>
     [DebuggerDisplay("{" + nameof(Name) + "}")]
-    public class LimitModifier : IHasInternalId, IHasName, ICanRemove, IHasCharacterObject, IHasNotes
+    public partial class LimitModifier : IHasInternalId, IHasName, ICanRemove, IHasCharacterObject, IHasNotes
     {
         private Guid _guiID;
         private bool _blnCanDelete = true;
@@ -453,19 +452,6 @@ namespace Chummer
 
         #region UI Methods
 
-        public async Task<TreeNode> CreateTreeNode(ContextMenuStrip cmsLimitModifier, CancellationToken token = default)
-        {
-            TreeNode objNode = new TreeNode
-            {
-                Name = InternalId,
-                ContextMenuStrip = cmsLimitModifier,
-                Text = await GetCurrentDisplayNameAsync(token).ConfigureAwait(false),
-                Tag = this,
-                ForeColor = await GetPreferredColorAsync(token).ConfigureAwait(false),
-                ToolTipText = (await GetNotesAsync(token).ConfigureAwait(false)).WordWrap()
-            };
-            return objNode;
-        }
 
         public Color PreferredColor
         {

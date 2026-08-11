@@ -26,7 +26,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using Chummer.Annotations;
@@ -39,7 +38,7 @@ namespace Chummer.Backend.Uniques
     /// A Tradition
     /// </summary>
     [HubClassTag("SourceID", true, "Name", "Extra")]
-    public sealed class Tradition : IHasInternalId, IHasName, IHasSourceId, IHasXmlDataNode, IHasSource, INotifyMultiplePropertiesChangedAsync, IHasLockObject, IHasCharacterObject
+    public sealed partial class Tradition : IHasInternalId, IHasName, IHasSourceId, IHasXmlDataNode, IHasSource, INotifyMultiplePropertiesChangedAsync, IHasLockObject, IHasCharacterObject
     {
         private Guid _guiID;
         private Guid _guiSourceID;
@@ -2448,31 +2447,7 @@ namespace Chummer.Backend.Uniques
 
         #endregion static
 
-        public void SetSourceDetail(Control sourceControl)
-        {
-            using (LockObject.EnterReadLock())
-            {
-                if (_objCachedSourceDetail.Language != GlobalSettings.Language)
-                    _objCachedSourceDetail = default;
-                SourceDetail.SetControl(sourceControl);
-            }
-        }
 
-        public async Task SetSourceDetailAsync(Control sourceControl, CancellationToken token = default)
-        {
-            IAsyncDisposable objLocker = await LockObject.EnterReadLockAsync(token).ConfigureAwait(false);
-            try
-            {
-                token.ThrowIfCancellationRequested();
-                if (_objCachedSourceDetail.Language != GlobalSettings.Language)
-                    _objCachedSourceDetail = default;
-                await (await GetSourceDetailAsync(token).ConfigureAwait(false)).SetControlAsync(sourceControl, token).ConfigureAwait(false);
-            }
-            finally
-            {
-                await objLocker.DisposeAsync().ConfigureAwait(false);
-            }
-        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
