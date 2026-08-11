@@ -1,0 +1,123 @@
+# Decisões técnicas
+
+Registro das decisões de arquitetura e engenharia, com o motivo. Serve para o PO acompanhar
+o rumo sem ler código, e para sessões futuras não redecidirem o já decidido.
+
+Decisões técnicas são do programador (ver `CLAUDE.md`). Estão aqui para **transparência**,
+não para aprovação — mas o PO pode contestar qualquer uma.
+
+Status: `VIGENTE` · `SUPERSEDIDA`
+
+---
+
+## DEC-001 — Hard fork, sem compatibilidade de merge com o upstream · VIGENTE
+**2026-08-11**
+
+As refatorações necessárias ao porte (remover WinForms do domínio, eliminar o caminho
+síncrono, trocar `System.Drawing`) são incompatíveis com a base upstream, que continua sendo
+um aplicativo WinForms. Tentar manter merge possível travaria justamente as mudanças que
+o porte exige.
+
+**Custo aceito:** correções de regras feitas pelo upstream não chegam automaticamente.
+Mitigação: os arquivos de `data/` são independentes de código e podem ser atualizados
+isoladamente — que é onde mora a maior parte das correções de regra do upstream.
+
+---
+
+## DEC-002 — Avalonia como stack de UI · VIGENTE
+**2026-08-11**
+
+Alternativas consideradas: .NET MAUI, Android nativo (Kotlin) consumindo o núcleo.
+
+**Por que Avalonia:**
+- XAML com databinding sobre `INotifyPropertyChanged` — que o domínio do Chummer **já
+  implementa de forma rigorosa**, com propagação declarativa por grafo de dependências
+  (ver `docs/codebase/07-concorrencia.md`). A parte difícil de ligar domínio a UI moderna
+  já está pronta.
+- Um só código para Android, Linux e Windows. O porte Linux nativo, que o projeto nunca
+  teve, sai como subproduto.
+- Permite `Chummer.Desktop`, que é o que torna possível depurar o porte sem emulador.
+
+**Por que não MAUI:** não entrega desktop Linux, o que elimina o `Chummer.Desktop` e amarra
+o ciclo de desenvolvimento ao emulador.
+
+**Por que não Kotlin:** descartaria as ~350.000 linhas de regras do `Backend/`.
+
+---
+
+## DEC-003 — MVP é leitor/gerenciador de sessão, construído como piloto · VIGENTE
+**2026-08-11**
+
+O MVP **não** inclui criação de personagem. Inclui: abrir `.chum5`/`.chum5lz`, exibir o
+personagem completo, editar estado de sessão, salvar, e ver a ficha impressa.
+
+**Por que este recorte:** a criação de personagem é ~70% da superfície de UI (só
+`CharacterCreate` + `CharacterCareer` + `CharacterShared` somam 66.412 linhas) e ~20% do
+valor numa mesa de jogo.
+
+**"Piloto" é literal:** o MVP é a arquitetura final com menos telas, não um protótipo. Nada
+nele é descartável. Por isso ele inclui deliberadamente **recarregar arma** — o único item
+do escopo que exercita o padrão de solicitação de escolha ao usuário, que é o que destrava
+os 45 diálogos de seleção depois.
+
+**Descoberta que forçou este formato:** carregar um `.chum5` instancia 30 tipos distintos do
+domínio. Não existe fatia fina do `Backend/` — os ~350.000 LOC do núcleo são custo
+obrigatório da primeira entrega. O que dá para fatiar é a UI.
+
+---
+
+## DEC-004 — Teste diferencial contra o build legado como espinha dorsal · VIGENTE
+**2026-08-11**
+
+A pergunta de um porte não é "passa nos testes?" mas "**se comporta como o antigo?**".
+
+**Mecanismo:** o build legado (net48) roda em CI no `windows-latest` e gera artefatos
+dourados para os 34 personagens de teste. O `Chummer.Core` (net9) gera os mesmos. Um job
+compara. Divergência = regressão até prova em contrário (ver PREM-002).
+
+**A peça de maior retorno:** `PrintToXmlTextWriter` produz uma projeção do personagem com
+**todos os valores calculados já resolvidos** — pools, limites, Essência, iniciativa,
+defesas. Hoje o `Test05_LoadThenPrint` gera isso e só verifica que não explodiu. Transformar
+essa saída em artefato dourado dá detecção de regressão de regra com granularidade de
+propriedade, reaproveitando máquina que já existe.
+
+Sem isso, o modo de falha típico do porte é silencioso: o arquivo salva e carrega
+perfeitamente, e a Agilidade está errada.
+
+**Ruído esperado, a ser triado separadamente de regressão real:**
+- **Ordenação de strings** — .NET Framework usa NLS, .NET moderno usa ICU. O Chummer ordena
+  listas por nome traduzido em 6 idiomas. Vai gerar diff que não é bug.
+- **Formatação numérica** — convenções de cultura mudaram entre as versões, e o Chummer
+  formata nuyen, Essência e custos com cultura configurável.
+
+---
+
+## DEC-005 — Convenções de código: húngara no código movido, C# moderno no novo · VIGENTE
+**2026-08-11**
+
+Código **movido** do `Backend/` preserva a notação húngara original (`strNome`, `blnAtivo`,
+`objPersonagem`). Código **novo** (`Chummer.Core`, `Chummer.UI`) usa C# moderno idiomático.
+
+**Por quê:** misturar refatoração de estilo com refatoração estrutural produz diffs
+irrevisáveis. Num porte cujo maior risco é quebrar regras de Shadowrun silenciosamente, a
+legibilidade do diff é a principal defesa — e é o que permite ao PO exercer QA na revisão.
+
+Renomeação em massa, se for feita, é tarefa própria e isolada.
+
+---
+
+## DEC-006 — Ordem de ataque do desacoplamento · VIGENTE
+**2026-08-11**
+
+Derivada da relação esforço/risco medida em `docs/codebase/13-acoplamento-plataforma.md`:
+
+1. `NativeMethods.cs` — os 80 `DllImport` estão num único arquivo com 8 chamadores. Volume alto, esforço trivial.
+2. `GlobalSettings` / Registro — substituição do *backing store* atrás de fachada estável (6.448 acessos exigem preservar a superfície).
+3. `System.Drawing` — poucos pontos de contato, já mediados por `IHasMugshots` e `ImageExtensions`.
+4. Tipos de UI em assinaturas (`LoadingBar`, `CursorWait`) → abstrações de progresso.
+5. `MessageBox` + diálogos `Select*` → abstração de solicitação de interação.
+6. `TreeNode` fora do domínio.
+7. Caminho síncrono e `DoEvents` — o mais arriscado, porque mexe na semântica de concorrência de um sistema com locks caseiros.
+
+Os itens 1–4 são de baixo risco e não dependem de decisão pendente: **podem começar a
+qualquer momento**. Os itens 5–7 dependem do desenho da camada de plataforma.

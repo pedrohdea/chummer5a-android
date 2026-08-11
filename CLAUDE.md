@@ -36,13 +36,40 @@ criação de personagem?"*, *"o usuário precisa de export PDF na v1?"*, *"quais
 empacotar?"*. Perguntas que **não** devem ser feitas: *"uso Avalonia ou MAUI?"*, *"crio uma
 interface para isso?"*, *"qual biblioteca de imagem?"* — decida.
 
+**Nunca fique bloqueado.** Mesmo as perguntas de produto não param o trabalho — ver o
+protocolo da pasta do PO, logo abaixo. O PO trabalha em paralelo e pode demorar a
+responder; o desenvolvimento segue sob premissa registrada.
+
 **QA é dele.** Ele valida comportamento no aparelho. Você entrega verificado até onde o
 ambiente permite, e diz **explicitamente** o que não foi possível verificar. Nunca afirme
 que algo funciona sem ter rodado; nunca esconda um teste que falhou.
 
+## Protocolo da pasta do PO — leia antes de qualquer sessão de trabalho
+
+**`docs/po/`** é o mecanismo que permite PO e programador trabalharem em paralelo. Quatro
+arquivos: `pendencias.md` (perguntas abertas ao PO), `premissas.md` (o que foi assumido para
+não travar), `qa-roteiro.md` (o que precisa de teste humano), `decisoes.md` (decisões
+técnicas e o porquê).
+
+**A regra:** quando aparecer uma pergunta cuja resposta é do PO —
+
+1. registre a pendência em `pendencias.md`;
+2. **escolha a resposta mais provável**, registre em `premissas.md` com o que muda se estiver
+   errada e o custo de reverter (🟢 baixo · 🟡 médio · 🔴 alto);
+3. **siga trabalhando** sob essa premissa.
+
+Única exceção: premissa 🔴 (retrabalho de semanas) — não construa por cima dela sem resposta;
+trabalhe em outra frente enquanto isso.
+
+**Mantenha os arquivos vivos.** Toda sessão: leia `pendencias.md` e `premissas.md` antes de
+começar; ao terminar, registre pendências novas, premissas novas, decisões tomadas e itens
+de QA que a entrega criou. Itens resolvidos mudam de status e vão para o fim do arquivo —
+nunca são apagados.
+
 ## Decisões já tomadas
 
-Registradas aqui para não serem re-litigadas a cada sessão.
+Resumo. O registro completo, com motivos e alternativas descartadas, está em
+`docs/po/decisoes.md`.
 
 | Decisão | Escolha | Motivo |
 |---|---|---|
@@ -86,6 +113,21 @@ números medidos. Especialmente:
 
 Documentação do upstream que continua válida: `Chummer/docs/wiki/` (autoria de dados
 customizados), `Chummer/docs/XPathConditionSystem.md`.
+
+## Estratégia de teste
+
+Espinha dorsal: **teste diferencial contra o build legado** (DEC-004). O build net48 roda em
+CI no `windows-latest` e gera artefatos dourados para os 34 personagens de
+`Chummer.Tests/TestFiles/`; o `Chummer.Core` gera os mesmos e um job compara. Divergência é
+regressão até prova em contrário — o porte preserva até os defeitos atuais (PREM-002).
+
+A suíte existente já é uma boa base de caracterização: carrega todo o XML, carrega os 34
+personagens, faz round-trip de save com diff XMLUnit (com filtros para as não-determinâncias
+conhecidas) e imprime em todos os idiomas.
+
+A peça de maior retorno a construir: `PrintToXmlTextWriter` produz uma projeção com **todos
+os valores de regra já calculados**. Hoje o `Test05` gera e descarta. Transformar isso em
+artefato dourado dá detecção de regressão de regra por propriedade, quase de graça.
 
 ## Fatos do código que economizam tempo
 
