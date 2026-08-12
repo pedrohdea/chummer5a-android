@@ -44,18 +44,26 @@ Tornar todo o `Backend/` compilável sob net9.0, sem UI e sem `System.Drawing`.
   - ✅ Infraestrutura de UI devolvida ao lugar dela (DEC-020) — 671 → **367**
   - ✅ Abstração de interação com o usuário, metade de mensagem (DEC-026) — 367 → 89
   - ✅ Extração dos membros restantes, com o extrator corrigido (DEC-033) — 89 → **20**
-  - ⬜ **Retratos como bytes (DEC-021, desenhado em DEC-034)** — os 20 que sobram são
-    todos deste subsistema, e são todo o acoplamento de declaração que resta no `Backend/`
-- ⬜ **Metade de seleção** da abstração de interação: `ThreadSafeForm` e os diálogos
-  `Select*`. Só fica visível ao censo depois que as declarações zerarem (DEC-032) — é
-  acoplamento de corpo de método, e o compilador não o enxerga antes disso
+  - ✅ **Retratos como bytes (DEC-021, desenhado em DEC-034)** — 20 → **0**. A frente de
+    declaração do `Backend/` está zerada.
+- 🔄 **Acoplamento de corpo de método** — medido pela primeira vez em
+  `docs/codebase/15-acoplamento-de-corpo.md`: **1.584 erros**. Em ordem de retorno:
+  - ⬜ Consolidar `AddImprovementCollection` com `AddImprovementAsyncCollection` — 524
+    erros (262 cada, número idêntico), um terço do total, e ~15 mil linhas duplicadas
+  - ⬜ `ColorManager` — 336 ocorrências de um símbolo só; o domínio decide cor de item
+  - ⬜ **Metade de seleção** da abstração de interação: `ThreadSafeForm` + `DialogResult`
+    (337) e os **24 diálogos `Select*` distintos** que o domínio instancia
+  - ⬜ `Program` — 102 ocorrências, quase todas `MessageBox` disfarçado
+  - ⬜ Arrastar o que já é domínio puro (atributos de Matriz, os `Clear*` de `Character`) —
+    ~200 erros sem decisão de arquitetura nenhuma pela frente
 - ⬜ Mover o `Backend/` inteiro de uma vez, quando o censo chegar a zero
 
-> **O número do censo mudou de significado** (DEC-032). Ele conta erros de **declaração**;
-> acoplamento dentro de corpos de método é invisível enquanto restar um erro de declaração
-> no arquivo. A série 733 → 20 mede uma frente só. As 329 chamadas a `MessageBox`, as ~120
-> instanciações de diálogo e os 146 `Application.DoEvents()` ainda não entraram na conta —
-> e só entram quando esta primeira frente chegar a zero.
+> **O número do censo mudou de significado duas vezes** (DEC-032). Ele conta erros de
+> **declaração** enquanto houver um; só quando a declaração zera o compilador vincula
+> corpos de método e o resto aparece. A série 733 → 20 mediu a primeira frente; o salto de
+> 20 para 1.584 é a segunda frente ficando visível, **não uma regressão**. As 329 chamadas
+> a `MessageBox`, as instanciações de diálogo e os 146 `Application.DoEvents()` entraram na
+> conta agora.
 - ⬜ Testes existentes passando contra o `Chummer.Core`
 - ⬜ **Reavaliar o plano na totalidade**
 

@@ -334,3 +334,19 @@ O ganho técnico é concreto, e maior do que "uma pergunta a menos":
 PEND-013 (regras da casa) foi respondida no mesmo bloco e aponta na mesma direção: o
 aplicativo usa o ruleset padrão. Medido: os 34 personagens de teste do repositório usam
 **todos** `default.xml` — o que já estava coberto é exatamente o que ficou no escopo.
+
+---
+
+## PREM-020 — Ninguém precisa recomprimir foto já guardada · ATIVA 🟢
+**Criada:** 2026-08-12 · **Pendência:** PEND-016 · **Decisão:** DEC-037
+
+Assumido que **não existe** necessidade de reprocessar retratos que já estão dentro do
+personagem. A configuração de compressão descreve como guardar a próxima foto escolhida, e
+não é um botão de reprocessamento retroativo.
+
+**O que muda se estiver errada:** entra um comando explícito de recompressão nos formulários
+de personagem. É uma ação de menu e uma passada pela lista de retratos — não mexe no
+domínio, que já guarda bytes e aceita receber outros.
+
+**Custo de reverter:** 🟢 baixo. Nada foi construído por cima dessa premissa; ela só
+descreve o que **não** foi construído.

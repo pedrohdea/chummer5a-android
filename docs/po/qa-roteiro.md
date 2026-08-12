@@ -127,3 +127,40 @@ comportamento tem que ser vista por olho humano antes de virar verdade.
 
 **Também vale testar:** trocar a foto por uma nova, salvar, reabrir. E um personagem com
 várias fotos, trocando qual é a principal.
+
+---
+
+## QA-009 — Importar personagem do Hero Lab com foto · AGUARDANDO
+**Etapa:** 2 (extração do núcleo) · **Decisão:** DEC-034
+
+Importar um `.por` do Hero Lab que tenha retrato e conferir que o retrato aparece.
+
+**O que quero saber:** a foto aparece, e aparece inteira — não cortada, não girada, não em
+preto.
+
+**Por que existe:** a importação lia a imagem do zip com GDI+, convertia o formato de pixel
+e guardava o objeto de imagem. Agora ela copia os bytes do zip direto, sem abrir a imagem.
+É mais simples e não perde nada, mas passa a aceitar qualquer formato que o Hero Lab
+gravar — inclusive algum que o decodificador só vá reclamar na hora de exibir.
+
+**Só vale se você tiver um `.por`.** Se não tiver, ignore: é caminho de importação, não do
+uso normal.
+
+---
+
+## QA-010 — Mudar a compressão de retrato nas configurações · AGUARDANDO
+**Etapa:** 2 (extração do núcleo) · **Decisão:** DEC-037
+
+Em Configurações, mudar "compressão de retrato", salvar um personagem que **já** tinha foto,
+e depois adicionar uma foto nova.
+
+**O que quero saber:** você concorda com o comportamento novo — a mudança vale para a foto
+**nova**, e a foto antiga fica como estava.
+
+**Por que existe:** antes, mudar a compressão e salvar reprocessava as fotos já guardadas.
+Agora a compressão acontece uma vez, quando você escolhe a foto. É melhoria (evitava-se
+empilhar gerações de JPEG), mas é comportamento diferente do que o Chummer faz hoje, e é o
+tipo de coisa que só o usuário pode dizer se incomoda.
+
+**Se incomodar:** a saída não é voltar atrás, é um comando explícito de "recomprimir fotos
+deste personagem". Diga se quiser que ele entre no escopo.
