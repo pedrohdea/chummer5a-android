@@ -1,7 +1,9 @@
 using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using Chummer.UI;
+using Chummer.UI.ViewModels;
 using Chummer.UI.Views;
 
 namespace Chummer.Desktop;
@@ -18,29 +20,43 @@ namespace Chummer.Desktop;
 /// </remarks>
 internal static class Screenshot
 {
-    public static int Capture(string path, int width, int height)
+    public static int Capture(string path, int width, int height, bool withSpikes)
     {
-        // SetupWithoutStarting brings up Skia and the styling system without a window and
-        // without a dispatcher loop — exactly what is needed to rasterise one control.
+        // UsePlatformDetect and not UseSkia alone: Avalonia refuses to start without a
+        // runtime platform, and using the real one means this run also proves the X11
+        // backend initialises. It therefore needs a display — under Xvfb in the container.
         AppBuilder.Configure<App>()
-            .UseSkia()
+            .UsePlatformDetect()
             .WithInterFont()
             .SetupWithoutStarting();
 
-        MainView view = new()
+        // The view has to live inside a real window, not float on its own: Avalonia resolves
+        // styles and theme resources through the visual tree up to a TopLevel. Rendering a
+        // detached control produces a technically valid, entirely blank PNG — measured.
+        MainWindow window = new()
         {
             Width = width,
             Height = height,
         };
+        window.Show();
 
-        view.Measure(new Size(width, height));
-        view.Arrange(new Rect(0, 0, width, height));
-        view.UpdateLayout();
+        Pump(40);
+
+        if (withSpikes && (window.Content as MainView)?.DataContext is MainViewModel viewModel)
+        {
+            Task running = viewModel.RunSpikesAsync();
+            while (!running.IsCompleted)
+            {
+                Dispatcher.UIThread.RunJobs();
+                Thread.Sleep(25);
+            }
+            Pump(40);
+        }
 
         using RenderTargetBitmap bitmap = new(
             new PixelSize(width, height),
             new Vector(96, 96));
-        bitmap.Render(view);
+        bitmap.Render(window);
 
         string? directory = Path.GetDirectoryName(Path.GetFullPath(path));
         if (!string.IsNullOrEmpty(directory))
@@ -50,5 +66,19 @@ internal static class Screenshot
         FileInfo file = new(path);
         Console.WriteLine($"PNG gravado: {file.FullName} ({file.Length} bytes, {width}x{height})");
         return file.Length > 0 ? 0 : 1;
+    }
+
+    /// <summary>
+    /// Runs pending dispatcher work. Layout, styling and text shaping all happen on
+    /// dispatcher jobs — pumping them is what turns "the window exists" into "the window has
+    /// content". Without it the PNG comes out valid and entirely blank, which was measured.
+    /// </summary>
+    private static void Pump(int rounds)
+    {
+        for (int i = 0; i < rounds; ++i)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(25);
+        }
     }
 }

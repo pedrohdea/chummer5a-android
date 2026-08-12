@@ -24,7 +24,13 @@ internal static class Program
 
         int shot = Array.IndexOf(args, "--screenshot");
         if (shot >= 0 && shot + 1 < args.Length)
-            return Screenshot.Capture(args[shot + 1], width: 420, height: 900);
+        {
+            return Screenshot.Capture(
+                args[shot + 1],
+                width: 420,
+                height: 900,
+                withSpikes: args.Contains("--with-spikes", StringComparer.Ordinal));
+        }
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         return 0;

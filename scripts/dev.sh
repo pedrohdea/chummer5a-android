@@ -12,6 +12,7 @@
 #   ./scripts/dev.sh erros Gear    idem, filtrado por arquivo
 #   ./scripts/dev.sh apk        gera o APK e informa o tamanho
 #   ./scripts/dev.sh spikes     roda as medições de plataforma no desktop (controle)
+#   ./scripts/dev.sh tela [png] renderiza a UI para PNG (prova que desenha, sem tela)
 #   ./scripts/dev.sh status     onde o porte está, em números
 #
 # Por que existe: as ferramentas do projeto medem coisas diferentes e é fácil rodar a
@@ -110,6 +111,18 @@ FIM
       while IFS=$'\t' read -r bytes caminho; do
         printf '\nAPK: %s\n     %s bytes (%.2f MiB)\n' "$caminho" "$bytes" "$(echo "$bytes/1048576" | bc -l)"
       done
+    ;;
+
+  tela)
+    # Prova que a UI DESENHA, e não só que compila. O contêiner não tem tela nem ferramenta
+    # de captura, então o próprio app rasteriza a janela para PNG; o Xvfb entra porque o
+    # Avalonia exige uma plataforma de runtime, e usar a de verdade faz esta execução provar
+    # também que o backend X11 sobe.
+    destino="${1:-/tmp/chummer-tela.png}"; shift || true
+    titulo "Renderizando a UI para $destino"
+    cd "$RAIZ/src" && CHUMMER_ASSETS="$RAIZ/Chummer" \
+      xvfb-run -a dotnet run --project Chummer.Desktop/Chummer.Desktop.csproj --nologo \
+        -- --screenshot "$destino" "$@"
     ;;
 
   spikes)
