@@ -72,6 +72,10 @@ case "$cmd" in
     ;;
 
   apk)
+    # O setup instala em ~/android-sdk; adota automaticamente se estiver lá.
+    if [ -z "${ANDROID_HOME:-}" ] && [ -d "$HOME/android-sdk/platforms" ]; then
+        export ANDROID_HOME="$HOME/android-sdk" ANDROID_SDK_ROOT="$HOME/android-sdk"
+    fi
     if [ -z "${ANDROID_HOME:-}${ANDROID_SDK_ROOT:-}" ]; then
       erro "Android SDK não encontrado (ANDROID_HOME/ANDROID_SDK_ROOT vazios)."
       cat >&2 <<'FIM'
@@ -83,8 +87,10 @@ O workload .NET de Android instala normalmente aqui:
 Mas ele traz só o compilador e os runtimes. Empacotar um APK exige também o SDK do
 Google (platform + build-tools), que este contêiner não tem e não conseguiu baixar.
 
-Onde o APK é gerado, portanto: no CI. O runner `ubuntu-latest` do GitHub Actions já vem
-com o Android SDK instalado e $ANDROID_HOME definido.
+Rode:  ./scripts/setup-dev.sh --android
+
+Ele baixa o SDK do Google descobrindo a URL no índice do repositório. Medido: o APK
+sai deste contêiner em ~50 s, sem CI.
 
 Ver docs/DESENVOLVIMENTO.md, seção "APK".
 FIM

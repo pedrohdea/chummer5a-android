@@ -61,6 +61,38 @@ dotnet --list-sdks
 if [ "$INSTALL_ANDROID" -eq 1 ]; then
     log "Instalando workload Android"
     dotnet workload install android --skip-sign-check
+
+    # ------------------------------------------------------------------
+    # SDK do Google. O workload acima traz só compilador e runtimes; sem o SDK
+    # o build para com XA5300 e nenhum APK sai.
+    #
+    # A URL é DESCOBERTA no índice do repositório, nunca chutada: o nome do
+    # arquivo é `commandlinetools-linux-<build>_latest.zip` — sem hífen entre
+    # "commandline" e "tools". Chutando com hífen dá 404 em todas as versões, e
+    # foi o que me fez concluir, errado, que o SDK não entrava neste contêiner.
+    # ------------------------------------------------------------------
+    SDK="${ANDROID_HOME:-$HOME/android-sdk}"
+    if [ ! -d "$SDK/platforms" ]; then
+        echo "Instalando o Android SDK em $SDK ..."
+        TMP=$(mktemp -d)
+        curl -sSL -o "$TMP/repo.xml" https://dl.google.com/android/repository/repository2-3.xml
+        PKG=$(grep -oE 'commandlinetools-linux-[0-9]+_latest\.zip' "$TMP/repo.xml" \
+              | sort -t- -k3 -n | tail -1)
+        [ -n "$PKG" ] || { echo "não achei o commandlinetools no índice" >&2; exit 1; }
+        curl -sSL -o "$TMP/cmdline.zip" "https://dl.google.com/android/repository/$PKG"
+        mkdir -p "$SDK/cmdline-tools"
+        unzip -q "$TMP/cmdline.zip" -d "$TMP/x"
+        rm -rf "$SDK/cmdline-tools/latest"
+        mv "$TMP/x/cmdline-tools" "$SDK/cmdline-tools/latest"
+        rm -rf "$TMP"
+        export ANDROID_HOME="$SDK" ANDROID_SDK_ROOT="$SDK"
+        export PATH="$SDK/cmdline-tools/latest/bin:$PATH"
+        yes 2>/dev/null | sdkmanager --licenses > /dev/null 2>&1 || true
+        sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0" \
+            > /dev/null 2>&1
+    fi
+    echo "Android SDK: $SDK"
+    echo "Exporte antes de compilar:  export ANDROID_HOME=$SDK ANDROID_SDK_ROOT=$SDK"
     log "Workloads instalados"
     dotnet workload list
 else
