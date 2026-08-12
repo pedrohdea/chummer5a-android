@@ -59,6 +59,30 @@ Tornar todo o `Backend/` compilável sob net9.0, sem UI e sem `System.Drawing`.
 - ⬜ Testes existentes passando contra o `Chummer.Core`
 - ⬜ **Reavaliar o plano na totalidade**
 
+## Etapa 2.5 — APK esqueleto, em paralelo ⬜
+
+**Não depende do `Chummer.Core`.** Existe para responder, com o aparelho na mão, as perguntas
+de plataforma que estão em aberto desde a Etapa 1 (item 1.4, nunca feito) e que podem
+invalidar decisões de arquitetura já tomadas.
+
+- ⬜ Projeto `Chummer.Android` com Avalonia, tela única, nada de domínio
+- ⬜ Os 21 MB de `data/` embarcados como assets — **medir tempo de carga e pico de memória**
+- ⬜ `XslCompiledTransform` rodando no Android — se não rodar, a Etapa 7 muda inteira
+- ⬜ Tamanho do APK com os assets dentro
+- ⬜ Job de CI que gera o APK e o publica como artefato
+- ⬜ **PO instala no A56 e confirma que abre** (PREM-018)
+- ⬜ **Reavaliar o plano na totalidade**
+
+> **Por que sobe para cá.** Estas medições não competem com a Etapa 2 — são outra frente, e
+> a resposta delas muda o plano das etapas 4, 6 e 7. Deixá-las para depois é carregar por
+> mais tempo o risco de descobrir tarde que uma decisão de arquitetura não se sustenta no
+> aparelho. E dá ao PO um APK instalável muito antes do MVP.
+>
+> **Onde o APK é construído:** no CI. Medido em 2026-08-12 — o workload .NET de Android
+> instala neste contêiner, mas o SDK do Google não: `InstallAndroidDependencies` falha com
+> `XAIAD7009` e o download direto do `commandline-tools` responde 404. O runner
+> `ubuntu-latest` já traz o SDK.
+
 ## Etapa 3 — Artefatos dourados e teste diferencial ⬜
 
 - ⬜ Job Windows que gera save + impressão dos 34 personagens com MSBuild do VS (DEC-015)
@@ -161,3 +185,47 @@ arquivos sujos, ou seja, não formam um conjunto fechado por dependência.
 confundido as duas coisas ao escrever DEC-014.
 
 Nova estratégia: **consertar em lugar, mover uma vez** (DEC-016).
+
+### Revisão estratégica de 2026-08-12 — "o que falta para um APK funcional"
+
+Provocada pelo PO. Quatro achados, o primeiro deles desconfortável.
+
+**1. A Etapa 2 está muito menos adiantada do que o número sugeria.** O censo saiu de 733
+para 20, e isso parecia 97%. Não é. O censo mede **acoplamento de declaração**; o de corpo
+de método é invisível para ele enquanto restar um erro de declaração (DEC-032). Medido agora,
+o que ele nunca contou:
+
+| | |
+|---|---|
+| `ThreadSafeForm` no `Backend/` (diálogos de seleção) | **327** |
+| arquivos do `Backend/` ainda com `using System.Windows.Forms` | **27** |
+| linhas ainda em `Chummer/Backend/` | **321.901** |
+| linhas já em `src/Chummer.Core/` | **747** |
+
+Ou seja: das ~322 mil linhas do domínio, **0,2% foram migradas**. O que se fez até aqui foi
+preparar o terreno — separar metades de UI, criar a abstração de interação, consertar as
+ferramentas. Trabalho necessário, mas a mudança de endereço mal começou.
+
+**2. Existem dois "APK" diferentes, e confundi-los atrasa o projeto.**
+
+- **APK esqueleto** — instala, abre, não lê ficha. **Não depende do `Chummer.Core`.**
+  Alcançável em dias, e é o que responde os riscos de plataforma.
+- **APK funcional** — abre um `.chum5` e mostra o personagem. Depende da Etapa 2 inteira,
+  porque carregar um `.chum5` instancia 30 tipos do domínio e não existe fatia fina
+  (achado da Etapa 0).
+
+O plano só previa o segundo. O primeiro virou a **Etapa 2.5**, em paralelo.
+
+**3. Os spikes da Etapa 1.4 nunca foram feitos, e são os de maior risco restante.** Tempo de
+carga dos 21 MB, pico de memória, `XslCompiledTransform` no Android, tamanho do APK. São as
+únicas perguntas abertas capazes de derrubar decisões de arquitetura já tomadas — a de XSLT
+sozinha define se a Etapa 7 existe como planejada. Estavam agendadas para "quando der"; agora
+são a Etapa 2.5.
+
+**4. A ordem das etapas 3 e 5 não precisa preceder o primeiro APK.** Artefatos dourados
+(Etapa 3) são rede de segurança para a **mudança de comportamento**; saneamento assíncrono
+(Etapa 5) é para não dar ANR. Nenhum dos dois é pré-requisito para um APK **existir**. Ficam
+onde estão, mas deixam de bloquear a Etapa 2.5.
+
+**Caminho crítico, em uma linha:** retratos → destrava a medição → metade de seleção (os 327)
+→ mover 322 mil linhas → UI Avalonia → APK funcional. Em paralelo, e independente: Etapa 2.5.
