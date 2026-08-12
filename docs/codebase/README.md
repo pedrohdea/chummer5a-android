@@ -21,7 +21,8 @@ para que as etapas de refatoração partam de um mapa confiável em vez de supos
 | 11 | [Projetos Satélite](11-projetos-satelite.md) | Técnico — Hub, plugins, utilitários |
 | 12 | [Build, CI e Dependências](12-build-ci.md) | Técnico — como se compila hoje |
 | 13 | [Acoplamento à Plataforma](13-acoplamento-plataforma.md) | Técnico — **inventário Windows-only** |
-| 14 | [Censo de Erros](14-censo-de-erros.md) | Técnico — **medição: 733 erros ao compilar o Backend sob net9.0** |
+| 14 | [Censo de Erros](14-censo-de-erros.md) | Técnico — **medição da frente de DECLARAÇÃO: 733 erros, hoje zerada** |
+| 15 | [Acoplamento de Corpo de Método](15-acoplamento-de-corpo.md) | Técnico — **a outra metade: 1.584 erros que só apareceram quando as declarações zeraram** |
 
 ## Documentação que já existia no projeto
 

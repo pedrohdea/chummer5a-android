@@ -169,7 +169,10 @@ números medidos. Especialmente:
 - `docs/codebase/02-glossario.md` — sem o glossário e a notação húngara, o `Backend/` é ilegível
 - `docs/codebase/13-acoplamento-plataforma.md` — o inventário do que prende ao Windows, com a ordem de ataque
 - `docs/codebase/06-motor-regras.md` — o subsistema de Improvements, que é o coração das regras
-- `docs/codebase/14-censo-de-erros.md` — a medição: 733 erros, dos quais só 451 são domínio
+- `docs/codebase/14-censo-de-erros.md` — a medição da frente de **declaração**: 733 erros, dos quais só 451 são domínio
+- `docs/codebase/15-acoplamento-de-corpo.md` — a outra metade, medida quando as declarações
+  zeraram (DEC-034): **1.584 erros de corpo de método**, um terço deles nos dois
+  `AddImprovementCollection` duplicados
 
 Documentação do upstream que continua válida: `Chummer/docs/wiki/` (autoria de dados
 customizados), `Chummer/docs/XPathConditionSystem.md`.
