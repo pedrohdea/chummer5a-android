@@ -17,6 +17,13 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>0.1</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <!--
+      Só arm64. Medido: incluir também android-x64 acrescenta 13,2 MiB ao APK — mais do que
+      TODOS os dados de jogo juntos, que custam 2,9 MiB comprimidos. x86_64 em Android só
+      existe em emulador, e o alvo do projeto é um aparelho real.
+      Para trabalhar com emulador: -p:RuntimeIdentifiers="android-arm64;android-x64".
+    -->
+    <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!--
       O SDK Android emite XA4218/XA4301 e avisos de binding de terceiros que nada têm a ver

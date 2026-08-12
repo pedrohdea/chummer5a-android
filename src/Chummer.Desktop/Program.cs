@@ -22,6 +22,10 @@ internal static class Program
         if (args.Contains("--spikes", StringComparer.Ordinal))
             return RunSpikesOnConsole();
 
+        int shot = Array.IndexOf(args, "--screenshot");
+        if (shot >= 0 && shot + 1 < args.Length)
+            return Screenshot.Capture(args[shot + 1], width: 420, height: 900);
+
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         return 0;
     }
