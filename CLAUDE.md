@@ -154,6 +154,15 @@ da raiz, o SDK errado é selecionado e o build legado quebra com `MSB3823`.
 O container é efêmero: **toda dependência de toolchain vai nesse script**, nunca num
 comando avulso. CI do porte: `.github/workflows/port-build.yml` (Linux).
 
+## Retomar o trabalho
+
+**`docs/po/estado-atual.md`** — onde o porte está agora, o que está em voo, e os três
+comandos para voltar a todo vapor depois de qualquer interrupção. Atualize-o ao fim de toda
+sessão; velho, ele é pior que inútil.
+
+**`docs/po/prompt-agente.md`** — o prompt para abrir sessão nova ou subagente, e como
+briefar: erros literais colados, critério de aceite binário, pastas proibidas.
+
 ## O plano
 
 **`docs/po/plano.md`** — as 10 etapas, com estado. Toda etapa termina com a subetapa

@@ -114,3 +114,71 @@ Etapa 2.5 vai responder.
 
 Ao dar uma frente a um agente, diga explicitamente **quais pastas ele NÃO deve tocar** — é o
 que evita conflito entre worktrees.
+
+---
+
+## Como briefar um subagente
+
+Aprendido na prática: agente com missão vaga gasta metade do orçamento **redescobrindo** o
+que já sabíamos. O contexto dele começa frio — o que está óbvio para quem briefa não existe
+para quem recebe.
+
+Um briefing bom tem estas seis partes. As três primeiras não são opcionais.
+
+**1. Os erros LITERAIS, colados.** Não "conserte os erros de mugshot" — cole a saída de
+`./scripts/dev.sh censo`. O agente não deve gastar uma rodada de ferramenta para descobrir
+o que você já tem na tela.
+
+**2. O critério de aceite, binário.** "`./scripts/dev.sh censo` retorna 0 erros e
+`./scripts/dev.sh check` passa." Sem julgamento, sem "ficou bom". Ou o comando passa ou não.
+
+**3. As pastas PROIBIDAS.** Nomeie as pastas das outras frentes. É o que evita conflito
+entre worktrees, e nenhum agente adivinha sozinho.
+
+**4. O que já está pronto no ambiente.** Android SDK em `~/android-sdk`, workload instalado,
+APK sai em ~50 s local. Sem isso ele reinstala tudo — ou pior, conclui que não dá.
+
+**5. As armadilhas relevantes à tarefa dele.** Não a lista inteira; as duas ou três que a
+frente dele encosta.
+
+**6. Resiliência.** Commite e empurre a cada passo, para uma branch própria, mesmo parcial.
+O worktree vive num contêiner efêmero.
+
+### Modelo
+
+```
+Você é programador sênior no porte do Chummer 5 para Android.
+LEIA ANTES: CLAUDE.md, docs/DESENVOLVIMENTO.md, docs/po/estado-atual.md.
+
+## Sua tarefa
+<uma frase>
+
+## Os erros, literais
+<cole a saída real do comando>
+
+## Critério de aceite
+<comando> retorna <resultado exato>. E ./scripts/dev.sh check passa.
+
+## NÃO toque em
+<pastas das outras frentes>
+
+## Já pronto no ambiente
+<toolchain, atalhos, o que não precisa refazer>
+
+## Armadilhas desta frente
+<as duas ou três relevantes>
+
+## Resiliência
+Commite e empurre a cada passo para <branch>, mesmo parcial.
+
+## Ao terminar, reporte
+Números medidos, o que funcionou, e o que NÃO deu para verificar.
+```
+
+### Sobre orçamento de contexto
+
+O agente principal também tem limite, e ele acaba. O que protege o projeto não é economizar
+tokens — é **deixar no repositório tudo que permite recomeçar**: `estado-atual.md` atualizado,
+decisões registradas, trabalho empurrado. Uma sessão que termina com o contexto cheio e o
+repositório em dia não perdeu nada. Uma que termina com trabalho brilhante só no contêiner
+perdeu tudo.
