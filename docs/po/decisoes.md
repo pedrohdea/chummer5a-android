@@ -1032,3 +1032,51 @@ extraídos, só `NativeMethods.UI.cs` tinha o defeito.
 **A limitação que fica registrada:** a classificação de `CS0246` do verificador continua
 grossa demais para detectar um tipo de domínio que sumiu. A auditoria estrutural cobre o
 caso conhecido; outros ainda dependem do CI Windows.
+
+---
+
+## DEC-036 — O build legado inteiro compila em Linux · VIGENTE
+**2026-08-12**
+
+`scripts/verificar-legado.sh` compila **todo** o aplicativo legado — `Backend/`, `Controls/`,
+`Forms/`, `Plugins/`, `UI/`, `Telemetry/` e `Chummer.Core` — em Linux, sob
+`net9.0-windows`, com WinForms de verdade. Roda em cerca de meio minuto.
+
+**A descoberta:** `EnableWindowsTargeting=true` faz o SDK restaurar os assemblies de
+referência do Windows Desktop em Linux. Os assemblies de referência não têm código nativo;
+só a execução precisa de Windows. Com isso `UseWindowsForms` funciona, `System.Windows.Forms`
+resolve, e os erros de declaração vão a zero — que é a condição para o Roslyn finalmente
+vincular corpos de método (DEC-032).
+
+**Por que isto importa mais do que parece:** era a peça que faltava desde o começo do porte.
+Quatro rodadas de CI vermelhas nesta sessão foram causadas por erros de corpo de método que
+nenhuma ferramenta local podia ver — cada uma com cinco minutos de latência, todas em código
+que eu acabara de reescrever mecanicamente. Agora aparecem em segundos.
+
+**A validação, e ela mudou o desenho:** reinjetei o defeito exato que quebrou o CI —
+`DialogResult eShowBPResult = <expressão PromptResult>` — e o script disse **OK**. Falso
+negativo. A causa: a primeira versão listava o `CS0246` de `ContextMenu` como "diferença
+conhecida entre net48 e net9" e o filtrava da saída. Só que erro de declaração filtrado
+continua sendo erro de declaração: o compilador seguia sem vincular corpo nenhum, e o script
+anunciava "corpos vinculados" tendo analisado zero corpos.
+
+Daí a regra que o script passou a seguir, e que é o coração dele:
+
+| Tipo de diferença | Tratamento |
+|---|---|
+| **de declaração** (tipo removido, base ausente) | **declarar o tipo** em `scripts/probe/WinFormsRemovedTypes.cs`, para os erros chegarem de fato a zero |
+| **de corpo** (método que virou extensão) | pode ser filtrado da saída — não cega a análise |
+| **de analisador** (`WFO1000`) | `NoWarn` — analisador não interfere na vinculação |
+
+Com `ContextMenu` declarado em vez de filtrado, o defeito injetado apareceu como
+`CS0266` e `CS0019`, nas mesmas linhas que o CI Windows apontou.
+
+**O que ele não é:** o build net48. O alvo é `net9.0-windows` e há diferenças reais — hoje
+uma só, `Directory.GetAccessControl`, que no .NET moderno virou extensão sobre
+`DirectoryInfo`. O CI Windows continua sendo a única prova de que o net48 compila; este
+script tira dele o papel de primeira linha de defesa.
+
+**A lição, e é a mesma de DEC-019 pela quinta vez:** eu ia entregar um verificador que
+passava em código quebrado. O que o salvou não foi revisá-lo, foi **injetar o defeito
+conhecido e exigir que ele falhasse**. Ferramenta de verificação precisa de teste negativo;
+"rodou e deu OK" não é evidência de nada.
