@@ -34,6 +34,10 @@ PROBE="$WORK_DIR/Probe"
 export PATH="${DOTNET_ROOT:-/usr/share/dotnet}:$PATH"
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1
 
+# Auditoria estrutural antes de compilar: barata, e pega uma classe de defeito que a
+# classificação por código de erro deixa passar (parcial emitida para tipo aninhado).
+python3 "$REPO_ROOT/scripts/probe/auditar-parciais.py" "$REPO_ROOT"
+
 mkdir -p "$PROBE"
 NOVO="$(cat <<'CSPROJ'
 <Project Sdk="Microsoft.NET.Sdk">

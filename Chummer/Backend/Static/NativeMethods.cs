@@ -27,7 +27,7 @@ using System.Text;
 
 namespace Chummer
 {
-    internal static class NativeMethods
+    internal static partial class NativeMethods
     {
         [DllImport("dbghelp.dll", EntryPoint = "MiniDumpWriteDump", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
@@ -903,7 +903,7 @@ namespace Chummer
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        internal partial struct SHSTOCKICONINFO
+        internal struct SHSTOCKICONINFO
         {
             internal uint cbSize;
             internal IntPtr hIcon;

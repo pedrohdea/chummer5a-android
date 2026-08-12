@@ -223,20 +223,31 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
 
     # Reconhece class, static class, sealed/abstract class, struct e readonly struct.
     # `static class` e `struct` também aceitam `partial`, então a mesma técnica vale.
+    #
+    # A indentação é EXATAMENTE quatro espaços, e isso não é cosmético: é o que distingue um
+    # tipo de topo, declarado direto no namespace, de um tipo ANINHADO dentro de outro.
+    # Aceitando qualquer indentação, `SHSTOCKICONINFO` — um struct dentro de NativeMethods —
+    # entrava no mapa como se fosse de topo, e `GetStockIcon` foi emitido dentro dele em vez
+    # de dentro de NativeMethods, num `partial struct` de topo que nem é o mesmo tipo. O
+    # resultado compila até tentar resolver os outros membros aninhados. Mesma família do
+    # bug de DEC-029: membro atribuído ao tipo errado.
+    #
+    # Os membros são reconhecidos a oito espaços (RE_MEMBRO), ou seja, membros diretos de um
+    # tipo a quatro. Os dois números precisam concordar.
     RE_DECL = re.compile(
-        r'^(?P<ind>\s*)(?P<acc>public|internal)'
+        r'^(?P<ind> {4})(?P<acc>public|internal)'
         r'(?P<mods>(?:\s+(?:sealed|abstract|static|readonly|unsafe|partial))*)'
         r'\s+(?P<kind>class|struct)\s+(?P<nome>\w+)', re.M)
     # Mapeia TODOS os tipos do arquivo, com a linha em que cada um começa. Um arquivo pode
     # declarar vários tipos no mesmo namespace, e cada membro precisa voltar ao seu.
-    tipos = []   # (linha_inicio, nome, kind, modificadores)
+    tipos = []   # (linha_inicio, nome, kind, modificadores, acesso)
     for i, l in enumerate(linhas):
         md = RE_DECL.match(l)
         if md:
             # `partial` é removido dos modificadores guardados: ele é reinserido na posição
             # certa ao emitir a metade de UI, e mantê-lo aqui produziria `partial partial`.
             mods_limpos = ' '.join(x for x in md.group('mods').split() if x != 'partial')
-            tipos.append((i, md.group('nome'), md.group('kind'), mods_limpos))
+            tipos.append((i, md.group('nome'), md.group('kind'), mods_limpos, md.group('acc')))
     if not tipos:
         print(f'  {caminho}: declaração de tipo não encontrada, ignorado')
         return None
@@ -332,7 +343,7 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
         if l.startswith('using System.Windows.Forms;') and not ainda_usa_ui:
             continue
         # Todo tipo que teve membro extraído precisa virar parcial na metade de domínio.
-        for _, nome_t, kind_t, _mods in tipos:
+        for _, nome_t, kind_t, _mods, _acc in tipos:
             if nome_t in {d[1] for d in por_tipo}:
                 if re.match(r'^\s*(public|internal).*\bpartial\s+' + kind_t + r'\s+' + nome_t + r'\b', l):
                     continue          # já é parcial
@@ -361,21 +372,21 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
     usings_antigos, blocos_antigos = ler_ui_existente(saida)
     usings = usings + [u for u in usings_antigos if u not in usings]
 
-    ordem = [(nome_t, kind_t, mods_t) for (_, nome_t, kind_t, mods_t) in por_tipo]
-    vistos = {n for n, _, _ in ordem}
+    ordem = [(nome_t, kind_t, mods_t, acc_t) for (_, nome_t, kind_t, mods_t, acc_t) in por_tipo]
+    vistos = {n for n, _, _, _ in ordem}
     # Tipos que só existem na extração anterior continuam no arquivo. Sem isto, extrair um
     # tipo novo de um arquivo com vários apagaria os outros.
     for nome_t in blocos_antigos:
         if nome_t not in vistos:
-            ordem.append((nome_t, 'class', ''))
+            ordem.append((nome_t, 'class', '', 'public'))
 
     corpo = '\n'.join(licenca) + '\n' + nota + '\n' + '\n'.join(usings) + '\n\n' + ns + '\n{\n'
-    for nome_t, kind_t, mods_t in ordem:
+    for nome_t, kind_t, mods_t, acc_t in ordem:
         trecho = list(blocos_antigos.get(nome_t, []))
-        for (_, n2, _k2, _m2), novas in por_tipo.items():
+        for (_, n2, _k2, _m2, _a2), novas in por_tipo.items():
             if n2 == nome_t:
                 trecho += novas
-        decl = ' '.join(x for x in ['public', mods_t, 'partial', kind_t, nome_t] if x)
+        decl = ' '.join(x for x in [acc_t, mods_t, 'partial', kind_t, nome_t] if x)
         corpo += f'    {decl}\n    {{\n'
         corpo += '\n'.join(trecho).rstrip() + '\n    }\n\n'
     corpo = corpo.rstrip() + '\n}\n'

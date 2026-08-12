@@ -995,3 +995,40 @@ ingestão, e não toda vez que se salva.
 **Consequência para o teste dourado:** o artefato de um personagem com foto vai divergir do
 build legado no elemento `mainmugshotbase64`. É divergência esperada e é a única prevista
 até agora — precisa de exceção declarada no comparador, não de investigação.
+
+---
+
+## DEC-035 — O mapa de tipos do extrator respeita aninhamento · VIGENTE
+**2026-08-12**
+
+`GetStockIcon` foi emitido dentro de `partial struct SHSTOCKICONINFO`. Só que
+`SHSTOCKICONINFO` é um struct **aninhado dentro de `NativeMethods`**, e a parcial emitida
+criou no namespace um tipo de topo homônimo — outro tipo. `SHSTOCKICONID`, aninhado no
+`NativeMethods` de verdade, deixou de resolver.
+
+**Causa:** o `RE_DECL` que monta o mapa de tipos aceitava qualquer indentação, então tipos
+aninhados entravam no mapa como se fossem de topo. Os membros são reconhecidos a oito
+espaços — membros diretos de um tipo a quatro — e os dois números precisavam concordar.
+Agora a declaração exige exatamente quatro espaços.
+
+**Segundo defeito no mesmo caminho:** o emissor escrevia `public` fixo na parcial.
+`NativeMethods` é `internal static class`, e a parcial `public` daria conflito de
+acessibilidade. O modificador de acesso original passou a ser preservado.
+
+**Por que o verificador não pegou:** `verificar-ui.sh` classifica **todo** `CS0246` como
+acoplamento esperado — é assim que os tipos de WinForms ausentes aparecem. O `CS0246` de
+`SHSTOCKICONID`, um enum de domínio, caiu no mesmo balde.
+
+Classificar `CS0246` por símbolo, como já se faz com `CS0103`, seria a correção geral, mas
+distinguir "tipo de domínio que sumiu" de "tipo de plataforma que nunca existiu" exige a
+lista de todos os tipos do repositório e erra nas duas direções durante a migração. Em vez
+disso, `scripts/probe/auditar-parciais.py` faz uma verificação **estrutural**: toda parcial
+emitida tem de corresponder a um tipo declarado a quatro espaços em algum arquivo não
+gerado. Sem falso positivo possível, e roda antes da compilação.
+
+**Auditoria feita antes de consertar** — a mesma disciplina de DEC-029: dos arquivos já
+extraídos, só `NativeMethods.UI.cs` tinha o defeito.
+
+**A limitação que fica registrada:** a classificação de `CS0246` do verificador continua
+grossa demais para detectar um tipo de domínio que sumiu. A auditoria estrutural cobre o
+caso conhecido; outros ainda dependem do CI Windows.

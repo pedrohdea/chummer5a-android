@@ -33,7 +33,7 @@ using System.Text;
 
 namespace Chummer
 {
-    public partial struct SHSTOCKICONINFO
+    internal static partial class NativeMethods
     {
         /// <summary>
         /// Gets a Windows stock icon. Useful as an alternative to the SystemIcons class.
