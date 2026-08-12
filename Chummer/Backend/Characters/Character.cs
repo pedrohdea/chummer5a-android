@@ -7103,7 +7103,7 @@ namespace Chummer
 
                                             if (blnPromptConfirmSetting)
                                             {
-                                                DialogResult eShowBPResult = blnSync
+                                                PromptResult eShowBPResult = blnSync
                                                     // ReSharper disable once MethodHasAsyncOverloadWithCancellation
                                                     ? UserInteraction.ShowScrollableMessage(
                                                         string.Format(
@@ -7130,12 +7130,12 @@ namespace Chummer
                                                             token: token).ConfigureAwait(false),
                                                         PromptButtons.YesNoCancel, PromptIcon.Warning,
                                                         token: token).ConfigureAwait(false);
-                                                if (eShowBPResult == DialogResult.Cancel)
+                                                if (eShowBPResult == PromptResult.Cancel)
                                                 {
                                                     return false;
                                                 }
 
-                                                blnShowSelectBP = eShowBPResult == DialogResult.Yes;
+                                                blnShowSelectBP = eShowBPResult == PromptResult.Yes;
                                             }
                                         }
                                         else if (blnHashCodeSuccess
@@ -7149,7 +7149,7 @@ namespace Chummer
                                                          token).ConfigureAwait(false))
                                                  != intSettingsHashCode)
                                         {
-                                            DialogResult eShowBPResult = blnSync
+                                            PromptResult eShowBPResult = blnSync
                                                 // ReSharper disable once MethodHasAsyncOverloadWithCancellation
                                                 ? UserInteraction.ShowScrollableMessage(
                                                     string.Format(
@@ -7176,12 +7176,12 @@ namespace Chummer
                                                         token: token).ConfigureAwait(false),
                                                     PromptButtons.YesNoCancel, PromptIcon.Warning,
                                                     token: token).ConfigureAwait(false);
-                                            if (eShowBPResult == DialogResult.Cancel)
+                                            if (eShowBPResult == PromptResult.Cancel)
                                             {
                                                 return false;
                                             }
 
-                                            blnShowSelectBP = eShowBPResult == DialogResult.Yes;
+                                            blnShowSelectBP = eShowBPResult == PromptResult.Yes;
                                         }
                                     }
                                 }
