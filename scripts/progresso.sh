@@ -22,7 +22,9 @@ MODO="completo"
 case "${1:-}" in
     --rapido) MODO="rapido" ;;
     --historico)
-        [ -f "$CSV" ] && grep -v '^#' "$CSV" | column -s, -t || echo "sem histórico ainda"
+        [ -f "$CSV" ] && grep -v '^#' "$CSV" \
+            | awk -F, '{printf "%-12s %8s %10s %8s %8s %8s %8s %8s %5s\n",$1,$2,$3,$4,$5,$6,$7,$8,$9}' \
+            || echo "sem histórico ainda"
         exit 0 ;;
     -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
 esac
