@@ -8,6 +8,21 @@
 [![License](https://img.shields.io/github/license/chummer5a/chummer5a)](https://www.gnu.org/licenses/gpl-3.0.html)
 [![Donations](https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg)](https://ko-fi.com/Z8Z7IP4E)
 
+## Sobre este fork
+
+Este é um **hard fork** sem fins comerciais de [chummer5a/chummer5a](https://github.com/chummer5a/chummer5a),
+com um objetivo único: portar o Chummer 5 para Android.
+
+**Não há e não haverá qualquer finalidade comercial.** Nada aqui é vendido, licenciado ou
+distribuído em loja de aplicativos; o uso é pessoal, na mesa de jogo dos envolvidos. O
+projeto não coleta telemetria e não tem identidade de marca própria.
+
+Shadowrun é marca registrada da Catalyst Game Labs / The Topps Company. Este projeto não é
+afiliado, patrocinado nem endossado por eles. Segue a GPL-3.0 do projeto original.
+
+O plano do porte, as decisões técnicas e o que já foi feito estão em [`docs/po/`](docs/po/)
+e [`docs/codebase/`](docs/codebase/).
+
 ## Basic Overview
 
 Chummer is a character creation and management application for the tabletop RPG [Shadowrun, Fifth Edition](https://www.shadowruntabletop.com/products-page/getting-started/shadowrun-fifth-edition) running on Windows. Not only can you create your character quickly and easily, but you can also use Chummer during your character's shadowrunning career, to accurately track your Karma, Nuyen, ammo, and everything else all in one place. Chummer also includes support for a number of optional rules and house rules and even includes support for critters and is useful for players and Game Masters alike! It also supports a number of languages: supports multiple languages: English (US), French, German, Japanese, Portuguese (Brazil) and Chinese (Simplified) files are pre-installed, while additional languages can be added and shared through use of our in-house translator tool.

@@ -52,7 +52,7 @@ reversa depende dele.
 
 ---
 
-## PEND-003 — Telemetria · ABERTA
+## PEND-003 — Telemetria · RESPONDIDA
 **Criada:** 2026-08-11 · **Premissa:** PREM-005 · **Reversão:** 🟢 baixo
 
 O upstream envia telemetria via Application Insights (`Program.ChummerTelemetryClient`,
@@ -61,11 +61,11 @@ explícito?
 
 Envolve política de loja de aplicativos e LGPD — é decisão de produto, não técnica.
 
-**Resposta:**
+**Resposta (2026-08-12):** **Sem telemetria.** O projeto não tem fins comerciais, e não há a quem reportar nada. Removida do porte por inteiro — não é "desligada por padrão", é ausente. Isso elimina o pacote Application Insights da árvore de dependências.
 
 ---
 
-## PEND-004 — Canal de distribuição · ABERTA
+## PEND-004 — Canal de distribuição · RESPONDIDA
 **Criada:** 2026-08-11 · **Premissa:** PREM-006 · **Reversão:** 🟡 médio
 
 Google Play, APK direto, F-Droid, ou mais de um?
@@ -75,11 +75,11 @@ API mínima, e exige assinatura gerenciada. F-Droid exige build reproduzível a 
 fonte e é incompatível com dependências proprietárias. APK direto não impõe nada, mas
 também não dá atualização automática.
 
-**Resposta:**
+**Resposta (2026-08-12):** **APK direto, sem loja.** Sem fins comerciais, o aplicativo é instalado à mão pelos envolvidos. Nenhuma política de loja se aplica.
 
 ---
 
-## PEND-005 — Conteúdo de Shadowrun em loja pública · ABERTA
+## PEND-005 — Conteúdo de Shadowrun em loja pública · RESPONDIDA
 **Criada:** 2026-08-11 · **Premissa:** PREM-007 · **Reversão:** 🟡 médio
 
 Os arquivos de `data/` contêm estatísticas de jogo de Shadowrun, propriedade da Catalyst
@@ -90,11 +90,11 @@ Não é pergunta jurídica que eu possa responder — é decisão consciente de 
 Alternativa técnica, se preferir cautela: o app instala sem os dados e o usuário aponta
 para os arquivos que ele já tem do Chummer desktop.
 
-**Resposta:**
+**Resposta (2026-08-12):** **Não se aplica.** Sem publicação em loja, a questão de conteúdo de Shadowrun em plataforma pública desaparece. O README registra a não afiliação com a Catalyst Game Labs.
 
 ---
 
-## PEND-006 — Identidade do aplicativo · ABERTA
+## PEND-006 — Identidade do aplicativo · RESPONDIDA
 **Criada:** 2026-08-11 · **Premissa:** PREM-008 · **Reversão:** 🟡 médio
 
 Nome visível, ícone e *package id* (ex.: `com.exemplo.chummer`). O package id é
@@ -102,7 +102,7 @@ Nome visível, ícone e *package id* (ex.: `com.exemplo.chummer`). O package id 
 
 Não bloqueia o MVP, mas precisa estar decidido antes de qualquer publicação.
 
-**Resposta:**
+**Resposta (2026-08-12):** **Sem identidade própria.** Não há marca a construir. Nome e ícone ficam como estiverem; não é assunto do projeto.
 
 ---
 
@@ -221,7 +221,7 @@ personagem por vez — preservar agora é gratuito, reintroduzir depois é caro.
 
 ---
 
-## PEND-013 — Regras da casa e dados customizados · ABERTA
+## PEND-013 — Regras da casa e dados customizados · RESPONDIDA
 **Criada:** 2026-08-11 · **Premissa:** PREM-017 · **Reversão:** 🟡 médio
 
 A mesa do PO usa regras padrão, algum dos 57 pacotes de `customdata/`, ou XML próprio?
@@ -231,7 +231,7 @@ pacote instalado, o que envolve armazenamento gravável no Android e um fluxo de
 Se for tudo padrão, a tela de configuração de ruleset pode ficar para depois do MVP — é uma
 das mais complexas do desktop (`EditCharacterSettings`).
 
-**Resposta:**
+**Resposta (2026-08-12):** **Fora do MVP.** Regras da casa e dados customizados não entram. O aplicativo usa o ruleset padrão. Os 34 personagens de teste do repositório usam todos `default.xml`, então isso é exatamente o que já está coberto.
 
 ---
 

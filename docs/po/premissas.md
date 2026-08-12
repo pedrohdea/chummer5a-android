@@ -97,7 +97,7 @@ como está: `pt-br` + `en-us` no APK, os outros quatro fora.
 
 ---
 
-## PREM-005 — Telemetria desligada no MVP · ATIVA 🟢
+## PREM-005 — Telemetria removida, não apenas desligada · CONFIRMADA 🟢
 **Criada:** 2026-08-11 · **Pendência:** PEND-003
 
 Nenhuma coleta: sem Application Insights, sem envio de relatório de falha. Falhas contam
@@ -111,7 +111,7 @@ quais (`PerfCounterCollector`) é específica de Windows.
 
 ---
 
-## PREM-006 — Distribuição por APK direto no MVP · ATIVA 🟡
+## PREM-006 — Distribuição por APK direto, sem loja · CONFIRMADA 🟢
 **Criada:** 2026-08-11 · **Pendência:** PEND-004
 
 O MVP é distribuído como APK assinado, publicado como release do GitHub. Sem loja.
@@ -134,7 +134,7 @@ Trabalho contido, mas afeta a experiência de instalação.
 
 ---
 
-## PREM-008 — Identidade provisória do app · ATIVA 🟡
+## PREM-008 — Sem identidade de marca própria · CONFIRMADA 🟢
 **Criada:** 2026-08-11 · **Pendência:** PEND-006
 
 Nome de trabalho "Chummer" e package id provisório. **Não publicar em loja com esse id** —
@@ -263,7 +263,7 @@ de ser um MVP-leitor. Por isso a pergunta foi registrada mesmo sem resposta.
 
 ---
 
-## PREM-017 — Mesa usa regras padrão; o ruleset gravado é respeitado · ATIVA 🟡
+## PREM-017 — Mesa usa regras padrão; o ruleset gravado é respeitado · CONFIRMADA 🟢
 **Criada:** 2026-08-11 · **Pendência:** PEND-013
 
 O MVP **não** ganha tela de configuração de ruleset. Mas o `CharacterSettings` gravado no
@@ -310,3 +310,27 @@ cumprido quando os três forem verdadeiros, nesta ordem:
 **Por que nessa ordem, e não na do enunciado:** fidelidade primeiro porque é a única que
 invalida as outras se falhar. Um app bonito que calcula o pool errado é pior que nenhum app.
 
+
+
+---
+
+## Confirmação em bloco — sem fins comerciais · 2026-08-12
+
+O PO respondeu PEND-003, PEND-004, PEND-005 e PEND-006 com uma única razão: **o projeto não
+tem fins comerciais**. Isso confirma quatro premissas de uma vez e, mais do que confirmar,
+endurece três delas de 🟡 para 🟢 — deixaram de ser apostas e viraram consequência de uma
+decisão de escopo.
+
+O ganho técnico é concreto, e maior do que "uma pergunta a menos":
+
+- **Telemetria some do porte.** Não é "desligada por padrão", é ausente. O pacote Application
+  Insights sai da árvore de dependências, e com ele o `TelemetryClient` que a extração já
+  vinha tratando como código de UI.
+- **Etapa 10 encolhe.** Sem loja, não há política de plataforma, revisão, assinatura de
+  publicação nem questão de propriedade intelectual em vitrine pública. Sobra assinar o APK
+  para instalação direta.
+- **PEND-005 deixa de existir** em vez de ser respondida: sem publicação, não há pergunta.
+
+PEND-013 (regras da casa) foi respondida no mesmo bloco e aponta na mesma direção: o
+aplicativo usa o ruleset padrão. Medido: os 34 personagens de teste do repositório usam
+**todos** `default.xml` — o que já estava coberto é exatamente o que ficou no escopo.
