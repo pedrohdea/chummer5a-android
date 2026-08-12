@@ -55,45 +55,45 @@ namespace Chummer
         public static PromptResult DefaultResult { get; set; } = PromptResult.OK;
 
         public static PromptResult ShowMessage(
-            string strMessage,
-            string strCaption = "",
-            PromptButtons eButtons = PromptButtons.OK,
-            PromptIcon eIcon = PromptIcon.None,
-            PromptDefaultButton eDefaultButton = PromptDefaultButton.Button1)
+            string message,
+            string caption = "",
+            PromptButtons buttons = PromptButtons.OK,
+            PromptIcon icon = PromptIcon.None,
+            PromptDefaultButton defaultButton = PromptDefaultButton.Button1)
         {
-            return Current.ShowMessage(strMessage, strCaption, eButtons, eIcon, eDefaultButton);
+            return Current.ShowMessage(message, caption, buttons, icon, defaultButton);
         }
 
         public static PromptResult ShowScrollableMessage(
-            string strMessage,
-            string strCaption = "",
-            PromptButtons eButtons = PromptButtons.OK,
-            PromptIcon eIcon = PromptIcon.None,
-            PromptDefaultButton eDefaultButton = PromptDefaultButton.Button1)
+            string message,
+            string caption = "",
+            PromptButtons buttons = PromptButtons.OK,
+            PromptIcon icon = PromptIcon.None,
+            PromptDefaultButton defaultButton = PromptDefaultButton.Button1)
         {
-            return Current.ShowScrollableMessage(strMessage, strCaption, eButtons, eIcon, eDefaultButton);
+            return Current.ShowScrollableMessage(message, caption, buttons, icon, defaultButton);
         }
 
         public static Task<PromptResult> ShowMessageAsync(
-            string strMessage,
-            string strCaption = "",
-            PromptButtons eButtons = PromptButtons.OK,
-            PromptIcon eIcon = PromptIcon.None,
-            PromptDefaultButton eDefaultButton = PromptDefaultButton.Button1,
+            string message,
+            string caption = "",
+            PromptButtons buttons = PromptButtons.OK,
+            PromptIcon icon = PromptIcon.None,
+            PromptDefaultButton defaultButton = PromptDefaultButton.Button1,
             CancellationToken token = default)
         {
-            return Current.ShowMessageAsync(strMessage, strCaption, eButtons, eIcon, eDefaultButton, token);
+            return Current.ShowMessageAsync(message, caption, buttons, icon, defaultButton, token);
         }
 
         public static Task<PromptResult> ShowScrollableMessageAsync(
-            string strMessage,
-            string strCaption = "",
-            PromptButtons eButtons = PromptButtons.OK,
-            PromptIcon eIcon = PromptIcon.None,
-            PromptDefaultButton eDefaultButton = PromptDefaultButton.Button1,
+            string message,
+            string caption = "",
+            PromptButtons buttons = PromptButtons.OK,
+            PromptIcon icon = PromptIcon.None,
+            PromptDefaultButton defaultButton = PromptDefaultButton.Button1,
             CancellationToken token = default)
         {
-            return Current.ShowScrollableMessageAsync(strMessage, strCaption, eButtons, eIcon, eDefaultButton, token);
+            return Current.ShowScrollableMessageAsync(message, caption, buttons, icon, defaultButton, token);
         }
     }
     /// <summary>
@@ -103,28 +103,28 @@ namespace Chummer
     /// </summary>
     public sealed class SilentUserInteraction : IUserInteraction
     {
-        public PromptResult ShowMessage(string strMessage, string strCaption,
-            PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton)
+        public PromptResult ShowMessage(string message, string caption,
+            PromptButtons buttons, PromptIcon icon, PromptDefaultButton defaultButton)
         {
             return UserInteraction.DefaultResult;
         }
 
-        public PromptResult ShowScrollableMessage(string strMessage, string strCaption,
-            PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton)
+        public PromptResult ShowScrollableMessage(string message, string caption,
+            PromptButtons buttons, PromptIcon icon, PromptDefaultButton defaultButton)
         {
             return UserInteraction.DefaultResult;
         }
 
-        public Task<PromptResult> ShowMessageAsync(string strMessage, string strCaption,
-            PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton,
+        public Task<PromptResult> ShowMessageAsync(string message, string caption,
+            PromptButtons buttons, PromptIcon icon, PromptDefaultButton defaultButton,
             CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
             return Task.FromResult(UserInteraction.DefaultResult);
         }
 
-        public Task<PromptResult> ShowScrollableMessageAsync(string strMessage, string strCaption,
-            PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton,
+        public Task<PromptResult> ShowScrollableMessageAsync(string message, string caption,
+            PromptButtons buttons, PromptIcon icon, PromptDefaultButton defaultButton,
             CancellationToken token)
         {
             token.ThrowIfCancellationRequested();

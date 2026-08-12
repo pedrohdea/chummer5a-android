@@ -1864,7 +1864,7 @@ namespace Chummer
                         string strFileNoPath = Path.GetFileName(strFile);
                         UserInteraction.ShowMessage(
                             string.Format(GlobalSettings.CultureInfo, strMessage, strFile, ex.Message),
-                            string.Format(GlobalSettings.CultureInfo, strTitle, strFileNoPath), icon: System.Windows.Forms.PromptIcon.Error);
+                            string.Format(GlobalSettings.CultureInfo, strTitle, strFileNoPath), icon: PromptIcon.Error);
                     }
                 }
             }
@@ -2178,7 +2178,7 @@ namespace Chummer
                         string strFileNoPath = Path.GetFileName(strFile);
                         await UserInteraction.ShowMessageAsync(
                             string.Format(GlobalSettings.CultureInfo, strMessage, strFile, ex.Message),
-                            string.Format(GlobalSettings.CultureInfo, strTitle, strFileNoPath), icon: System.Windows.Forms.PromptIcon.Error, token: token).ConfigureAwait(false);
+                            string.Format(GlobalSettings.CultureInfo, strTitle, strFileNoPath), icon: PromptIcon.Error, token: token).ConfigureAwait(false);
                     }
                 }
             }

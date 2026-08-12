@@ -1,4 +1,4 @@
-/*  This file is part of Chummer5a.
+﻿/*  This file is part of Chummer5a.
  *
  *  Chummer5a is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -650,7 +650,7 @@ namespace Chummer.Backend.Equipment
                                 frmSelect.MyForm.SetGeneralItemsMode(lstQualities);
                                 // ReSharper disable once MethodHasAsyncOverload
                                 if ((blnSync ? frmSelect.ShowDialogSafe(_objCharacter, token) : await frmSelect.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false))
-                                    == PromptResult.Cancel)
+                                    == DialogResult.Cancel)
                                 {
                                     _guiID = Guid.Empty;
                                     return;

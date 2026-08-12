@@ -33,41 +33,41 @@ namespace Chummer
     /// </summary>
     public sealed class WinFormsUserInteraction : IUserInteraction
     {
-        public PromptResult ShowMessage(string strMessage, string strCaption,
-            PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton)
+        public PromptResult ShowMessage(string message, string caption,
+            PromptButtons buttons, PromptIcon icon, PromptDefaultButton defaultButton)
         {
             return ToPromptResult(Program.ShowMessageBox(
-                strMessage, strCaption, ToButtons(eButtons), ToIcon(eIcon), ToDefaultButton(eDefaultButton)));
+                message, caption, ToButtons(buttons), ToIcon(icon), ToDefaultButton(defaultButton)));
         }
 
-        public PromptResult ShowScrollableMessage(string strMessage, string strCaption,
-            PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton)
+        public PromptResult ShowScrollableMessage(string message, string caption,
+            PromptButtons buttons, PromptIcon icon, PromptDefaultButton defaultButton)
         {
             return ToPromptResult(Program.ShowScrollableMessageBox(
-                strMessage, strCaption, ToButtons(eButtons), ToIcon(eIcon), ToDefaultButton(eDefaultButton)));
+                message, caption, ToButtons(buttons), ToIcon(icon), ToDefaultButton(defaultButton)));
         }
 
-        public async Task<PromptResult> ShowMessageAsync(string strMessage, string strCaption,
-            PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton,
+        public async Task<PromptResult> ShowMessageAsync(string message, string caption,
+            PromptButtons buttons, PromptIcon icon, PromptDefaultButton defaultButton,
             CancellationToken token)
         {
             return ToPromptResult(await Program.ShowMessageBoxAsync(
-                strMessage, strCaption, ToButtons(eButtons), ToIcon(eIcon),
-                ToDefaultButton(eDefaultButton), token).ConfigureAwait(false));
+                message, caption, ToButtons(buttons), ToIcon(icon),
+                ToDefaultButton(defaultButton), token).ConfigureAwait(false));
         }
 
-        public async Task<PromptResult> ShowScrollableMessageAsync(string strMessage, string strCaption,
-            PromptButtons eButtons, PromptIcon eIcon, PromptDefaultButton eDefaultButton,
+        public async Task<PromptResult> ShowScrollableMessageAsync(string message, string caption,
+            PromptButtons buttons, PromptIcon icon, PromptDefaultButton defaultButton,
             CancellationToken token)
         {
             return ToPromptResult(await Program.ShowScrollableMessageBoxAsync(
-                strMessage, strCaption, ToButtons(eButtons), ToIcon(eIcon),
-                ToDefaultButton(eDefaultButton), token).ConfigureAwait(false));
+                message, caption, ToButtons(buttons), ToIcon(icon),
+                ToDefaultButton(defaultButton), token).ConfigureAwait(false));
         }
 
-        public static MessageBoxButtons ToButtons(PromptButtons eButtons)
+        public static MessageBoxButtons ToButtons(PromptButtons buttons)
         {
-            switch (eButtons)
+            switch (buttons)
             {
                 case PromptButtons.OK: return MessageBoxButtons.OK;
                 case PromptButtons.OKCancel: return MessageBoxButtons.OKCancel;
@@ -75,20 +75,20 @@ namespace Chummer
                 case PromptButtons.YesNoCancel: return MessageBoxButtons.YesNoCancel;
                 case PromptButtons.YesNo: return MessageBoxButtons.YesNo;
                 case PromptButtons.RetryCancel: return MessageBoxButtons.RetryCancel;
-                default: throw new ArgumentOutOfRangeException(nameof(eButtons));
+                default: throw new ArgumentOutOfRangeException(nameof(buttons));
             }
         }
 
-        public static MessageBoxIcon ToIcon(PromptIcon eIcon)
+        public static MessageBoxIcon ToIcon(PromptIcon icon)
         {
-            switch (eIcon)
+            switch (icon)
             {
                 case PromptIcon.None: return MessageBoxIcon.None;
                 case PromptIcon.Information: return MessageBoxIcon.Information;
                 case PromptIcon.Question: return MessageBoxIcon.Question;
                 case PromptIcon.Warning: return MessageBoxIcon.Warning;
                 case PromptIcon.Error: return MessageBoxIcon.Error;
-                default: throw new ArgumentOutOfRangeException(nameof(eIcon));
+                default: throw new ArgumentOutOfRangeException(nameof(icon));
             }
         }
 

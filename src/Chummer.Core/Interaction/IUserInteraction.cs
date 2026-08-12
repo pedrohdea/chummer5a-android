@@ -48,31 +48,31 @@ namespace Chummer
         /// Ver DEC-028.
         /// </summary>
         PromptResult ShowMessage(
-            string strMessage,
-            string strCaption = "",
-            PromptButtons eButtons = PromptButtons.OK,
-            PromptIcon eIcon = PromptIcon.None,
-            PromptDefaultButton eDefaultButton = PromptDefaultButton.Button1);
+            string message,
+            string caption = "",
+            PromptButtons buttons = PromptButtons.OK,
+            PromptIcon icon = PromptIcon.None,
+            PromptDefaultButton defaultButton = PromptDefaultButton.Button1);
 
         /// <summary>
         /// Versão síncrona de <see cref="ShowScrollableMessageAsync"/>. Ver DEC-028.
         /// </summary>
         PromptResult ShowScrollableMessage(
-            string strMessage,
-            string strCaption = "",
-            PromptButtons eButtons = PromptButtons.OK,
-            PromptIcon eIcon = PromptIcon.None,
-            PromptDefaultButton eDefaultButton = PromptDefaultButton.Button1);
+            string message,
+            string caption = "",
+            PromptButtons buttons = PromptButtons.OK,
+            PromptIcon icon = PromptIcon.None,
+            PromptDefaultButton defaultButton = PromptDefaultButton.Button1);
 
         /// <summary>
         /// Mostra uma mensagem e devolve o que o usuário respondeu.
         /// </summary>
         Task<PromptResult> ShowMessageAsync(
-            string strMessage,
-            string strCaption = "",
-            PromptButtons eButtons = PromptButtons.OK,
-            PromptIcon eIcon = PromptIcon.None,
-            PromptDefaultButton eDefaultButton = PromptDefaultButton.Button1,
+            string message,
+            string caption = "",
+            PromptButtons buttons = PromptButtons.OK,
+            PromptIcon icon = PromptIcon.None,
+            PromptDefaultButton defaultButton = PromptDefaultButton.Button1,
             CancellationToken token = default);
 
         /// <summary>
@@ -80,11 +80,11 @@ namespace Chummer
         /// relatórios de validação, listas de itens afetados.
         /// </summary>
         Task<PromptResult> ShowScrollableMessageAsync(
-            string strMessage,
-            string strCaption = "",
-            PromptButtons eButtons = PromptButtons.OK,
-            PromptIcon eIcon = PromptIcon.None,
-            PromptDefaultButton eDefaultButton = PromptDefaultButton.Button1,
+            string message,
+            string caption = "",
+            PromptButtons buttons = PromptButtons.OK,
+            PromptIcon icon = PromptIcon.None,
+            PromptDefaultButton defaultButton = PromptDefaultButton.Button1,
             CancellationToken token = default);
     }
 }

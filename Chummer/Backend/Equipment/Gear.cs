@@ -1,4 +1,4 @@
-/*  This file is part of Chummer5a.
+﻿/*  This file is part of Chummer5a.
  *
  *  Chummer5a is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -324,7 +324,7 @@ namespace Chummer.Backend.Equipment
                         {
                             // Make sure the dialogue window was not canceled.
                             // ReSharper disable once MethodHasAsyncOverload
-                            if (frmPickText.ShowDialogSafe(_objCharacter, token) == PromptResult.Cancel)
+                            if (frmPickText.ShowDialogSafe(_objCharacter, token) == DialogResult.Cancel)
                             {
                                 _guiID = Guid.Empty;
                                 return;
@@ -353,7 +353,7 @@ namespace Chummer.Backend.Equipment
                                    }, token).ConfigureAwait(false))
                         {
                             // Make sure the dialogue window was not canceled.
-                            if (await frmPickText.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == PromptResult.Cancel)
+                            if (await frmPickText.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                             {
                                 _guiID = Guid.Empty;
                                 return;
@@ -418,7 +418,7 @@ namespace Chummer.Backend.Equipment
                                    }))
                             {
                                 // ReSharper disable once MethodHasAsyncOverload
-                                if (frmPickNumber.ShowDialogSafe(_objCharacter, token) == PromptResult.Cancel)
+                                if (frmPickNumber.ShowDialogSafe(_objCharacter, token) == DialogResult.Cancel)
                                 {
                                     _guiID = Guid.Empty;
                                     return;
@@ -442,7 +442,7 @@ namespace Chummer.Backend.Equipment
                                        AllowCancel = false
                                    }, token).ConfigureAwait(false))
                             {
-                                if (await frmPickNumber.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == PromptResult.Cancel)
+                                if (await frmPickNumber.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                                 {
                                     _guiID = Guid.Empty;
                                     return;
@@ -483,7 +483,7 @@ namespace Chummer.Backend.Equipment
 
                             // ReSharper disable once MethodHasAsyncOverload
                             if (frmPickWeaponCategory.ShowDialogSafe(_objCharacter, token)
-                                != PromptResult.OK)
+                                != DialogResult.OK)
                             {
                                 _guiID = Guid.Empty;
                                 return;
@@ -508,7 +508,7 @@ namespace Chummer.Backend.Equipment
                                 frmPickWeaponCategory.MyForm.OnlyCategory = _strForcedValue;
 
                             if (await frmPickWeaponCategory.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false)
-                                != PromptResult.OK)
+                                != DialogResult.OK)
                             {
                                 _guiID = Guid.Empty;
                                 return;
@@ -820,7 +820,7 @@ namespace Chummer.Backend.Equipment
                                     frmPickItem.MyForm.SetGeneralItemsMode(lstGears);
 
                                     // Make sure the dialogue window was not canceled.
-                                    if (frmPickItem.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
+                                    if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
                                     {
                                         if (objXmlChooseGearNode["required"]?.InnerTextIsTrueString() == true)
                                         {
@@ -1036,7 +1036,7 @@ namespace Chummer.Backend.Equipment
                                     frmPickItem.MyForm.SetGeneralItemsMode(lstGears);
 
                                     // Make sure the dialogue window was not canceled.
-                                    if (await frmPickItem.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == PromptResult.Cancel)
+                                    if (await frmPickItem.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                                     {
                                         if (objXmlChooseGearNode["required"]?.InnerTextIsTrueString() == true)
                                         {

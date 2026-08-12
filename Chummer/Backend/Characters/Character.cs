@@ -1,4 +1,4 @@
-/*  This file is part of Chummer5a.
+﻿/*  This file is part of Chummer5a.
  *
  *  Chummer5a is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -3232,7 +3232,7 @@ namespace Chummer
                         }))
                         {
                             // Make sure the dialogue window was not canceled.
-                            if (frmPickText.ShowDialogSafe(this, token) == PromptResult.Cancel)
+                            if (frmPickText.ShowDialogSafe(this, token) == DialogResult.Cancel)
                                 continue;
                             strExtra = frmPickText.MyForm.SelectedValue;
                         }
@@ -4055,7 +4055,7 @@ namespace Chummer
                         {
                             // Make sure the dialogue window was not canceled.
                             if (await frmPickText.ShowDialogSafeAsync(this, token).ConfigureAwait(false) ==
-                                PromptResult.Cancel)
+                                DialogResult.Cancel)
                                 continue;
                             strExtra = frmPickText.MyForm.SelectedValue;
                         }
@@ -7130,12 +7130,12 @@ namespace Chummer
                                                             token: token).ConfigureAwait(false),
                                                         PromptButtons.YesNoCancel, PromptIcon.Warning,
                                                         token: token).ConfigureAwait(false);
-                                                if (eShowBPResult == PromptResult.Cancel)
+                                                if (eShowBPResult == DialogResult.Cancel)
                                                 {
                                                     return false;
                                                 }
 
-                                                blnShowSelectBP = eShowBPResult == PromptResult.Yes;
+                                                blnShowSelectBP = eShowBPResult == DialogResult.Yes;
                                             }
                                         }
                                         else if (blnHashCodeSuccess
@@ -7176,12 +7176,12 @@ namespace Chummer
                                                         token: token).ConfigureAwait(false),
                                                     PromptButtons.YesNoCancel, PromptIcon.Warning,
                                                     token: token).ConfigureAwait(false);
-                                            if (eShowBPResult == PromptResult.Cancel)
+                                            if (eShowBPResult == DialogResult.Cancel)
                                             {
                                                 return false;
                                             }
 
-                                            blnShowSelectBP = eShowBPResult == PromptResult.Yes;
+                                            blnShowSelectBP = eShowBPResult == DialogResult.Yes;
                                         }
                                     }
                                 }
@@ -7203,7 +7203,7 @@ namespace Chummer
                                                    () => new SelectBuildMethod(this, true)))
                                         {
                                             // ReSharper disable once MethodHasAsyncOverload
-                                            if (frmPickBP.ShowDialogSafe(this, token) != PromptResult.OK)
+                                            if (frmPickBP.ShowDialogSafe(this, token) != DialogResult.OK)
                                             {
                                                 return false;
                                             }
@@ -7218,7 +7218,7 @@ namespace Chummer
                                                        .ConfigureAwait(false))
                                         {
                                             if (await frmPickBP.ShowDialogSafeAsync(this, token).ConfigureAwait(false)
-                                                != PromptResult.OK)
+                                                != DialogResult.OK)
                                             {
                                                 return false;
                                             }
@@ -8118,7 +8118,7 @@ namespace Chummer
                                                                             .SetDropdownItemsMode(lstContacts);
                                                                         // ReSharper disable once MethodHasAsyncOverload
                                                                         if (frmPickItem.ShowDialogSafe(this, token)
-                                                                            != PromptResult.OK)
+                                                                            != DialogResult.OK)
                                                                         {
                                                                             return false;
                                                                         }
@@ -8139,7 +8139,7 @@ namespace Chummer
                                                                         if (await frmPickItem
                                                                                 .ShowDialogSafeAsync(this, token)
                                                                                 .ConfigureAwait(false)
-                                                                            != PromptResult.OK)
+                                                                            != DialogResult.OK)
                                                                         {
                                                                             return false;
                                                                         }
@@ -16949,7 +16949,7 @@ namespace Chummer
             try
             {
                 token.ThrowIfCancellationRequested();
-                if (eResult != PromptResult.OK)
+                if (eResult != DialogResult.OK)
                 {
                     await SetSettingsKeyAsync(strOldSettingsKey, token).ConfigureAwait(false);
                     return false;
@@ -49960,7 +49960,7 @@ namespace Chummer
                                                    = ThreadSafeForm<SelectBuildMethod>.Get(
                                                        () => new SelectBuildMethod(this, true)))
                                             {
-                                                if (frmPickBP.ShowDialogSafe(this, token) != PromptResult.OK)
+                                                if (frmPickBP.ShowDialogSafe(this, token) != DialogResult.OK)
                                                     return false;
                                             }
                                         }
@@ -49988,7 +49988,7 @@ namespace Chummer
                                                    .ConfigureAwait(false))
                                         {
                                             if (await frmPickBP.ShowDialogSafeAsync(this, token)
-                                                    .ConfigureAwait(false) != PromptResult.OK)
+                                                    .ConfigureAwait(false) != DialogResult.OK)
                                                 return false;
                                         }
                                     }
@@ -50071,7 +50071,7 @@ namespace Chummer
                                                ThreadSafeForm<SelectMetatypePriority>.Get(
                                                    () => new SelectMetatypePriority(this)))
                                         {
-                                            if (frmSelectMetatype.ShowDialogSafe(this, token) != PromptResult.OK)
+                                            if (frmSelectMetatype.ShowDialogSafe(this, token) != DialogResult.OK)
                                                 return false;
                                         }
                                         // ReSharper restore MethodHasAsyncOverloadWithCancellation
@@ -50083,7 +50083,7 @@ namespace Chummer
                                                await ThreadSafeForm<SelectMetatypePriority>.GetAsync(
                                                    () => new SelectMetatypePriority(this), token).ConfigureAwait(false))
                                         {
-                                            if (await frmSelectMetatype.ShowDialogSafeAsync(this, token).ConfigureAwait(false) != PromptResult.OK)
+                                            if (await frmSelectMetatype.ShowDialogSafeAsync(this, token).ConfigureAwait(false) != DialogResult.OK)
                                                 return false;
                                         }
                                     }
@@ -50098,7 +50098,7 @@ namespace Chummer
                                                ThreadSafeForm<SelectMetatypeKarma>.Get(
                                                    () => new SelectMetatypeKarma(this)))
                                         {
-                                            if (frmSelectMetatype.ShowDialogSafe(this, token) != PromptResult.OK)
+                                            if (frmSelectMetatype.ShowDialogSafe(this, token) != DialogResult.OK)
                                                 return false;
                                         }
                                         // ReSharper restore MethodHasAsyncOverloadWithCancellation
@@ -50110,7 +50110,7 @@ namespace Chummer
                                                await ThreadSafeForm<SelectMetatypeKarma>.GetAsync(
                                                    () => new SelectMetatypeKarma(this), token).ConfigureAwait(false))
                                         {
-                                            if (await frmSelectMetatype.ShowDialogSafeAsync(this, token: token).ConfigureAwait(false) != PromptResult.OK)
+                                            if (await frmSelectMetatype.ShowDialogSafeAsync(this, token: token).ConfigureAwait(false) != DialogResult.OK)
                                                 return false;
                                         }
                                     }
@@ -53776,7 +53776,7 @@ namespace Chummer
                            }, token).ConfigureAwait(false))
                 {
                     await frmWILHits.MyForm.SetDiceAsync(intDice, token).ConfigureAwait(false);
-                    if (await frmWILHits.ShowDialogSafeAsync(this, token).ConfigureAwait(false) != PromptResult.OK)
+                    if (await frmWILHits.ShowDialogSafeAsync(this, token).ConfigureAwait(false) != DialogResult.OK)
                         return false;
 
                     intWILResult = frmWILHits.MyForm.Result;
@@ -54404,7 +54404,7 @@ namespace Chummer
                                     DialogResult eResult = blnSync
                                         ? frmSelectItem.ShowDialogSafe(this, token)
                                         : await frmSelectItem.ShowDialogSafeAsync(this, token).ConfigureAwait(false);
-                                    if (eResult == PromptResult.OK)
+                                    if (eResult == DialogResult.OK)
                                     {
                                         string strSelectedText = frmSelectItem.MyForm.SelectedItem;
                                         if (!string.IsNullOrEmpty(strSelectedText))

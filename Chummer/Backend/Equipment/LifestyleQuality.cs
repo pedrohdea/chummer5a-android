@@ -1,4 +1,4 @@
-/*  This file is part of Chummer5a.
+﻿/*  This file is part of Chummer5a.
  *
  *  Chummer5a is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -615,7 +615,7 @@ namespace Chummer.Backend.Equipment
                                    }))
                         {
                             frmSelect.MyForm.SetGeneralItemsMode(lstQualities);
-                            if (frmSelect.ShowDialogSafe(_objCharacter) == PromptResult.Cancel)
+                            if (frmSelect.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
                             {
                                 _guiID = Guid.Empty;
                                 return;
@@ -698,7 +698,7 @@ namespace Chummer.Backend.Equipment
                                    }, token).ConfigureAwait(false))
                         {
                             frmSelect.MyForm.SetGeneralItemsMode(lstQualities);
-                            if (await frmSelect.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == PromptResult.Cancel)
+                            if (await frmSelect.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                             {
                                 _guiID = Guid.Empty;
                                 return;
