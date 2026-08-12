@@ -952,3 +952,46 @@ a API de mugshots. Todo o resto do acoplamento de declaração do `Backend/` est
 **A lição:** uma ferramenta que MOVE código nunca deve poder APAGÁ-LO. A verificação de
 conservação não é defesa contra um bug específico; é a invariante da ferramenta, e devia
 estar lá desde a primeira versão.
+
+---
+
+## DEC-034 — Mugshots como bytes, com recompressão na entrada · VIGENTE
+**2026-08-12** · realiza DEC-021
+
+O domínio guarda a foto como `byte[]` — exatamente os bytes que o base64 do `.chum5`
+carrega. Nenhuma decodificação acontece no núcleo. `IHasMugshots` troca
+`ThreadSafeList<Image>` por `ThreadSafeList<byte[]>` e `Image MainMugshot` por
+`byte[] MainMugshot`; a camada de apresentação decodifica para o tipo de imagem da
+plataforma — `System.Drawing.Image` no WinForms legado, o equivalente do Avalonia no
+Android.
+
+**Tamanho real da mudança, medido:** 27 pontos de chamada fora do `Backend/`, em cinco
+arquivos (`CharacterCreate.cs`, `CharacterCareer.cs`, `CharacterShared.cs`, e as metades de
+UI de `Spirit` e `Contact`). O `grep` cru dá 564 ocorrências de "Mugshot" em `Forms/`, mas
+quase todas são nomes de variável local. A conversão é pequena; a impressão de que era
+grande vinha da métrica errada.
+
+**Por que bytes e não uma abstração de imagem própria:** o domínio não faz nada com o
+conteúdo da imagem. Não mede, não corta, não valida formato. Ele carrega, guarda e devolve.
+Um `byte[]` descreve exatamente essa responsabilidade; qualquer coisa a mais seria uma
+abstração sem cliente.
+
+**Desvio deliberado de PREM-002, e é preciso registrar:** hoje `SaveMugshotsCore` chama
+`ToBase64StringAsJpeg` a **cada** salvamento. Como o carregamento decodifica e o salvamento
+recodifica, a foto sofre perda de geração toda vez que o personagem é salvo — mesmo que
+ninguém a tenha tocado. Guardando bytes, o salvamento reescreve o que leu, e o round-trip
+passa a ser idêntico byte a byte.
+
+Isso **corrige um defeito**, e PREM-002 diz que o porte preserva até os defeitos atuais. O
+desvio é intencional por dois motivos: preservar a degradação exigiria decodificar e
+recodificar no núcleo, arrastando `System.Drawing` de volta para dentro do domínio — isto é,
+o defeito e o acoplamento são a mesma coisa; e o round-trip byte-exato **melhora** o teste
+diferencial, que hoje precisaria de filtro para a não-determinância do recompressor JPEG.
+
+A recompressão por `SavedImageQuality` não desaparece: passa a ser aplicada **na entrada**,
+quando o usuário escolhe uma foto, que é onde ela sempre pertenceu. Comprimir uma vez na
+ingestão, e não toda vez que se salva.
+
+**Consequência para o teste dourado:** o artefato de um personagem com foto vai divergir do
+build legado no elemento `mainmugshotbase64`. É divergência esperada e é a única prevista
+até agora — precisa de exceção declarada no comparador, não de investigação.

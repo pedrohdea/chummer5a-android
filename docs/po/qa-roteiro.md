@@ -109,3 +109,21 @@ preferiu o desktop.
 **Por que é o mais importante:** uma partida encontra mais problema de usabilidade que um
 mês de emulador. É também o único teste que valida a premissa central do projeto — que um
 gerenciador de sessão sem criação de personagem é útil de verdade numa mesa.
+
+---
+
+## QA-008 — Foto do personagem sobrevive ao round-trip · AGUARDANDO
+**Etapa:** 2 (extração do núcleo) · **Decisão:** DEC-034
+
+Abrir no app um personagem seu que tenha foto, salvar sem mexer em nada, e reabrir.
+
+**O que quero saber:** a foto continua lá, na mesma qualidade. E, se você tiver como
+comparar, se ela ficou **igual** à do arquivo original em vez de um pouco pior.
+
+**Por que existe:** hoje o Chummer recomprime a foto em JPEG a cada salvamento, então a
+imagem degrada um pouco toda vez que você salva o personagem. A mudança para guardar os
+bytes crus elimina isso. É melhoria, mas é mudança de comportamento — e mudança de
+comportamento tem que ser vista por olho humano antes de virar verdade.
+
+**Também vale testar:** trocar a foto por uma nova, salvar, reabrir. E um personagem com
+várias fotos, trocando qual é a principal.

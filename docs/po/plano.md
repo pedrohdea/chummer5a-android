@@ -42,9 +42,20 @@ Tornar todo o `Backend/` compilável sob net9.0, sem UI e sem `System.Drawing`.
 - 🔄 **Consertar em lugar** os arquivos com erro, na ordem do censo (DEC-016)
   - ✅ Interfaces separadas de suas extensões de UI (DEC-018) — 733 → 671
   - ✅ Infraestrutura de UI devolvida ao lugar dela (DEC-020) — 671 → **367**
-  - ⬜ Retratos como bytes (DEC-021)
-  - ⬜ `Character.cs` (63), equipamento (~80), `LanguageManager` (18), `Utils` (13)
+  - ✅ Abstração de interação com o usuário, metade de mensagem (DEC-026) — 367 → 89
+  - ✅ Extração dos membros restantes, com o extrator corrigido (DEC-033) — 89 → **20**
+  - ⬜ **Retratos como bytes (DEC-021, desenhado em DEC-034)** — os 20 que sobram são
+    todos deste subsistema, e são todo o acoplamento de declaração que resta no `Backend/`
+- ⬜ **Metade de seleção** da abstração de interação: `ThreadSafeForm` e os diálogos
+  `Select*`. Só fica visível ao censo depois que as declarações zerarem (DEC-032) — é
+  acoplamento de corpo de método, e o compilador não o enxerga antes disso
 - ⬜ Mover o `Backend/` inteiro de uma vez, quando o censo chegar a zero
+
+> **O número do censo mudou de significado** (DEC-032). Ele conta erros de **declaração**;
+> acoplamento dentro de corpos de método é invisível enquanto restar um erro de declaração
+> no arquivo. A série 733 → 20 mede uma frente só. As 329 chamadas a `MessageBox`, as ~120
+> instanciações de diálogo e os 146 `Application.DoEvents()` ainda não entraram na conta —
+> e só entram quando esta primeira frente chegar a zero.
 - ⬜ Testes existentes passando contra o `Chummer.Core`
 - ⬜ **Reavaliar o plano na totalidade**
 
