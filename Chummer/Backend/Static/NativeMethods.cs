@@ -903,7 +903,7 @@ namespace Chummer
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        internal struct SHSTOCKICONINFO
+        internal partial struct SHSTOCKICONINFO
         {
             internal uint cbSize;
             internal IntPtr hIcon;
@@ -918,41 +918,5 @@ namespace Chummer
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static extern int SHGetStockIconInfo(SHSTOCKICONID siid, SHGSI uFlags, ref SHSTOCKICONINFO psii);
 
-        /// <summary>
-        /// Gets a Windows stock icon. Useful as an alternative to the SystemIcons class.
-        /// </summary>
-        /// <param name="eIconId">Id to indicate which stock icon to fetch.</param>
-        internal static Icon GetStockIcon(SHSTOCKICONID eIconId)
-        {
-            SHSTOCKICONINFO sii = new SHSTOCKICONINFO
-            {
-                cbSize = (uint)Marshal.SizeOf<SHSTOCKICONINFO>()
-            };
-            Marshal.ThrowExceptionForHR(SHGetStockIconInfo(eIconId, SHGSI.SHGSI_ICON, ref sii));
-            try
-            {
-                return Icon.FromHandle(sii.hIcon);
-            } // However, Icon.FromHandle is semi-stub in WINE so here is a backup.
-            catch (ArgumentException)
-            {
-                switch (eIconId)
-                {
-                    case SHSTOCKICONID.SIID_APPLICATION:
-                        return SystemIcons.Application;
-                    case SHSTOCKICONID.SIID_ERROR:
-                        return SystemIcons.Error;
-                    case SHSTOCKICONID.SIID_WARNING:
-                        return SystemIcons.Warning;
-                    case SHSTOCKICONID.SIID_HELP:
-                        return SystemIcons.Question;
-                    case SHSTOCKICONID.SIID_INFO:
-                        return SystemIcons.Information;
-                    case SHSTOCKICONID.SIID_SHIELD:
-                        return SystemIcons.Shield;
-                    default:
-                        return SystemIcons.Exclamation;
-                }
-            }
-        }
     }
 }

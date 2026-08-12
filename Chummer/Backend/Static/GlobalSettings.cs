@@ -215,7 +215,7 @@ namespace Chummer
     /// <summary>
     /// Global Settings. A static class since these settings are common across all characters, reducing execution time and memory usage.
     /// </summary>
-    public static class GlobalSettings
+    public static partial class GlobalSettings
     {
         private static readonly Lazy<Logger> s_ObjLogger = new Lazy<Logger>(LogManager.GetCurrentClassLogger);
         private static Logger Log => s_ObjLogger.Value;
@@ -2397,32 +2397,7 @@ namespace Chummer
             set => _intSavedImageQuality = value;
         }
 
-        /// <summary>
-        /// Converts an image to its Base64 string equivalent with compression settings specified by <see cref="SavedImageQuality"/>.
-        /// </summary>
-        /// <param name="objImageToSave">Image whose Base64 string should be created.</param>
-        /// <param name="token">Cancellation token to listen to.</param>
-        public static string ImageToBase64StringForStorage(Image objImageToSave, CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            return SavedImageQuality == int.MaxValue
-                ? objImageToSave.ToBase64String(token: token)
-                : objImageToSave.ToBase64StringAsJpeg(SavedImageQuality, token);
-        }
 
-        /// <summary>
-        /// Converts an image to its Base64 string equivalent with compression settings specified by <see cref="SavedImageQuality"/>.
-        /// </summary>
-        /// <param name="objImageToSave">Image whose Base64 string should be created.</param>
-        /// <param name="token">Cancellation token to listen to.</param>
-        public static Task<string> ImageToBase64StringForStorageAsync(Image objImageToSave, CancellationToken token = default)
-        {
-            if (token.IsCancellationRequested)
-                return Task.FromCanceled<string>(token);
-            return SavedImageQuality == int.MaxValue
-                ? objImageToSave.ToBase64StringAsync(token: token)
-                : objImageToSave.ToBase64StringAsJpegAsync(SavedImageQuality, token: token);
-        }
 
         /// <summary>
         /// Last folder from which a mugshot was added
