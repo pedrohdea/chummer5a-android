@@ -104,7 +104,7 @@ TODOS=$(sed -E 's/^[[:space:]]+//; s/^[0-9]+>//; s/ \[[^]]*\.csproj\]$//' "$WORK
 # `MessageBoxButtons` sem o using também vira CS0103 e é bug real. A diferença está no nome.
 #
 # Esta lista precisa acompanhar TIPOS_UI em scripts/extrair-ui.py.
-UI_CONHECIDOS='TreeNode|TreeView|TreeNodeCollection|TreeViewEventArgs|ContextMenuStrip|ToolStrip[A-Za-z]*|Control|Form|IWin32Window|ListViewItem|ListViewGroup|ComboBox|ListBox|ElasticComboBox|ToolTip|RightToLeft|SortOrder|KeyEventArgs|Image|Bitmap|Icon|CursorWait|LoadingBar|ThreadSafeForm|Cursors|Clipboard'
+UI_CONHECIDOS='TreeNode|TreeView|TreeNodeCollection|TreeViewEventArgs|ContextMenuStrip|ToolStrip[A-Za-z]*|Control|Form|IWin32Window|ListViewItem|ListViewItemWithValue|ListViewGroup|ComboBox|ListBox|ElasticComboBox|NumericUpDownEx|RichTextBox|ToolTip|RightToLeft|SortOrder|MouseEventArgs|KeyEventArgs|Image|Bitmap|Icon|CursorWait|LoadingBar|ThreadSafeForm|Cursors|Clipboard|TelemetryClient'
 
 ESPERADO_RE="error (CS0246|CS0234|CS1069):|error CS0103: The name '($UI_CONHECIDOS)'"
 PROBLEMAS=$(printf '%s\n' "$TODOS" | grep -vE "$ESPERADO_RE" || true)

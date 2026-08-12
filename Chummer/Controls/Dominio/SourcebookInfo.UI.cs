@@ -73,5 +73,8 @@ namespace Chummer
                 ? objImageToSave.ToBase64StringAsync(token: token)
                 : objImageToSave.ToBase64StringAsJpegAsync(SavedImageQuality, token: token);
         }
+        public static NumericUpDownEx.InterceptMouseWheelMode InterceptMode => AllowHoverIncrement
+            ? NumericUpDownEx.InterceptMouseWheelMode.WhenMouseOver
+            : NumericUpDownEx.InterceptMouseWheelMode.WhenFocus;
     }
 }

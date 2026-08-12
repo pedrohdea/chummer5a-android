@@ -1,4 +1,4 @@
-﻿/*  This file is part of Chummer5a.
+/*  This file is part of Chummer5a.
  *
  *  Chummer5a is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ using Microsoft.IO;
 
 namespace Chummer
 {
-    public static class CommonFunctions
+    public static partial class CommonFunctions
     {
         #region XPath Evaluators
 
@@ -1929,15 +1929,6 @@ namespace Chummer
             return decValue;
         }
 
-        public static void ShiftTabsOnMouseScroll(object sender, MouseEventArgs e)
-        {
-            if (!GlobalSettings.SwitchTabsOnHoverScroll || e == null)
-                return;
-            if (sender is TabControl tabControl && tabControl.DisplayRectangle.Contains(e.Location))
-            {
-                tabControl.SelectedIndex = (tabControl.SelectedIndex + e.Delta) % tabControl.TabCount;
-            }
-        }
 
         /// <summary>
         /// Verify that the user wants to delete an item.

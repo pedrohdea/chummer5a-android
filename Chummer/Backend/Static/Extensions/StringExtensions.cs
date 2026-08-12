@@ -29,12 +29,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using RtfPipe;
 
 namespace Chummer
 {
-    public static class StringExtensions
+    public static partial class StringExtensions
     {
         public static bool IsEmptyGuid(this string strInput)
         {
@@ -5744,7 +5743,6 @@ namespace Chummer
         private static readonly string[] s_astrEscapedLineEndingStrings = new[] { "\\r\\n", "\\n\\r", "\\n", "\\r" };
 
         private static readonly DebuggableSemaphoreSlim s_RtbRtfManipulatorLock = new DebuggableSemaphoreSlim();
-        private static readonly Lazy<RichTextBox> s_RtbRtfManipulator = new Lazy<RichTextBox>(() => Utils.RunOnMainThread(() => new RichTextBox(), token: CancellationToken.None));
 
         /// <summary>
         /// Strip RTF Tags from RTF Text.

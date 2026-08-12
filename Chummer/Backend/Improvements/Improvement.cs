@@ -35,7 +35,7 @@ using NLog;
 namespace Chummer
 {
     [DebuggerDisplay("{" + nameof(DisplayDebug) + "()}")]
-    public class Improvement : IHasNotes, IHasInternalId, ICanSort, IHasCharacterObject
+    public partial class Improvement : IHasNotes, IHasInternalId, ICanSort, IHasCharacterObject
     {
         private static readonly Lazy<Logger> s_ObjLogger = new Lazy<Logger>(LogManager.GetCurrentClassLogger);
         private static Logger Log => s_ObjLogger.Value;
@@ -5232,20 +5232,6 @@ namespace Chummer
 
         #region UI Methods
 
-        public async Task<TreeNode> CreateTreeNode(ContextMenuStrip cmsImprovement, CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            TreeNode objNode = new TreeNode
-            {
-                Name = InternalId,
-                Text = CustomName,
-                Tag = this,
-                ContextMenuStrip = cmsImprovement,
-                ForeColor = await GetPreferredColorAsync(token).ConfigureAwait(false),
-                ToolTipText = (await GetNotesAsync(token).ConfigureAwait(false)).WordWrap()
-            };
-            return objNode;
-        }
 
         public Color PreferredColor
         {

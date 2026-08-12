@@ -34,8 +34,6 @@ using System.Xml;
 using System.Xml.XPath;
 using Chummer.Annotations;
 using NLog;
-using TreeNode = System.Windows.Forms.TreeNode;
-using TreeNodeCollection = System.Windows.Forms.TreeNodeCollection;
 
 namespace Chummer.Backend.Equipment
 {

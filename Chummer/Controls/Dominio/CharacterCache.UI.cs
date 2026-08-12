@@ -96,5 +96,17 @@ namespace Chummer
                 }
             }
         }
+        private SafeAsyncEventHandler<TreeViewEventArgs> _onMyAfterSelect;
+        [JsonIgnore]
+        [XmlIgnore]
+        [IgnoreDataMember]
+        public SafeAsyncEventHandler<TreeViewEventArgs> OnMyAfterSelect
+        {
+            get
+            {
+                using (LockObject.EnterReadLock())
+                    return _onMyAfterSelect;
+            }
+        }
     }
 }

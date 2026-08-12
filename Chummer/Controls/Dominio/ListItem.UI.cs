@@ -30,7 +30,33 @@ using System.Windows.Forms;
 
 namespace Chummer
 {
-    public static partial class CompareTreeNodes
+    public partial class ListViewColumnSorter
+    {
+        private SortOrder _eOrderOfSort;
+        /// <summary>
+        /// SortOrder to be used.
+        /// </summary>
+        public SortOrder Order
+        {
+            get => _eOrderOfSort;
+            set => _eOrderOfSort = value;
+        }
+    }
+
+    public partial class DataGridViewColumnSorter
+    {
+        private SortOrder _objOrderOfSort;
+        /// <summary>
+        /// SortOrder to be used.
+        /// </summary>
+        public SortOrder Order
+        {
+            get => _objOrderOfSort;
+            set => _objOrderOfSort = value;
+        }
+    }
+
+    public partial class CompareTreeNodes
     {
         /// <summary>
         /// Sort TreeNodes in alphabetical order, ignoring [].
@@ -47,7 +73,7 @@ namespace Chummer
         }
     }
 
-    public static partial class CompareListViewItems
+    public partial class CompareListViewItems
     {
         /// <summary>
         /// Sort ListViewItems in reverse chronological order.

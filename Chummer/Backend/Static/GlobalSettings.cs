@@ -1188,9 +1188,6 @@ namespace Chummer
             set => _blnNestWeaponMountsUnderWeaponsCategory = value;
         }
 
-        public static NumericUpDownEx.InterceptMouseWheelMode InterceptMode => AllowHoverIncrement
-            ? NumericUpDownEx.InterceptMouseWheelMode.WhenMouseOver
-            : NumericUpDownEx.InterceptMouseWheelMode.WhenFocus;
 
         /// <summary>
         /// Whether dice rolling is allowed for Skills.

@@ -37,16 +37,49 @@ import sys
 # `Color`, `Point`, `Size` e `Rectangle` NÃO entram: vivem em System.Drawing.Primitives,
 # que faz parte do framework compartilhado e existe sob net9.0. Só `Image`, `Bitmap` e
 # `Icon` exigem System.Drawing.Common.
+# A lista foi montada por medição, não por intuição: cada nome abaixo apareceu como símbolo
+# ausente num relatório do censo. Ao acrescentar um nome aqui, acrescente também em
+# UI_CONHECIDOS de scripts/verificar-ui.sh — senão o verificador passa a acusar como defeito
+# de extração o acoplamento que ele deveria reconhecer.
 TIPOS_UI = [
-    'TreeNode', 'TreeView', 'TreeNodeCollection', 'ContextMenuStrip', 'ToolStripItem',
-    'ToolStripMenuItem', 'Control', 'Form', 'IWin32Window', 'ListViewItem', 'ListViewGroup',
-    'ComboBox', 'ListBox', 'ElasticComboBox', 'ToolTip', 'DialogResult', 'MessageBoxButtons',
+    'TreeNode', 'TreeView', 'TreeNodeCollection', 'TreeViewEventArgs', 'ContextMenuStrip',
+    'ToolStripItem', 'ToolStripMenuItem', 'Control', 'Form', 'IWin32Window', 'ListViewItem',
+    'ListViewItemWithValue', 'ListViewGroup', 'ComboBox', 'ListBox', 'ElasticComboBox',
+    'NumericUpDownEx', 'RichTextBox', 'ToolTip', 'DialogResult', 'MessageBoxButtons',
     'MessageBoxIcon', 'CursorWait', 'LoadingBar', 'ThreadSafeForm', 'RightToLeft',
-    'Image', 'Bitmap', 'Icon',
+    'SortOrder', 'MouseEventArgs', 'KeyEventArgs', 'Image', 'Bitmap', 'Icon',
+    # Telemetria: sai do núcleo por PREM-005, e o tipo vem do pacote Application Insights,
+    # que não é portável. Tratado como UI pelo mesmo motivo — não pertence ao domínio.
+    'TelemetryClient',
 ]
 RE_TIPO_UI = re.compile(r'\b(' + '|'.join(TIPOS_UI) + r')\b')
 
 RE_MEMBRO = re.compile(r'^\s{8}(\[.*\]\s*)?((public|private|internal|protected)\b.*)')
+
+RE_IDENT = re.compile(r'\b[A-Za-z_]\w*\b')
+
+
+def sem_nome_do_membro(assinatura):
+    """Devolve a assinatura sem o NOME do próprio membro.
+
+    Por que isto é necessário: a marcação procura tipos de UI em qualquer parte da
+    assinatura, e o nome do membro faz parte dela. `public int SortOrder` casava com
+    `SortOrder` da lista — que ali é o índice de ordenação de ICanSort, um `int` de domínio,
+    e não o enum de WinForms. Vehicle e Improvement tiveram a propriedade arrancada do
+    domínio por causa disso, quebrando a implementação de ICanSort.
+
+    O nome do membro é o último identificador antes do `(` de um método, ou o último
+    identificador da assinatura no caso de propriedades, campos e indexadores.
+    """
+    corte = assinatura.split('=>')[0].split('{')[0]
+    antes_par = corte.split('(')[0] if '(' in corte else corte
+    idents = RE_IDENT.findall(antes_par)
+    if not idents:
+        return assinatura
+    nome = idents[-1]
+    # Remove só a última ocorrência, para não apagar um tipo homônimo usado antes.
+    i = antes_par.rfind(nome)
+    return antes_par[:i] + antes_par[i + len(nome):] + assinatura[len(antes_par):]
 
 
 def limpa(linha):
@@ -134,8 +167,59 @@ def inicio_com_docs(linhas, i):
     return j
 
 
+RE_PARTIAL_EMITIDA = re.compile(
+    r'^    (?:public|internal)(?:\s+(?:sealed|abstract|static|readonly|unsafe))*'
+    r'\s+partial\s+(?:class|struct)\s+(\w+)\s*$')
+
+
+def ler_ui_existente(caminho_ui):
+    """Lê um `.UI.cs` gerado numa execução anterior.
+
+    Devolve `(usings, {nome_do_tipo: [linhas do corpo]})`.
+
+    Por que isto existe: a ferramenta reescrevia o arquivo de saída do zero a cada execução.
+    Rodá-la de novo no mesmo arquivo — o que acontece sempre que um tipo novo entra em
+    TIPOS_UI — apagava tudo que a execução anterior havia extraído, sem devolver nada ao
+    domínio. Vehicle.UI.cs perdeu dois dos três membros assim. Código sumindo em silêncio
+    numa base de 350 mil linhas é o pior modo de falha possível para esta ferramenta.
+
+    O arquivo é lido com confiança porque foi gerado por esta mesma função, com formato
+    fixo: declaração parcial recuada em quatro espaços, corpo entre `    {` e `    }`.
+    """
+    if not os.path.exists(caminho_ui):
+        return [], {}
+    linhas = open(caminho_ui, encoding='utf-8-sig').read().split('\n')
+    usings = [l for l in linhas if l.startswith('using ')]
+    blocos, i = {}, 0
+    while i < len(linhas):
+        m = RE_PARTIAL_EMITIDA.match(linhas[i])
+        if m and i + 1 < len(linhas) and linhas[i + 1].strip() == '{':
+            prof, j, corpo = 1, i + 2, []
+            while j < len(linhas) and prof > 0:
+                c = limpa(linhas[j])
+                prof += c.count('{') - c.count('}')
+                if prof > 0:
+                    corpo.append(linhas[j])
+                j += 1
+            blocos[m.group(1)] = [l for l in corpo]
+            i = j
+        else:
+            i += 1
+    return usings, blocos
+
+
+def conta_membros(texto):
+    """Quantos membros de tipo o texto declara. Usado só para conservação, não para lógica.
+
+    RE_MEMBRO não é multilinha — é aplicada linha a linha em todo o resto da ferramenta —
+    então a contagem também percorre linha a linha, e não com findall no texto inteiro.
+    """
+    return sum(1 for l in texto.split('\n') if RE_MEMBRO.match(l))
+
+
 def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
-    linhas = open(caminho, encoding='utf-8-sig').read().split('\n')
+    original_dominio = open(caminho, encoding='utf-8-sig').read()
+    linhas = original_dominio.split('\n')
 
     # Reconhece class, static class, sealed/abstract class, struct e readonly struct.
     # `static class` e `struct` também aceitam `partial`, então a mesma técnica vale.
@@ -180,7 +264,7 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
                 assinatura.append(linhas[k])
                 if '{' in limpa(linhas[k]) or '=>' in linhas[k]:
                     break
-            if RE_TIPO_UI.search(limpa(' '.join(assinatura))):
+            if RE_TIPO_UI.search(sem_nome_do_membro(limpa(' '.join(assinatura)))):
                 marcados.append((inicio_com_docs(linhas, i), fim, dono(i)))
             i = fim
         else:
@@ -264,6 +348,7 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
     # --- metade de UI ---
     os.makedirs(destino_dir, exist_ok=True)
     saida = os.path.join(destino_dir, f'{tipo}.UI.cs')
+    original_ui = open(saida, encoding='utf-8-sig').read() if os.path.exists(saida) else ''
     nota = (f'// Metade dependente de WinForms de {tipo}, separada do domínio durante a\n'
             f'// extração do núcleo (DEC-023). A metade de regras vive em {caminho}.\n'
             f'//\n'
@@ -272,12 +357,41 @@ def extrair(caminho, destino_dir='Chummer/Controls/Dominio'):
     # A declaração da classe parcial precisa ser emitida aqui. Esquecê-la deixa o arquivo
     # com uma chave de fechamento a mais e produz CS1022 — foi o primeiro defeito que o
     # verificador de sintaxe pegou.
+    # Funde com o que já havia sido extraído antes, em vez de sobrescrever.
+    usings_antigos, blocos_antigos = ler_ui_existente(saida)
+    usings = usings + [u for u in usings_antigos if u not in usings]
+
+    ordem = [(nome_t, kind_t, mods_t) for (_, nome_t, kind_t, mods_t) in por_tipo]
+    vistos = {n for n, _, _ in ordem}
+    # Tipos que só existem na extração anterior continuam no arquivo. Sem isto, extrair um
+    # tipo novo de um arquivo com vários apagaria os outros.
+    for nome_t in blocos_antigos:
+        if nome_t not in vistos:
+            ordem.append((nome_t, 'class', ''))
+
     corpo = '\n'.join(licenca) + '\n' + nota + '\n' + '\n'.join(usings) + '\n\n' + ns + '\n{\n'
-    for (_, nome_t, kind_t, mods_t), trecho in por_tipo.items():
+    for nome_t, kind_t, mods_t in ordem:
+        trecho = list(blocos_antigos.get(nome_t, []))
+        for (_, n2, _k2, _m2), novas in por_tipo.items():
+            if n2 == nome_t:
+                trecho += novas
         decl = ' '.join(x for x in ['public', mods_t, 'partial', kind_t, nome_t] if x)
         corpo += f'    {decl}\n    {{\n'
         corpo += '\n'.join(trecho).rstrip() + '\n    }\n\n'
     corpo = corpo.rstrip() + '\n}\n'
+
+    # CONSERVAÇÃO: nenhum membro pode desaparecer.
+    #
+    # Esta ferramenta move código; ela nunca deve apagá-lo. A verificação compara a soma de
+    # membros das duas metades antes e depois. É barata, e é o que teria pego na hora a
+    # sobrescrita que destruiu Vehicle.UI.cs. Ver DEC-034.
+    antes = conta_membros(original_dominio) + conta_membros(original_ui)
+    depois = conta_membros('\n'.join(dominio)) + conta_membros(corpo)
+    if depois < antes:
+        open(caminho, 'w', encoding='utf-8').write(original_dominio)   # desfaz a metade já gravada
+        print(f'  {tipo}: ABORTADO — {antes - depois} membro(s) sumiriam ({antes} -> {depois})')
+        return None
+
     open(saida, 'w', encoding='utf-8').write(corpo)
 
     print(f'  {tipo}: {len(extraidas)} linhas extraídas -> {saida}')

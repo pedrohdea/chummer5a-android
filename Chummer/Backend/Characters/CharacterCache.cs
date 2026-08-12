@@ -61,7 +61,6 @@ namespace Chummer
         private readonly ConcurrentDictionary<string, object> _dicMyPluginData = new ConcurrentDictionary<string, object>();
         private SafeAsyncEventHandler _onMyDoubleClick;
         private SafeAsyncEventHandler _onMyContextMenuDeleteClick;
-        private SafeAsyncEventHandler<TreeViewEventArgs> _onMyAfterSelect;
 
         public AsyncFriendlyReaderWriterLock LockObject { get; } = new AsyncFriendlyReaderWriterLock();
 
@@ -649,17 +648,6 @@ namespace Chummer
             }
         }
 
-        [JsonIgnore]
-        [XmlIgnore]
-        [IgnoreDataMember]
-        public SafeAsyncEventHandler<TreeViewEventArgs> OnMyAfterSelect
-        {
-            get
-            {
-                using (LockObject.EnterReadLock())
-                    return _onMyAfterSelect;
-            }
-        }
 
 
         public async Task OnDefaultDoubleClick(object sender, EventArgs e, CancellationToken token = default)

@@ -918,3 +918,37 @@ Dos 57 atuais, 26 são `Image`/`Icon`/`Bitmap` em assinaturas — o que promove 
 medição produz esteve errado quatro vezes — duplicado pelo MSBuild, falso zero por SDK
 errado, inflado por conjunto incompleto, e agora cego para corpos de método. A ferramenta
 merece a mesma desconfiança que o código que ela mede.
+
+---
+
+## DEC-033 — O extrator funde em vez de sobrescrever, e conserva membros · VIGENTE
+**2026-08-12**
+
+`scripts/extrair-ui.py` reescrevia `Tipo.UI.cs` do zero a cada execução. Rodá-lo de novo no
+mesmo arquivo — o que acontece toda vez que um tipo novo entra em `TIPOS_UI` — **apagava**
+o que a execução anterior havia extraído, sem devolver nada ao domínio. `Vehicle.UI.cs`
+perdeu dois dos três membros assim, e os dois simplesmente sumiram da árvore.
+
+Três mudanças:
+
+**Fusão.** A ferramenta lê o `.UI.cs` anterior, recupera o corpo de cada tipo parcial e o
+reemite junto com os membros novos. Tipos que só existiam na extração anterior continuam no
+arquivo — sem isso, extrair um tipo de um arquivo com vários apagaria os outros.
+
+**Conservação.** Depois de montar as duas metades, a soma de membros declarados é comparada
+com a de antes. Se algum sumiria, a extração é abortada e a metade de domínio já gravada é
+restaurada. É barato e teria pego a destruição na hora, em vez de num `git diff --stat` lido
+por acaso.
+
+**O nome do membro sai da assinatura antes da marcação.** `public int SortOrder` casava com
+`SortOrder` da lista de tipos de UI — mas ali `SortOrder` é o nome do membro, o índice de
+ordenação `int` de `ICanSort`, e não o enum de WinForms. Vehicle e Improvement tiveram a
+propriedade arrancada do domínio por isso, quebrando a implementação da interface. A
+marcação agora remove o identificador do próprio membro antes de procurar tipos.
+
+**Estado após a correção:** censo de declarações em **20 erros, todos do mesmo subsistema** —
+a API de mugshots. Todo o resto do acoplamento de declaração do `Backend/` está resolvido.
+
+**A lição:** uma ferramenta que MOVE código nunca deve poder APAGÁ-LO. A verificação de
+conservação não é defesa contra um bug específico; é a invariante da ferramenta, e devia
+estar lá desde a primeira versão.
