@@ -815,3 +815,38 @@ geração automática quebra **na forma**, mas não o que ela quebra **no sentid
 build net48 só existir no CI, erros semânticos em `Controls/` terão latência de minutos. É
 custo aceito e conhecido — não custo surpresa.
 
+---
+
+## DEC-030 — Verificação semântica local do código extraído · VIGENTE
+**2026-08-11**
+
+Substitui `verificar-sintaxe-ui.sh` por **`verificar-ui.sh`**, que compila
+`Backend/` + `Chummer.Core/` + as três pastas de `Controls/` juntas sob net9.0 e classifica
+cada erro.
+
+**Por que a versão anterior não bastava:** ela provava que o arquivo gerado estava **bem
+formado**, e o bug de DEC-029 produziu arquivos perfeitamente bem formados com métodos no
+tipo errado. Sintaxe válida, sentido errado. Só o build net48 no CI pegava, com minutos de
+latência e depois de o commit já estar publicado.
+
+**A classificação, e o detalhe que a torna correta:**
+
+| Código | Veredito |
+|---|---|
+| `CS0246`, `CS0234`, `CS1069` | **esperado** — tipo de WinForms ou `System.Drawing` ausente sob net9.0. É a razão do porte existir. |
+| `CS0103` | **depende do símbolo** |
+| todo o resto | **defeito da extração** |
+
+`CS0103` precisou de tratamento por nome, não por código. Um enum de WinForms usado como
+valor — `RightToLeft eIntoRightToLeft = RightToLeft.Inherit` num parâmetro padrão — produz
+`CS0103` e é esperado. Mas `MessageBoxButtons` sem o `using` também produz `CS0103` e é bug
+real, exatamente o que quebrou o build antes. A diferença está no **nome citado na
+mensagem**, e a primeira versão do classificador acusou os dois como problema.
+
+**Estado atual:** 723 erros em `Controls/`, todos de acoplamento conhecido. Nenhum defeito de
+extração.
+
+**O que isto compra:** a latência de detecção de um defeito de extração cai de minutos, no
+CI Windows, para segundos, em Linux. Não substitui o CI — continua sendo o único lugar que
+prova que o net48 compila — mas tira dele o papel de primeira linha de defesa.
+

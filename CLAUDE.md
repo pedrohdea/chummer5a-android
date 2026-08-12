@@ -129,6 +129,7 @@ Código acoplado a WinForms arrastado para dentro **falha na compilação**. Nã
 ./scripts/censo-erros.sh            # mede: relatório completo (barra de progresso da Etapa 2)
 ./scripts/censo-erros.sh --rapido   # guia: primeiros erros, ~1 s (laço interno)
 ./scripts/censo-erros.sh --rapido Weapon   # idem, filtrado por arquivo
+./scripts/verificar-ui.sh           # valida o que foi extraído para Controls/
 ```
 
 **Dois `global.json`, e a distinção é crítica** (DEC-012): a raiz fixa o SDK 8 do build
