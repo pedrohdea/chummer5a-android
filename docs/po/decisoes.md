@@ -1111,9 +1111,21 @@ compila e transforma sem reclamar.
 
 1. **NativeAOT está fora do Chummer.Android** enquanto a impressão for por XSLT. Não é
    preferência de desempenho: é incompatibilidade dura.
-2. O modo padrão do .NET para Android (Mono com JIT, inclusive com AOT de perfil, onde o JIT
-   continua disponível) **deve** funcionar — mas isso é dedução, não medição, e a medição no
-   aparelho é justamente o que o APK esqueleto vai trazer. Ver QA-009.
+2. O modo padrão do .NET para Android **deve** funcionar — mas isso é **inferência, não
+   medição**, e a medição no aparelho é justamente o que o APK esqueleto vai trazer
+   (QA-009). A inferência está apoiada em quatro fatos verificados no SDK e no APK gerado,
+   e é forte o bastante para se seguir construindo sobre ela:
+
+   | Evidência | Onde foi verificada |
+   |---|---|
+   | `RunAOTCompilation` é **true** por padrão em Release | `Microsoft.Android.Sdk.DefaultProperties.targets:105` |
+   | `AndroidAotMode` fica **vazio** — modo "Normal", que preserva o JIT, e não full-AOT | `Microsoft.Android.Sdk.Aot.targets:81` |
+   | `libmono-component-marshal-ilgen.so` **está dentro do APK** — é o componente do Mono que gera IL em tempo de execução | listagem do APK gerado |
+   | `System.Private.Xml` **sobreviveu ao trimmer** e foi AOT-compilada | `libaot-System.Private.Xml.dll.so` no APK |
+
+   O que a inferência **não** cobre: se o Mono responde `IsDynamicCodeSupported = true` com
+   AOT normal ativo. Só o aparelho responde isso, e o cartão de XSLT do APK responde na
+   primeira execução.
 3. Se o item 2 falhar no aparelho, a alternativa não é reescrever as folhas: é trocar o motor
    por um processador XSLT 1.0 gerenciado que interprete em vez de emitir IL. Trabalho
    grande, mas as folhas sobrevivem.

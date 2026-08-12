@@ -27,7 +27,9 @@ Descrever o código como ele é, antes de qualquer refatoração.
 - ✅ 1.0 `scripts/setup-dev.sh`, SDK versionado
 - ✅ 1.1 `src/Chummer.Core` + `Chummer.Port.sln` compilando em Linux; CI do porte
 - ✅ 1.2/1.3 Censo de erros: 733 distintos, dos quais 451 de domínio
-- ⬜ 1.4 Spikes de risco: `XslCompiledTransform` no Android · carga dos 21 MB · tamanho do APK
+- 🔄 1.4 Spikes de risco — **absorvidos pela Etapa 2.5**, onde estão medidos. Tamanho do APK
+  e carga dos dados: fechados. `XslCompiledTransform`: a dependência foi medida e a
+  consequência registrada (DEC-037); falta só a confirmação no aparelho (QA-009)
 - ⬜ 1.5 Desenho da interface `IUserPrompt`
 - ✅ **Reavaliar o plano na totalidade** — *feito: o censo mostrou 38% dos erros em arquivos
   que nem sobem para o núcleo, e o build legado foi provado funcional (DEC-015), encerrando
@@ -315,3 +317,32 @@ onde estão, mas deixam de bloquear a Etapa 2.5.
 
 **Caminho crítico, em uma linha:** retratos → destrava a medição → metade de seleção (os 327)
 → mover 322 mil linhas → UI Avalonia → APK funcional. Em paralelo, e independente: Etapa 2.5.
+
+### Durante a Etapa 2.5 (reavaliação parcial) — 2026-08-12
+
+Parcial de propósito: a reavaliação completa só é honesta depois que o PO rodar QA-009 no
+aparelho. Mas três medições já mudaram coisas, e segurá-las até lá não ajuda ninguém.
+
+**1. O risco de tamanho estava no lugar errado.** O plano vinha tratando os "21 MB de
+`data/`" como o problema de empacotamento. São 2,80 MiB dentro do APK. O custo real era uma
+ABI de emulador, 13,2 MiB, que ninguém tinha olhado. APK final: 17,86 MiB — confortável.
+**Nenhuma etapa precisa mudar por causa de tamanho.**
+
+**2. A Etapa 4 ganha um item concreto que ela não tinha.** A amplificação de 3,8× do
+`XmlDocument` (25,11 MiB retidos para 6,52 MiB de arquivo) é grande, e o cache do
+`XmlManager` nunca solta. Trocar `XmlDocument` por `XPathDocument` no caminho de leitura sai
+de "otimização se sobrar tempo" para item da etapa: o Chummer **lê** os dados de jogo, não
+os edita, e o `XPathDocument` representa a mesma árvore em uma fração da memória.
+
+**3. A Etapa 7 continua de pé, mas com uma restrição nova e permanente.** As folhas XSLT não
+usam nada que o .NET moderno não suporte, e a cadeia de imports foi provada resolúvel a
+partir dos assets — o que era o risco imaginado. O risco real é outro e não tinha sido
+previsto: `XslCompiledTransform` **exige código dinâmico e explode sem ele**. Consequência
+que atravessa todas as etapas seguintes: **NativeAOT está fora do `Chummer.Android`** e
+precisa continuar fora. Fica registrado em DEC-037 para que ninguém o ligue mais adiante
+"para ganhar desempenho" e quebre a impressão de fichas sem entender por quê.
+
+**O maior risco ainda é o mesmo?** Não. O maior risco do projeto continua sendo a Etapa 2 —
+mover 322 mil linhas — e nada aqui mudou isso. Mas o maior risco *de plataforma*, que era
+"a arquitetura escolhida não se sustenta no aparelho", encolheu para uma única pergunta
+binária com resposta a caminho.
