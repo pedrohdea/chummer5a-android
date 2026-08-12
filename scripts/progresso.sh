@@ -22,7 +22,7 @@ MODO="completo"
 case "${1:-}" in
     --rapido) MODO="rapido" ;;
     --historico)
-        [ -f "$CSV" ] && column -s, -t "$CSV" || echo "sem histórico ainda"
+        [ -f "$CSV" ] && grep -v '^#' "$CSV" | column -s, -t || echo "sem histórico ainda"
         exit 0 ;;
     -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
 esac
@@ -43,12 +43,16 @@ APK=$(find "$RAIZ/src" -name '*.apk' 2>/dev/null | head -1)
 APK=$([ -n "$APK" ] && echo sim || echo nao)
 
 if [ "$MODO" = "completo" ]; then
+    # head -1 em cada etapa: sem isso o valor pode vir com mais de uma linha e o CSV
+    # sai corrompido — foi o que aconteceu na medição de 2026-08-12.
     CENSO=$("$RAIZ/scripts/censo-erros.sh" --rapido --limite 0 2>/dev/null \
-            | grep -oE 'Total: [0-9]+' | grep -oE '[0-9]+' || echo -1)
+            | grep -oE 'Total: [0-9]+' | head -1 | grep -oE '[0-9]+' | head -1 || true)
+    CENSO=${CENSO:--1}
     # A saída tem escape ANSI antes do número; remover antes de casar.
     ANDROID=$("$RAIZ/scripts/verificar-android.sh" 2>/dev/null \
             | sed -E 's/\x1b\[[0-9;]*m//g' | grep -oE '^[0-9]+ erro' \
-            | grep -oE '^[0-9]+' || echo -1)
+            | grep -oE '^[0-9]+' | head -1 || true)
+    ANDROID=${ANDROID:--1}
 else
     CENSO=-1; ANDROID=-1
 fi
@@ -60,7 +64,7 @@ if [ ! -f "$CSV" ]; then
     mkdir -p "$(dirname "$CSV")"
     echo "data,commits,backend_linhas,core_linhas,censo,android,threadsafeform,ui_linhas,apk" > "$CSV"
 fi
-ANTERIOR=$(tail -1 "$CSV")
+ANTERIOR=$(grep -v '^#' "$CSV" | tail -1)
 echo "$DATA,$COMMITS,$BACKEND,$CORE,$CENSO,$ANDROID,$TSF,$UI,$APK" >> "$CSV"
 
 delta() { # $1 antes  $2 depois  $3 sentido(-1 menor é melhor, 1 maior é melhor)
@@ -76,14 +80,24 @@ if [ -n "$ANTERIOR" ] && [ "${ANTERIOR%%,*}" != "data" ]; then
     IFS=, read -r a_data a_com a_back a_core a_cen a_and a_tsf a_ui a_apk <<< "$ANTERIOR"
     printf '  %-34s %8s  %s\n' "métrica" "agora" "desde $a_data"
     printf '  %-34s %8s  ' "commits"                 "$COMMITS"; delta "$a_com"  "$COMMITS"  1;  echo
-    printf '  %-34s %8s  ' "linhas em Backend/ (cai)" "$BACKEND"; delta "$a_back" "$BACKEND" -1; echo
+    printf '  %-34s %8s  ' "linhas em Backend/" "$BACKEND"; delta "$a_back" "$BACKEND" -1; echo
+    if [ "$BACKEND" -gt "$a_back" ]; then
+        printf '      \033[33m↑ crescer aqui pode ser PROGRESSO:\033[0m membro que perdeu
+'
+        printf '        dependência de UI volta da metade .UI.cs para o domínio.
+'
+    fi
     printf '  %-34s %8s  ' "linhas em Chummer.Core/"  "$CORE";    delta "$a_core" "$CORE"     1;  echo
     printf '  %-34s %8s  ' "erros de declaração"      "$CENSO";   delta "$a_cen"  "$CENSO"   -1; echo
     printf '  %-34s %8s  ' "distância até o Android"  "$ANDROID"; delta "$a_and"  "$ANDROID" -1; echo
     printf '  %-34s %8s  ' "ThreadSafeForm no Backend" "$TSF";    delta "$a_tsf"  "$TSF"     -1; echo
     printf '  %-34s %8s  ' "linhas de UI Avalonia"    "$UI";      delta "$a_ui"   "$UI"       1;  echo
     printf '  %-34s %8s\n' "APK gerado"               "$APK"
-    AVANCOU=$(( (a_back - BACKEND) + (CORE - a_core) + (a_tsf - TSF) + (UI - a_ui) ))
+    # A distância até o Android entra no veredito: é a métrica mais próxima do objetivo.
+    # Ponderada, porque cair 20 ali vale mais que mover 20 linhas de arquivo.
+    DIST=0
+    [ "$a_and" != "-1" ] && [ "$ANDROID" != "-1" ] && DIST=$(( (a_and - ANDROID) * 100 ))
+    AVANCOU=$(( (a_back - BACKEND) + (CORE - a_core) + (a_tsf - TSF) + (UI - a_ui) + DIST ))
     NOVOS_COMMITS=$(( COMMITS - a_com ))
 else
     printf '  primeira medição — sem comparação. Rode de novo amanhã.\n'
