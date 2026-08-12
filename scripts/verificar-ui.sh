@@ -19,6 +19,11 @@
 #
 # Não conseguimos COMPILAR esses arquivos em Linux, mas conseguimos provar que a extração
 # não inventou nada além do acoplamento que já sabíamos existir.
+#
+# LIMITE DESTA VERIFICAÇÃO (DEC-032): ela alcança declarações, não corpos de método. Se um
+# arquivo tem erro de declaração, o Roslyn nem vincula os corpos, e um defeito de extração
+# dentro de um método passa batido. "OK" aqui significa "nenhum defeito visível na fase de
+# declaração" — não "nenhum defeito".
 
 set -euo pipefail
 
@@ -66,6 +71,8 @@ NOVO="$(cat <<'CSPROJ'
     <Compile Include="$(R)/Chummer/Controls/Dominio/**/*.cs" />
     <Compile Include="$(R)/Chummer/Controls/Extensions/**/*.cs" />
     <Compile Include="$(R)/Chummer/Controls/Infrastructure/**/*.cs" />
+    <!-- Âncoras de namespace: sem elas o Roslyn esconde os erros reais. Ver DEC-031. -->
+    <Compile Include="$(R)/scripts/probe/NamespaceAnchors.cs" />
   </ItemGroup>
 </Project>
 CSPROJ
@@ -111,4 +118,5 @@ fi
 
 ESPERADOS=$(printf '%s' "$TODOS" | grep -c '' || true)
 printf '\n\033[1mOK\033[0m — %s erros, todos de acoplamento conhecido (CS0246/CS0234/CS1069).\n' "$ESPERADOS"
-printf 'Nenhum defeito de extração: sintaxe válida e cada membro no tipo certo.\n'
+printf 'Nenhum defeito de extração VISÍVEL: sintaxe válida e cada membro no tipo certo.\n'
+printf 'Ressalva: só a fase de declaração é vinculada; corpos de método não. Ver DEC-032.\n'

@@ -850,3 +850,71 @@ extração.
 CI Windows, para segundos, em Linux. Não substitui o CI — continua sendo o único lugar que
 prova que o net48 compila — mas tira dele o papel de primeira linha de defesa.
 
+
+---
+
+## DEC-031 — Âncoras de namespace na sondagem · VIGENTE
+**2026-08-12**
+
+`scripts/probe/NamespaceAnchors.cs` declara um tipo interno e vazio em cada namespace que a
+sondagem não consegue resolver — `System.Windows.Forms`, `Microsoft.ApplicationInsights` e
+mais três. Entra no censo e no verificador de UI; não entra em nenhum projeto do produto.
+
+**O problema:** quando `using System.Windows.Forms;` não resolve, o Roslyn emite **um** erro,
+o `CS0234` da própria diretiva, e suprime todos os erros de nome não resolvido no resto do
+arquivo. Medido em repro mínimo: sete linhas com três referências a WinForms produzem 1 erro
+sem âncora e 5 com âncora.
+
+**O estrago no censo:** 28 arquivos colapsavam assim. `AddImprovementCollection.cs`, com 52
+comparações a `DialogResult` e 54 usos de `ThreadSafeForm`, contava como **um** erro.
+
+**Como funciona:** um namespace declarado em código-fonte só existe para o `using` se contiver
+ao menos um tipo. Um tipo vazio por namespace basta — a diretiva resolve e cada referência
+real volta a ter o seu próprio erro.
+
+**O que deliberadamente NÃO se faz:** declarar os tipos de WinForms. O censo mede acoplamento;
+declarar `DialogResult` esconderia exatamente o que ele conta. A âncora torna os erros
+visíveis, não os faz sumir.
+
+---
+
+## DEC-032 — O censo mede declarações, não corpos de método · VIGENTE
+**2026-08-12**
+
+O número do censo conta **apenas erros de nível de declaração**. Acoplamento dentro de corpos
+de método é invisível para ele enquanto existir um único erro de declaração no arquivo.
+
+**A prova, mínima e reproduzível:**
+
+```csharp
+public class C {
+    private MissingInDecl _field;                        // erro de DECLARAÇÃO
+    public void Body() { var x = MissingInBody.Value; }  // erro de CORPO
+}
+```
+
+Sozinho, o erro de corpo é reportado (`CS0103`). Com o erro de declaração presente, o
+compilador reporta **só a declaração** — o erro de corpo desaparece por completo. O Roslyn
+de linha de comando compila em fases e não vincula corpos de método se a fase de declaração
+já produziu erros.
+
+**Como isso apareceu:** a migração para a fachada de interação (DEC-026) quebrou 164
+expressões — `ShowDialogSafe(...) == PromptResult.Cancel`, comparando `DialogResult` com
+`PromptResult`. Todas em corpos de método. O censo em Linux não viu nenhuma; o build net48
+no CI Windows viu todas, porque lá as declarações estão limpas. Duas execuções de CI
+vermelhas antes de a causa ficar clara.
+
+**O que isso muda na leitura do progresso:** a série 733 → 671 → … → 57 nunca significou "92%
+do acoplamento resolvido". Significa "o acoplamento **de declaração** está quase resolvido; o
+de corpo segue não medido". As 329 chamadas a `MessageBox`, as ~120 instanciações de diálogo
+e os 146 `Application.DoEvents()` estão quase todos em corpos — e portanto fora da conta.
+
+**Consequência de estratégia:** zerar os erros de declaração deixa de ser um marco entre
+outros e passa a ser **pré-requisito de medição**. Só depois disso o censo enxerga o resto.
+Dos 57 atuais, 26 são `Image`/`Icon`/`Bitmap` em assinaturas — o que promove DEC-021
+(mugshots como bytes) de dívida conhecida a próximo passo do caminho crítico.
+
+**A lição, e é a quarta do mesmo tipo (ver DEC-019):** o primeiro número que uma ferramenta de
+medição produz esteve errado quatro vezes — duplicado pelo MSBuild, falso zero por SDK
+errado, inflado por conjunto incompleto, e agora cego para corpos de método. A ferramenta
+merece a mesma desconfiança que o código que ela mede.

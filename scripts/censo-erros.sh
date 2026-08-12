@@ -5,6 +5,17 @@
 # Compila todo o Backend/ legado sob net9.0 e agrega os erros. O objetivo NÃO é fazer
 # compilar — é medir o acoplamento à plataforma e servir de barra de progresso da Etapa 2.
 #
+# O QUE ESTE NÚMERO MEDE, E O QUE ELE NÃO MEDE (DEC-032)
+#
+# Ele conta apenas erros de NÍVEL DE DECLARAÇÃO. O Roslyn de linha de comando compila em
+# fases e não vincula corpos de método se a fase de declaração já produziu erros: um campo
+# de tipo inexistente esconde por completo um MessageBox no corpo do método ao lado.
+#
+# Portanto: acoplamento dentro de corpos de método é INVISÍVEL para esta ferramenta
+# enquanto houver um único erro de declaração. As 329 chamadas a MessageBox e as ~120
+# instanciações de diálogo não estão na conta. Zerar as declarações é pré-requisito para
+# medir o resto — não é o fim do trabalho.
+#
 # DOIS MODOS, porque são dois usos diferentes (DEC-022):
 #
 #   ./scripts/censo-erros.sh                    modo completo: relatório e total
@@ -108,6 +119,13 @@ NOVO_CSPROJ="$(cat <<'CSPROJ'
     -->
     <Compile Include="$(ChummerCore)/**/*.cs"
              Exclude="$(ChummerCore)/bin/**/*.cs;$(ChummerCore)/obj/**/*.cs" />
+    <!--
+      Âncoras de namespace. Sem elas o Roslyn colapsa todo arquivo cujo `using
+      System.Windows.Forms;` falha num único erro e some com o resto — 28 arquivos
+      escondendo um número desconhecido de referências. Ver scripts/probe/NamespaceAnchors.cs
+      e DEC-031.
+    -->
+    <Compile Include="$(ChummerProbe)/NamespaceAnchors.cs" />
   </ItemGroup>
 </Project>
 CSPROJ
@@ -129,6 +147,7 @@ PROPS=(
     -p:ChummerSevenZip="$REPO_ROOT/Chummer/7zip"
     -p:ChummerAnnotations="$REPO_ROOT/Chummer/Properties/Annotations.cs"
     -p:ChummerCore="$REPO_ROOT/src/Chummer.Core"
+    -p:ChummerProbe="$REPO_ROOT/scripts/probe"
 )
 
 if [ "$RESTAURAR" -eq 1 ]; then

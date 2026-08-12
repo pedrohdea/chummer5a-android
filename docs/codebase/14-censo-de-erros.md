@@ -6,6 +6,20 @@ com precisão, para dimensionar a Etapa 2.
 
 Reproduzível: `./scripts/censo-erros.sh`
 
+> **Leia isto antes de interpretar qualquer número desta página (DEC-032).**
+>
+> O censo conta **apenas erros de nível de declaração**. O compilador de linha de comando
+> não vincula corpos de método quando a fase de declaração já falhou, então acoplamento
+> dentro de um corpo é invisível enquanto houver um único erro de declaração no arquivo.
+>
+> As 329 chamadas a `MessageBox`, as ~120 instanciações de diálogo e os 146
+> `Application.DoEvents()` estão quase todos em corpos de método — e portanto **fora de
+> todos os totais abaixo**. Zerar as declarações é pré-requisito para medir o resto, não o
+> fim do trabalho.
+>
+> Medido em 2026-08-12, já com as âncoras de namespace de DEC-031: **57 erros de
+> declaração** restantes, dos quais 26 são `Image`/`Icon`/`Bitmap` em assinaturas.
+
 ---
 
 ## Resultado
