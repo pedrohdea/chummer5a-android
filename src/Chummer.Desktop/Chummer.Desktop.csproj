@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Head de desktop. Existe para depurar exatamente a mesma UI do Android sem emulador
+    (DEC-002) — e, nesta etapa, para servir de CONTROLE dos spikes: rodar as mesmas medições
+    aqui e no aparelho é o que separa "o Android é lento" de "o código é lento".
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <!-- Fonte embarcada só no desktop: o contêiner de build não tem fonte alguma instalada,
+         e sem ela o texto simplesmente não aparece. O Android traz as fontes do sistema. -->
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" Condition="'$(Configuration)' == 'Debug'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chummer.UI\Chummer.UI.csproj" />
+  </ItemGroup>
+
+</Project>

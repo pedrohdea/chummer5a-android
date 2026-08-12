@@ -1,0 +1,10 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:Chummer.UI.Views"
+        x:Class="Chummer.UI.Views.MainWindow"
+        Title="Chummer 5 — esqueleto"
+        Width="480" Height="900">
+
+  <views:MainView />
+
+</Window>
