@@ -123,7 +123,13 @@ Código acoplado a WinForms arrastado para dentro **falha na compilação**. Nã
 
 ### Ambiente de build
 
+**Tudo passa por `./scripts/dev.sh`** — e `./scripts/dev.sh check` é o que roda antes de
+todo commit. Guia completo em `docs/DESENVOLVIMENTO.md`.
+
 ```bash
+./scripts/dev.sh check              # ANTES DE TODO COMMIT: auditoria + ui + legado
+./scripts/dev.sh status             # onde o porte está, em números
+./scripts/dev.sh erros Weapon       # os primeiros erros nesse arquivo, ~1 s
 ./scripts/setup-dev.sh              # SDK .NET + verificação
 ./scripts/setup-dev.sh --android    # + workload Android (para gerar APK)
 ./scripts/censo-erros.sh            # mede: relatório completo (barra de progresso da Etapa 2)
