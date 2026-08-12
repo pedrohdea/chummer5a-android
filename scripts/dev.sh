@@ -12,6 +12,7 @@
 #   ./scripts/dev.sh erros Gear    idem, filtrado por arquivo
 #   ./scripts/dev.sh apk        gera o APK (exige Android SDK; ver docs/DESENVOLVIMENTO.md)
 #   ./scripts/dev.sh status     onde o porte está, em números
+#   ./scripts/dev.sh progresso  mede, registra no histórico e diagnostica se parou
 #
 # Por que existe: as ferramentas do projeto medem coisas diferentes e é fácil rodar a
 # errada. `check` é a resposta para "o que eu preciso rodar antes de commitar" — e ela
@@ -99,6 +100,10 @@ FIM
     titulo "Gerando APK"
     cd "$RAIZ/src" && dotnet publish Chummer.Android/Chummer.Android.csproj \
         -c Release -f net9.0-android --nologo "$@"
+    ;;
+
+  progresso)
+    exec "$RAIZ/scripts/progresso.sh" "$@"
     ;;
 
   status)
