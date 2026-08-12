@@ -74,28 +74,48 @@ com `MSB3823`. É por isso que `dev.sh build` faz `cd src` antes de qualquer coi
 
 ## APK
 
-**Não sai deste contêiner, e isso é um fato medido, não uma suposição.**
-
-O workload .NET de Android instala normalmente:
+**Sai deste contêiner.** Medido em 2026-08-12: 1 min 38 s do zero, ~50 s incremental.
 
 ```bash
-dotnet workload install android      # funciona
+./scripts/dev.sh setup --android    # uma vez: SDK .NET + workload + SDK do Google
+./scripts/dev.sh apk                # gera o APK e informa o tamanho
 ```
 
-Mas ele traz apenas o compilador e os runtimes. Empacotar um APK exige também o **SDK do
-Google** — `platform-tools`, `platforms/android-NN`, `build-tools` — e:
+O setup instala o SDK do Google em `~/android-sdk`, e o `dev.sh` o adota automaticamente se
+estiver lá — não é preciso exportar `ANDROID_HOME` na mão.
 
-- `dotnet build -t:InstallAndroidDependencies` falha com `XAIAD7009` neste contêiner;
-- o download direto de `dl.google.com/android/repository/commandline-tools-linux-*.zip`
-  responde **404** para todas as versões testadas.
+> Uma versão anterior deste documento afirmava que o APK **não** saía do contêiner, porque o
+> download do `commandline-tools` respondia 404. A URL fixa é que estava errada; descobri-la
+> pelo índice do repositório resolveu. O CI continua gerando o APK, mas agora para **publicar
+> o artefato ao PO**, não porque falte capacidade aqui.
 
-**Onde o APK é gerado, portanto: no CI.** O runner `ubuntu-latest` do GitHub Actions já vem
-com o Android SDK e `$ANDROID_HOME` definido. Se você tiver o SDK na sua máquina, defina
-`ANDROID_HOME` e `./scripts/dev.sh apk` funciona local.
+**Tamanho, medido** (ver DEC-039 para a composição completa):
 
-Isso **não bloqueia o desenvolvimento**: o `Chummer.Desktop` existe exatamente para depurar a
-mesma UI Avalonia sem emulador e sem APK (DEC-002). O APK é passo de empacotamento, não de
-desenvolvimento.
+| Configuração | APK |
+|---|---|
+| arm64 apenas, com todos os dados de jogo | **17,86 MiB** |
+| arm64 + x86_64 (só para emulador) | 31,10 MiB |
+
+O padrão é **só arm64**. Incluir `android-x64` acrescenta 13,2 MiB — mais do que todos os
+dados de jogo juntos, que custam 2,80 MiB comprimidos. Para emulador:
+
+```bash
+./scripts/dev.sh apk -p:RuntimeIdentifiers="android-arm64;android-x64"
+```
+
+### Ver a UI sem aparelho e sem emulador
+
+É para isso que o `Chummer.Desktop` existe (DEC-002).
+
+```bash
+./scripts/dev.sh tela /tmp/x.png    # renderiza a UI para PNG, sob Xvfb
+./scripts/dev.sh tela /tmp/x.png --with-spikes   # já com as medições na tela
+./scripts/dev.sh spikes             # as medições de plataforma no console
+```
+
+`dev.sh spikes` é a medição de **controle**: roda no desktop exatamente o que o APK roda no
+aparelho. Sem ela, um número ruim no celular não distingue "o Android é lento" de "o código
+é lento".
 
 ---
 

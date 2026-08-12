@@ -127,3 +127,52 @@ comportamento tem que ser vista por olho humano antes de virar verdade.
 
 **Também vale testar:** trocar a foto por uma nova, salvar, reabrir. E um personagem com
 várias fotos, trocando qual é a principal.
+
+---
+
+## QA-009 — Instalar o APK esqueleto e tocar em "Medir" · AGUARDANDO
+**Etapa:** 2.5 · **Decisões:** DEC-037, DEC-039, DEC-040
+
+**O APK:** artefato `chummer-android-apk` do workflow *Port Build (Linux)*, ou gerado
+localmente com `./scripts/dev.sh apk`. São 17,9 MiB. Instalação direta, sem loja — o
+aparelho vai pedir permissão para "instalar de fonte desconhecida".
+
+**O que fazer:** abrir o app e tocar no botão **Medir**. Depois me mandar a tela, ou os
+números transcritos.
+
+**O que preciso saber, em ordem de importância:**
+
+1. **O cartão "XslCompiledTransform" diz OK ou FALHOU.** Esta é a pergunta mais cara do
+   projeto inteiro. Se disser FALHOU, a Etapa 7 — as fichas impressas — muda de desenho, e é
+   melhor saber agora do que depois de construída. Se aparecer uma exceção no cartão, ela é
+   o texto mais valioso da tela: copie inteira.
+2. **"até o primeiro quadro"** — quanto tempo do toque no ícone até a tela aparecer. Se
+   passar de uns 2 segundos com a tela ainda vazia, o Android já está incomodado.
+3. **"heap gerenciado retido"** e **"limite de heap"** no cartão "Carga de data/". O primeiro
+   é o que os dados de jogo custam de memória; o segundo é o que o aparelho dá ao app. A
+   razão entre os dois diz se cabe folgado ou apertado.
+4. **"tempo total"** da carga de `data/`. No desktop deu ~200 ms. Um celular costuma ficar
+   entre 2× e 5× mais lento; muito além disso é sinal de que a Etapa 4 precisa mudar de
+   estratégia de carregamento.
+
+**O que NÃO esperar:** o app não abre ficha nenhuma. Ele é uma régua, não um produto. Abrir
+`.chum5` depende da Etapa 2, que corre em paralelo.
+
+**Se não abrir:** o texto do erro que o Android mostrar, e o modelo/versão do Android, já
+resolvem 90% dos casos.
+
+---
+
+## QA-010 — A tela é legível num celular de verdade · AGUARDANDO
+**Etapa:** 2.5 · **Decisão:** DEC-002
+
+Junto com QA-009, e é a primeira vez que alguém olha a UI do porte num aparelho.
+
+**O que quero saber:** o texto tem tamanho legível sem apertar os olhos, o botão é fácil de
+acertar com o dedo, a lista rola bem, e nada fica cortado nas bordas ou embaixo da barra de
+navegação do sistema.
+
+**Por que existe:** o `Chummer.Desktop` existe para eu depurar layout sem emulador (DEC-002),
+mas ele só é um substituto honesto se o que eu vejo lá corresponder ao que aparece no
+aparelho. Esta é a primeira calibração dessa correspondência — e tudo que eu desenhar daqui
+para frente parte dela.

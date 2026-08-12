@@ -32,6 +32,8 @@ env:
   DOTNET_NOLOGO: 1
 
 jobs:
+  # Sinal rápido. Compila só os projetos que não precisam do workload de Android, para que
+  # um erro de C# apareça em ~1 minuto em vez de esperar a instalação do workload.
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -55,10 +57,79 @@ jobs:
       # Os passos rodam com src/ como diretório de trabalho de propósito: o dotnet resolve
       # o global.json a partir do diretório de trabalho, não do caminho do projeto.
       # src/global.json exige o SDK 9; o da raiz exige o SDK 8 do build legado.
-      - name: Restore
+      - name: Build (núcleo, UI e head de desktop)
         working-directory: src
-        run: dotnet restore Chummer.Port.sln
+        run: |
+          dotnet build Chummer.Core/Chummer.Core.csproj --configuration Release
+          dotnet build Chummer.UI/Chummer.UI.csproj --configuration Release
+          dotnet build Chummer.Desktop/Chummer.Desktop.csproj --configuration Release
 
-      - name: Build
+      # A UI precisa provar que DESENHA, não só que compila. O runner não tem tela, então o
+      # próprio app rasteriza a janela para PNG sob Xvfb. Ver DEC-040.
+      - name: A UI desenha
         working-directory: src
-        run: dotnet build Chummer.Port.sln --no-restore --configuration Release
+        env:
+          CHUMMER_ASSETS: ${{ github.workspace }}/Chummer
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
+          xvfb-run -a dotnet run --project Chummer.Desktop/Chummer.Desktop.csproj \
+            --configuration Release -- --screenshot "$RUNNER_TEMP/tela.png" --with-spikes
+
+      - name: Publicar a captura
+        uses: actions/upload-artifact@v4
+        with:
+          name: tela-desktop
+          path: ${{ runner.temp }}/tela.png
+          if-no-files-found: error
+
+      # Medição de controle: os mesmos spikes que o APK roda no aparelho, rodados aqui. É o
+      # que separa "o Android é lento" de "o código é lento" quando os números do PO chegarem.
+      - name: Spikes de plataforma (controle)
+        working-directory: src
+        env:
+          CHUMMER_ASSETS: ${{ github.workspace }}/Chummer
+        run: dotnet run --project Chummer.Desktop/Chummer.Desktop.csproj --configuration Release -- --spikes
+
+  # O APK que o PO instala no aparelho. Separado do job acima porque instalar o workload de
+  # Android custa minutos e não deve atrasar o sinal de compilação.
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-apk-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: ${{ runner.os }}-nuget-apk-
+
+      - name: Instalar o workload de Android
+        run: dotnet workload install android
+
+      - name: Gerar o APK
+        working-directory: src
+        run: dotnet publish Chummer.Android/Chummer.Android.csproj --configuration Release
+
+      # O tamanho do APK é uma das medições da Etapa 2.5. Imprimi-lo a cada execução é o que
+      # transforma "o APK cresceu" de descoberta tardia em fato visível no log.
+      - name: Tamanho do APK
+        working-directory: src
+        run: |
+          find Chummer.Android/bin/Release -name '*-Signed.apk' \
+            -printf '%s bytes\t%f\n' | sort -rn
+
+      - name: Publicar o APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: chummer-android-apk
+          path: src/Chummer.Android/bin/Release/**/publish/*-Signed.apk
+          if-no-files-found: error

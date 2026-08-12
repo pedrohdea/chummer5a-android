@@ -59,29 +59,115 @@ Tornar todo o `Backend/` compilável sob net9.0, sem UI e sem `System.Drawing`.
 - ⬜ Testes existentes passando contra o `Chummer.Core`
 - ⬜ **Reavaliar o plano na totalidade**
 
-## Etapa 2.5 — APK esqueleto, em paralelo ⬜
+## Etapa 2.5 — APK esqueleto, em paralelo 🔄
 
 **Não depende do `Chummer.Core`.** Existe para responder, com o aparelho na mão, as perguntas
 de plataforma que estão em aberto desde a Etapa 1 (item 1.4, nunca feito) e que podem
 invalidar decisões de arquitetura já tomadas.
 
-- ⬜ Projeto `Chummer.Android` com Avalonia, tela única, nada de domínio
-- ⬜ Os 21 MB de `data/` embarcados como assets — **medir tempo de carga e pico de memória**
-- ⬜ `XslCompiledTransform` rodando no Android — se não rodar, a Etapa 7 muda inteira
-- ⬜ Tamanho do APK com os assets dentro
-- ⬜ Job de CI que gera o APK e o publica como artefato
-- ⬜ **PO instala no A56 e confirma que abre** (PREM-018)
-- ⬜ **Reavaliar o plano na totalidade**
+- ✅ `Chummer.UI`, `Chummer.Android` e `Chummer.Desktop` criados e na `Chummer.Port.sln`
+- ✅ `data/`, `lang/`, `sheets/` e `customdata/` embarcados como assets, por link (DEC-041)
+- ✅ Tamanho do APK medido — e a premissa da etapa foi **invertida** (DEC-039)
+- ✅ Tempo de carga e memória do XML medidos no desktop (controle)
+- ✅ `XslCompiledTransform`: **a dependência dura foi identificada e medida** (DEC-037)
+- ✅ A UI desenha, com PNG para provar (DEC-040)
+- ✅ Job de CI que gera o APK e o publica como artefato
+- ⬜ **PO instala no A56, abre e toca em "Medir"** (QA-009) — só ele pode fechar esta etapa
+- ⬜ **Reavaliar o plano na totalidade** — depois dos números do aparelho
 
 > **Por que sobe para cá.** Estas medições não competem com a Etapa 2 — são outra frente, e
 > a resposta delas muda o plano das etapas 4, 6 e 7. Deixá-las para depois é carregar por
 > mais tempo o risco de descobrir tarde que uma decisão de arquitetura não se sustenta no
 > aparelho. E dá ao PO um APK instalável muito antes do MVP.
->
-> **Onde o APK é construído:** no CI. Medido em 2026-08-12 — o workload .NET de Android
-> instala neste contêiner, mas o SDK do Google não: `InstallAndroidDependencies` falha com
-> `XAIAD7009` e o download direto do `commandline-tools` responde 404. O runner
-> `ubuntu-latest` já traz o SDK.
+
+### O formato da entrega, e por que não é um "hello world"
+
+A tela única do esqueleto **é o instrumento de medição**. Ela tem um botão "Medir" que roda
+os spikes no aparelho e mostra os números. Um "hello world" provaria apenas que o APK
+instala; este prova isso **e** traz de volta os números que só existem no aparelho.
+
+O `Chummer.Desktop` roda exatamente as mesmas medições (`./scripts/dev.sh spikes`). Isso não
+é conveniência: é o **controle**. Sem ele, um número ruim no celular não distingue "o Android
+é lento" de "o código é lento".
+
+### Onde o APK é construído — corrigido
+
+Sai **deste contêiner**, em ~50 s de build incremental e 1 min 38 s do zero. A afirmação
+anterior ("só no CI") caiu quando `setup-dev.sh --android` passou a descobrir a URL do
+`commandline-tools` pelo índice do repositório. O job de CI continua existindo, mas para
+**publicar o artefato ao PO**, não porque o contêiner não dê conta.
+
+### Os números medidos · 2026-08-12
+
+**Tamanho do APK** — três configurações, para separar o custo de cada coisa:
+
+| Configuração | APK |
+|---|---|
+| arm64 + x86_64, com os dados | 31,10 MiB |
+| arm64 + x86_64, sem os dados | 28,18 MiB |
+| **arm64 apenas, com os dados** | **17,86 MiB** ← o que se distribui |
+
+Composição do APK que se distribui:
+
+| Grupo | Cru | Dentro do APK |
+|---|---|---|
+| `lib/arm64-v8a` (runtime .NET + Skia) | 24,98 MiB | **12,32 MiB** |
+| dex, res, manifest | 6,75 MiB | 2,57 MiB |
+| `assets/lang` (11 arquivos) | 9,52 MiB | 1,79 MiB |
+| `assets/data` (42 arquivos) | 6,52 MiB | 0,63 MiB |
+| `assets/customdata` (220 arquivos) | 1,41 MiB | 0,24 MiB |
+| `assets/sheets` (174 arquivos) | 0,97 MiB | 0,14 MiB |
+| **total** | 50,15 MiB | **17,69 MiB** |
+
+> **O achado que inverte a premissa da etapa.** O plano tratava os "21 MB de dados" como o
+> risco de tamanho. Eles somam 18,4 MiB crus e custam **2,80 MiB** dentro do APK — XML
+> comprime ~6,6:1 e o zip do APK já faz isso. O custo real é a ABI `android-x64`, que
+> ninguém usa fora de emulador e pesa 13,2 MiB: **quatro vezes e meia todos os dados
+> juntos**. Ver DEC-039.
+
+**Carga dos dados** — 42 arquivos de `data/`, cada um num `XmlDocument` mantido vivo, que é
+o que o `XmlManager` legado faz. Medido no desktop (x64, .NET 9.0.18):
+
+| | |
+|---|---|
+| bytes lidos | 6,52 MiB |
+| nós XML | 343.678 |
+| tempo total | 172–239 ms |
+| tempo por MiB | 26–37 ms |
+| **heap gerenciado retido** | **25,11 MiB** |
+| alocado durante a carga | 40,84 MiB |
+| **amplificação XML→memória** | **3,8×** |
+
+> A amplificação de 3,8× é o número que importa para o Android, e é o que PREM-003 pedia.
+> `XmlDocument` custa quase quatro vezes o tamanho do arquivo, **retidos para sempre**,
+> porque o cache do `XmlManager` nunca solta. Só `data/` já pede 25 MiB; com `lang/` a conta
+> cresce. Aparelhos antigos dão 64–128 MiB de `memoryClass` por app — o A56 dá bem mais, mas
+> a margem não é infinita, e isto é argumento concreto para trocar `XmlDocument` por
+> `XPathDocument` (que é imutável e bem mais enxuto) na Etapa 4.
+
+**XSLT** — o achado mais importante da etapa. Ver DEC-037.
+
+| | |
+|---|---|
+| `msxsl:script` nas folhas do repositório | **0** ✅ |
+| `document()` nas folhas | **0** ✅ |
+| cadeia de `xsl:import` resolvida sem sistema de arquivos | **sim** ✅ |
+| `Shadowrun 5.xsl` — compilar com imports | 131–177 ms |
+| `Shadowrun 5.xsl` — transformar | 517–604 ms |
+| com `IsDynamicCodeSupported=false` | **`TypeInitializationException`** ❌ |
+
+> `XslCompiledTransform` compila a folha para IL via `Reflection.Emit`. **Sem código
+> dinâmico ele não degrada: ele explode**, no inicializador de `XmlILModule`, antes de ler a
+> primeira folha. Consequência dura: **NativeAOT está fora do `Chummer.Android`** enquanto a
+> impressão for por XSLT. O modo padrão do .NET para Android mantém o JIT e portanto deve
+> funcionar — mas isso é dedução, e a medição no aparelho é QA-009.
+
+**Build** — no contêiner, 4 CPUs:
+
+| Operação | Tempo |
+|---|---|
+| `dev.sh build` da solução inteira (Release, incremental) | 42 s |
+| `dotnet publish` do APK, do zero | 1 min 38 s |
 
 ## Etapa 3 — Artefatos dourados e teste diferencial ⬜
 

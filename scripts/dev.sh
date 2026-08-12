@@ -85,17 +85,13 @@ case "$cmd" in
       erro "Android SDK não encontrado (ANDROID_HOME/ANDROID_SDK_ROOT vazios)."
       cat >&2 <<'FIM'
 
-O workload .NET de Android instala normalmente aqui:
+Empacotar um APK exige o SDK do Google (platform + build-tools) além do workload
+.NET de Android. Rode:
 
-    dotnet workload install android
+    ./scripts/setup-dev.sh --android
 
-Mas ele traz só o compilador e os runtimes. Empacotar um APK exige também o SDK do
-Google (platform + build-tools), que este contêiner não tem e não conseguiu baixar.
-
-Rode:  ./scripts/setup-dev.sh --android
-
-Ele baixa o SDK do Google descobrindo a URL no índice do repositório. Medido: o APK
-sai deste contêiner em ~50 s, sem CI.
+Ele instala em ~/android-sdk, que o dev.sh adota sozinho. Medido: o APK sai deste
+contêiner em 1 min 38 s do zero, ~50 s incremental — sem CI.
 
 Ver docs/DESENVOLVIMENTO.md, seção "APK".
 FIM
