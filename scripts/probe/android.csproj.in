@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>Chummer</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>disable</Nullable><ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Ben.Demystifier" Version="0.4.1" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="10.0.9" />
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="18.7.23" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="NLog" Version="6.1.4" />
+    <PackageReference Include="XoshiroPRNG.Net" Version="1.6.0" />
+    <PackageReference Include="itext" Version="9.7.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(R)/Chummer/Backend/**/*.cs" />
+    <Compile Include="$(R)/Chummer/7zip/**/*.cs" />
+    <Compile Include="$(R)/Chummer/Properties/Annotations.cs" />
+    <Compile Include="$(R)/src/Chummer.Core/**/*.cs" Exclude="$(R)/src/Chummer.Core/bin/**/*.cs;$(R)/src/Chummer.Core/obj/**/*.cs" />
+    <Compile Include="$(R)/src/Chummer.Compat/**/*.cs" />
+  </ItemGroup>
+</Project>

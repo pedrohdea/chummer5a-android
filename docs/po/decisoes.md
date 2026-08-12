@@ -1080,3 +1080,51 @@ script tira dele o papel de primeira linha de defesa.
 passava em código quebrado. O que o salvou não foi revisá-lo, foi **injetar o defeito
 conhecido e exigir que ele falhasse**. Ferramenta de verificação precisa de teste negativo;
 "rodou e deu OK" não é evidência de nada.
+
+---
+
+## DEC-037 — Stubs de diálogo como spike, não como desenho · VIGENTE
+**2026-08-12**
+
+`scripts/gerar-stubs-dialogos.py` gera `src/Chummer.Compat/DialogStubs.g.cs`: 26 classes de
+diálogo, `ThreadSafeForm<T>` e `DialogResult`, todos compilando e **lançando
+`NotSupportedException` se chamados**. `scripts/verificar-android.sh` compila o domínio com
+eles no alvo do Android e mede a distância.
+
+**O que isto NÃO é.** Não é o desenho final. O desenho final continua sendo a abstração de
+solicitação/resposta de DEC-003 e DEC-026 — o domínio pede uma escolha, a apresentação
+resolve. Estes stubs são um atalho de propósito único.
+
+**A pergunta que o atalho responde:** carregar um `.chum5` no Android toca algum diálogo? A
+hipótese é que não — carregar é parser XML e construção de objetos; diálogos aparecem ao
+**criar** e **modificar** coisas que exigem escolha. Se a hipótese valer, dá para ter um APK
+que abre uma ficha semanas antes de a abstração de seleção existir. E cada stub que for
+chamado em execução lança com o nome do diálogo, apontando exatamente o que falta abstrair —
+o spike produz a lista de trabalho da rota longa.
+
+**Por que gerar em vez de escrever:** as assinaturas são extraídas dos formulários reais em
+`Chummer/Forms/`. São 26 diálogos e 57 membros distintos; escrever à mão é onde se erra o
+tipo de retorno e se descobre minutos depois.
+
+**Onde os stubs moram, e por quê.** `src/Chummer.Compat/`, fora de `src/Chummer.Core/`. O
+projeto legado compila `src/Chummer.Core/**` (DEC-013); qualquer coisa fora dessa pasta é
+automaticamente invisível para ele. Sem isso os stubs colidiriam com os tipos WinForms
+verdadeiros no build net48.
+
+**O resultado, medido:**
+
+| | |
+|---|---|
+| domínio no alvo Android, sem stubs | **104** erros |
+| com stubs de diálogo | **52** |
+| com stubs + âncora de `System.Windows.Forms` | **25** |
+| dos quais são a API de mugshots (DEC-034, em andamento) | **20** |
+
+Ou seja: 528 linhas geradas põem 322 mil linhas de domínio a ~5 erros de compilar para
+Android. Os cinco restantes são `Chummer.Plugins` e `Microsoft.ApplicationInsights` — MEF e
+telemetria, ambos fora do escopo por PREM-005 e pelo recorte do MVP.
+
+**A ressalva honesta, e ela é grande:** esses 25 são de **declaração**. Enquanto houver um
+deles, o compilador não vincula corpos de método (DEC-032). O número é **piso, não teto** —
+o teste de verdade vem quando os mugshots zerarem. Não afirmo que o domínio compila para
+Android; afirmo que a distância medida caiu de 104 para 25 e que o que sobrou tem dono.
