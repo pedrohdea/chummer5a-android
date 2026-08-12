@@ -130,7 +130,15 @@ Código acoplado a WinForms arrastado para dentro **falha na compilação**. Nã
 ./scripts/censo-erros.sh --rapido   # guia: primeiros erros, ~1 s (laço interno)
 ./scripts/censo-erros.sh --rapido Weapon   # idem, filtrado por arquivo
 ./scripts/verificar-ui.sh           # valida o que foi extraído para Controls/
+./scripts/verificar-legado.sh       # compila o app legado INTEIRO em Linux (~30 s)
 ```
+
+**Rode `verificar-legado.sh` antes de todo commit que mexa em código legado** (DEC-036). É
+a única ferramenta local que enxerga erro dentro de corpo de método: ela compila sob
+`net9.0-windows` com WinForms de verdade, então os erros de declaração chegam a zero e o
+Roslyn vincula os corpos. O censo **não** faz isso — ele mede acoplamento de declaração, e
+o compilador não vincula corpos enquanto houver erro de declaração (DEC-032). Foi essa
+cegueira que deixou quatro rodadas de CI vermelhas passarem por ferramentas locais verdes.
 
 **Dois `global.json`, e a distinção é crítica** (DEC-012): a raiz fixa o SDK 8 do build
 legado e **o porte não mexe nela**; `src/global.json` fixa o SDK 9. O `dotnet` resolve o
