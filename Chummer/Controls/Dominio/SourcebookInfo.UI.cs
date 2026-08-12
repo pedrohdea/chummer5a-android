@@ -49,29 +49,33 @@ namespace Chummer
     public static partial class GlobalSettings
     {
         /// <summary>
-        /// Converts an image to its Base64 string equivalent with compression settings specified by <see cref="SavedImageQuality"/>.
+        /// Encodes an image into the bytes that will be stored for it, with compression settings specified by <see cref="SavedImageQuality"/>.
+        /// Called when the user picks an image, not when the character is saved: the domain stores portraits as bytes and writes back
+        /// exactly what it read, so compression belongs at ingestion and happens once instead of on every save (DEC-034).
         /// </summary>
-        /// <param name="objImageToSave">Image whose Base64 string should be created.</param>
+        /// <param name="objImageToSave">Image whose stored bytes should be created.</param>
         /// <param name="token">Cancellation token to listen to.</param>
-        public static string ImageToBase64StringForStorage(Image objImageToSave, CancellationToken token = default)
+        public static byte[] ImageToBytesForStorage(Image objImageToSave, CancellationToken token = default)
         {
             token.ThrowIfCancellationRequested();
             return SavedImageQuality == int.MaxValue
-                ? objImageToSave.ToBase64String(token: token)
-                : objImageToSave.ToBase64StringAsJpeg(SavedImageQuality, token);
+                ? objImageToSave.ToBytes(token: token)
+                : objImageToSave.ToBytesAsJpeg(SavedImageQuality, token);
         }
         /// <summary>
-        /// Converts an image to its Base64 string equivalent with compression settings specified by <see cref="SavedImageQuality"/>.
+        /// Encodes an image into the bytes that will be stored for it, with compression settings specified by <see cref="SavedImageQuality"/>.
+        /// Called when the user picks an image, not when the character is saved: the domain stores portraits as bytes and writes back
+        /// exactly what it read, so compression belongs at ingestion and happens once instead of on every save (DEC-034).
         /// </summary>
-        /// <param name="objImageToSave">Image whose Base64 string should be created.</param>
+        /// <param name="objImageToSave">Image whose stored bytes should be created.</param>
         /// <param name="token">Cancellation token to listen to.</param>
-        public static Task<string> ImageToBase64StringForStorageAsync(Image objImageToSave, CancellationToken token = default)
+        public static Task<byte[]> ImageToBytesForStorageAsync(Image objImageToSave, CancellationToken token = default)
         {
             if (token.IsCancellationRequested)
-                return Task.FromCanceled<string>(token);
+                return Task.FromCanceled<byte[]>(token);
             return SavedImageQuality == int.MaxValue
-                ? objImageToSave.ToBase64StringAsync(token: token)
-                : objImageToSave.ToBase64StringAsJpegAsync(SavedImageQuality, token: token);
+                ? objImageToSave.ToBytesAsync(token: token)
+                : objImageToSave.ToBytesAsJpegAsync(SavedImageQuality, token: token);
         }
         public static NumericUpDownEx.InterceptMouseWheelMode InterceptMode => AllowHoverIncrement
             ? NumericUpDownEx.InterceptMouseWheelMode.WhenMouseOver
