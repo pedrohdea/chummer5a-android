@@ -955,8 +955,8 @@ estar lá desde a primeira versão.
 
 ---
 
-## DEC-034 — Mugshots como bytes, com recompressão na entrada · VIGENTE
-**2026-08-12** · realiza DEC-021
+## DEC-034 — Mugshots como bytes, com recompressão na entrada · VIGENTE · IMPLEMENTADA
+**2026-08-12** · realiza DEC-021 · implementada em 2026-08-12; desdobra em DEC-039 e DEC-040
 
 O domínio guarda a foto como `byte[]` — exatamente os bytes que o base64 do `.chum5`
 carrega. Nenhuma decodificação acontece no núcleo. `IHasMugshots` troca
@@ -1128,3 +1128,49 @@ telemetria, ambos fora do escopo por PREM-005 e pelo recorte do MVP.
 deles, o compilador não vincula corpos de método (DEC-032). O número é **piso, não teto** —
 o teste de verdade vem quando os mugshots zerarem. Não afirmo que o domínio compila para
 Android; afirmo que a distância medida caiu de 104 para 25 e que o que sobrou tem dono.
+## DEC-039 — A recompressão de retrato vale na entrada; mudá-la não mexe no que já existe · VIGENTE
+**2026-08-12** · realiza DEC-034
+
+Consequência de DEC-034 que merece registro próprio porque é **visível ao usuário**.
+
+Antes, `SavedImageQuality` era aplicado a **cada salvamento**: mudar a compressão nas
+configurações e salvar o personagem recomprimia todas as fotos dele, retroativamente. Agora
+a compressão acontece uma vez, em `AddMugshot`, quando o usuário escolhe a foto — e o
+salvamento reescreve os bytes que leu.
+
+**Efeito prático:** mudar a compressão passa a valer **só para as fotos adicionadas depois
+da mudança**. Uma foto já guardada não muda de qualidade, para melhor nem para pior.
+
+**Por que é o comportamento certo e não uma perda:** aplicar retroativamente nunca
+recuperava qualidade — só a destruía mais. Quem tivesse a compressão em "automático" e
+salvasse dez vezes ficava com dez gerações de JPEG empilhadas. A configuração descreve
+"como guardar o que eu escolher", não "reprocessar meu acervo".
+
+**O que se perde, e é real:** quem quiser encolher um personagem antigo cujas fotos foram
+guardadas sem compressão não tem mais como fazê-lo mudando a configuração e salvando. Se
+isso vier a ser pedido, a forma certa é um comando explícito de recompressão, não um efeito
+colateral de salvar.
+
+Registrado como QA-010 para verificação humana.
+
+---
+
+## DEC-040 — `CharacterCache` fica fora da conversão de retratos, e o motivo · VIGENTE
+**2026-08-12**
+
+`CharacterCache` guarda o retrato da lista de personagens e **não** implementa
+`IHasMugshots` — por isso não estava entre os 20 erros de declaração e ficou de fora de
+DEC-034. A decisão de não arrastá-lo junto é deliberada, não esquecimento.
+
+Ele não guarda a foto como veio: chama `GetCompressedImage` na carga e guarda o resultado
+comprimido, porque a lista de personagens mantém **todos** os personagens conhecidos em
+memória ao mesmo tempo. Guardar bytes crus ali trocaria um problema por outro — a lista
+passaria a carregar retratos em tamanho cheio.
+
+Convertê-lo exige decidir **onde** a compressão passa a acontecer, e essa decisão não é a
+mesma de DEC-034: no `IHasMugshots` a compressão pôde subir para a ingestão porque há um
+momento de ingestão claro (o usuário escolhe a foto). No cache, a "ingestão" é a leitura do
+arquivo, que é justamente o caminho que se quer manter no domínio.
+
+Os 7 `CS1069` e os 39 erros que `CharacterCache.cs` contribui ao censo de corpo de método
+estão registrados em `docs/codebase/15-acoplamento-de-corpo.md`.

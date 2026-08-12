@@ -1,4 +1,4 @@
-/*  This file is part of Chummer5a.
+﻿/*  This file is part of Chummer5a.
  *
  *  Chummer5a is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -2643,8 +2643,14 @@ namespace Chummer
 
                                 SetupCommonCollectionDatabindings(false);
 
-                                // Clear the mugshot image so that we don't get crashes from disposal ordering (image can get disposed before its picturebox does)
-                                await picMugshot.DoThreadSafeAsync(x => x.Image = null, CancellationToken.None).ConfigureAwait(false);
+                                // Clear the mugshot image so that we don't get crashes from disposal ordering (image can get disposed before its picturebox does).
+                                // The image is decoded by this form and belongs to it alone, so this is also where it gets disposed of (DEC-034).
+                                await picMugshot.DoThreadSafeAsync(x =>
+                                {
+                                    Image imgOld = x.Image;
+                                    x.Image = null;
+                                    imgOld?.Dispose();
+                                }, CancellationToken.None).ConfigureAwait(false);
 
                                 await Task.WhenAll(RefreshAttributesClearBindings(pnlAttributes, CancellationToken.None),
                                     RefreshMartialArtsClearBindings(treMartialArts, CancellationToken.None),
@@ -5593,7 +5599,7 @@ namespace Chummer
                                 await objMerge.SetBurntStreetCredAsync(await objVessel.GetBurntStreetCredAsync(GenericToken).ConfigureAwait(false), GenericToken).ConfigureAwait(false);
                                 await objMerge.SetNotorietyAsync(await objVessel.GetNotorietyAsync(GenericToken).ConfigureAwait(false), GenericToken).ConfigureAwait(false);
                                 await objMerge.SetPublicAwarenessAsync(await objVessel.GetPublicAwarenessAsync(GenericToken).ConfigureAwait(false), GenericToken).ConfigureAwait(false);
-                                ThreadSafeList<Image> lstMergeMugshots = await objMerge.GetMugshotsAsync(GenericToken).ConfigureAwait(false);
+                                ThreadSafeList<byte[]> lstMergeMugshots = await objMerge.GetMugshotsAsync(GenericToken).ConfigureAwait(false);
                                 await (await objVessel.GetMugshotsAsync(GenericToken).ConfigureAwait(false)).ForEachWithSideEffectsAsync(objMugshot =>
                                     lstMergeMugshots.AddAsync(objMugshot, GenericToken), GenericToken).ConfigureAwait(false);
                             }

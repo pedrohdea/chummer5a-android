@@ -257,3 +257,20 @@ precisa cobrir.
 
 **Resposta:**
 
+
+---
+
+## PEND-016 — Recomprimir fotos já guardadas · ABERTA
+**Criada:** 2026-08-12 · **Premissa:** PREM-020 · **Reversão:** 🟢 baixo
+
+A configuração de compressão de retrato passou a valer só para fotos **novas** (DEC-039).
+Você sente falta de conseguir encolher as fotos de um personagem antigo?
+
+**Por que importa:** se a resposta for sim, a forma certa é um comando explícito
+("recomprimir fotos deste personagem"), não o efeito colateral de salvar que existia antes.
+É trabalho pequeno, mas é tela nova — precisa entrar no escopo de propósito.
+
+**Por que não bloqueia:** o comportamento novo é o mais conservador dos dois. Ele nunca
+degrada uma foto sem que você peça; o antigo degradava a cada salvamento.
+
+**Resposta:**

@@ -78,6 +78,7 @@ namespace Chummer
         private bool _blnReadOnly;
         private bool _blnFree;
         private int _intMainMugshotIndex = -1;
+        private readonly ThreadSafeList<byte[]> _lstMugshots;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -487,7 +488,7 @@ namespace Chummer
             LockObject = objCharacter.LockObject;
             _objCharacter.MultiplePropertiesChangedAsync += CharacterObjectOnPropertyChanged;
             _blnReadOnly = blnIsReadOnly;
-            _lstMugshots = new ThreadSafeList<Image>(3, LockObject);
+            _lstMugshots = new ThreadSafeList<byte[]>(3, LockObject);
         }
 
         private Task CharacterObjectOnPropertyChanged(object sender, MultiplePropertiesChangedEventArgs e, CancellationToken token = default)
@@ -3447,8 +3448,174 @@ namespace Chummer
 
         #region IHasMugshots
 
+        /// <summary>
+        /// Character's portraits, each one the raw bytes of an encoded image file (DEC-034).
+        /// </summary>
+        public ThreadSafeList<byte[]> Mugshots
+        {
+            get
+            {
+                using (LockObject.EnterReadLock())
+                    return LinkedCharacter != null ? LinkedCharacter.Mugshots : _lstMugshots;
+            }
+        }
 
+        /// <summary>
+        /// Character's portraits, each one the raw bytes of an encoded image file (DEC-034).
+        /// </summary>
+        public async Task<ThreadSafeList<byte[]>> GetMugshotsAsync(CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
+            IAsyncDisposable objLocker = await LockObject.EnterReadLockAsync(token).ConfigureAwait(false);
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                Character objLinkedCharacter = await GetLinkedCharacterAsync(token).ConfigureAwait(false);
+                if (objLinkedCharacter != null)
+                    return await objLinkedCharacter.GetMugshotsAsync(token).ConfigureAwait(false);
+                return _lstMugshots;
+            }
+            finally
+            {
+                await objLocker.DisposeAsync().ConfigureAwait(false);
+            }
+        }
 
+        /// <summary>
+        /// Character's main portrait, the raw bytes of an encoded image file (DEC-034).
+        /// </summary>
+        public byte[] MainMugshot
+        {
+            get
+            {
+                using (LockObject.EnterReadLock())
+                {
+                    if (LinkedCharacter != null)
+                        return LinkedCharacter.MainMugshot;
+                    if (MainMugshotIndex >= Mugshots.Count || MainMugshotIndex < 0)
+                        return null;
+                    return Mugshots[MainMugshotIndex];
+                }
+            }
+            set
+            {
+                if (value == null)
+                {
+                    MainMugshotIndex = -1;
+                    return;
+                }
+
+                using (LockObject.EnterUpgradeableReadLock())
+                {
+                    if (LinkedCharacter != null)
+                        LinkedCharacter.MainMugshot = value;
+                    else
+                    {
+                        int intNewMainMugshotIndex = Mugshots.IndexOf(value);
+                        if (intNewMainMugshotIndex != -1)
+                        {
+                            MainMugshotIndex = intNewMainMugshotIndex;
+                        }
+                        else
+                        {
+                            using (Mugshots.LockObject.EnterWriteLock())
+                            {
+                                Mugshots.Add(value);
+                                MainMugshotIndex = Mugshots.IndexOf(value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Character's main portrait, the raw bytes of an encoded image file (DEC-034).
+        /// </summary>
+        public async Task<byte[]> GetMainMugshotAsync(CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
+            IAsyncDisposable objLocker = await LockObject.EnterReadLockAsync(token).ConfigureAwait(false);
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                Character objLinkedCharacter = await GetLinkedCharacterAsync(token).ConfigureAwait(false);
+                if (objLinkedCharacter != null)
+                    return await objLinkedCharacter.GetMainMugshotAsync(token).ConfigureAwait(false);
+                int intIndex = await GetMainMugshotIndexAsync(token).ConfigureAwait(false);
+                if (intIndex < 0)
+                    return null;
+                ThreadSafeList<byte[]> lstMugshots = await GetMugshotsAsync(token).ConfigureAwait(false);
+                if (intIndex >= await lstMugshots.GetCountAsync(token).ConfigureAwait(false))
+                    return null;
+
+                return await lstMugshots.GetValueAtAsync(intIndex, token).ConfigureAwait(false);
+            }
+            finally
+            {
+                await objLocker.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Character's main portrait, the raw bytes of an encoded image file (DEC-034).
+        /// </summary>
+        public async Task SetMainMugshotAsync(byte[] value, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
+            if (value == null)
+            {
+                await SetMainMugshotIndexAsync(-1, token).ConfigureAwait(false);
+                return;
+            }
+            IAsyncDisposable objLocker = await LockObject.EnterUpgradeableReadLockAsync(token).ConfigureAwait(false);
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                Character objLinkedCharacter = await GetLinkedCharacterAsync(token).ConfigureAwait(false);
+                if (objLinkedCharacter != null)
+                {
+                    await objLinkedCharacter.SetMainMugshotAsync(value, token).ConfigureAwait(false);
+                }
+                else
+                {
+                    ThreadSafeList<byte[]> lstMugshots = await GetMugshotsAsync(token).ConfigureAwait(false);
+                    int intNewMainMugshotIndex = await lstMugshots.IndexOfAsync(value, token).ConfigureAwait(false);
+                    if (intNewMainMugshotIndex != -1)
+                    {
+                        await SetMainMugshotIndexAsync(intNewMainMugshotIndex, token).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        IAsyncDisposable objLocker2 = await LockObject.EnterWriteLockAsync(token).ConfigureAwait(false);
+                        try
+                        {
+                            token.ThrowIfCancellationRequested();
+                            IAsyncDisposable objLocker3 =
+                                await lstMugshots.LockObject.EnterWriteLockAsync(token).ConfigureAwait(false);
+                            try
+                            {
+                                token.ThrowIfCancellationRequested();
+                                await lstMugshots.AddAsync(value, token).ConfigureAwait(false);
+                                await SetMainMugshotIndexAsync(await lstMugshots.IndexOfAsync(value, token).ConfigureAwait(false), token).ConfigureAwait(false);
+                            }
+                            finally
+                            {
+                                await objLocker3.DisposeAsync().ConfigureAwait(false);
+                            }
+                        }
+                        finally
+                        {
+                            await objLocker2.DisposeAsync().ConfigureAwait(false);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                await objLocker.DisposeAsync().ConfigureAwait(false);
+            }
+        }
 
 
 
@@ -3597,12 +3764,10 @@ namespace Chummer
                     // ReSharper disable once MethodHasAsyncOverloadWithCancellation
                     using (objWriter.StartElement("mugshots"))
                     {
-                        foreach (Image imgMugshot in Mugshots)
+                        foreach (byte[] abytMugshot in Mugshots)
                         {
                             // ReSharper disable once MethodHasAsyncOverload
-                            objWriter.WriteElementString(
-                                // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                                "mugshot", GlobalSettings.ImageToBase64StringForStorage(imgMugshot, token));
+                            objWriter.WriteElementString("mugshot", Convert.ToBase64String(abytMugshot));
                         }
                     }
                     // </mugshot>
@@ -3618,12 +3783,10 @@ namespace Chummer
                         = await objWriter.StartElementAsync("mugshots", token: token).ConfigureAwait(false);
                     try
                     {
-                        await (await GetMugshotsAsync(token).ConfigureAwait(false)).ForEachAsync(async imgMugshot =>
+                        await (await GetMugshotsAsync(token).ConfigureAwait(false)).ForEachAsync(async abytMugshot =>
                         {
                             await objWriter.WriteElementStringAsync(
-                                "mugshot",
-                                await GlobalSettings.ImageToBase64StringForStorageAsync(imgMugshot, token)
-                                    .ConfigureAwait(false), token: token).ConfigureAwait(false);
+                                "mugshot", Convert.ToBase64String(abytMugshot), token: token).ConfigureAwait(false);
                         }, token).ConfigureAwait(false);
                     }
                     finally
@@ -3646,54 +3809,12 @@ namespace Chummer
             using (LockObject.EnterWriteLock(token))
             {
                 xmlSavedNode.TryGetInt32FieldQuickly("mainmugshotindex", ref _intMainMugshotIndex);
-                XPathNodeIterator xmlMugshotsList = xmlSavedNode.SelectAndCacheExpression("mugshots/mugshot", token);
-                if (xmlMugshotsList.Count > 0)
+                foreach (XPathNavigator objXmlMugshot in xmlSavedNode.SelectAndCacheExpression("mugshots/mugshot", token))
                 {
-                    string[] astrMugshotsBase64 = ArrayPool<string>.Shared.Rent(xmlMugshotsList.Count);
-                    try
-                    {
-                        token.ThrowIfCancellationRequested();
-                        int j = 0;
-                        foreach (XPathNavigator objXmlMugshot in xmlMugshotsList)
-                        {
-                            string strMugshot = objXmlMugshot.Value;
-                            if (!string.IsNullOrWhiteSpace(strMugshot))
-                                astrMugshotsBase64[j++] = strMugshot;
-                            else
-                                astrMugshotsBase64[j++] = string.Empty;
-                        }
-
-                        if (xmlMugshotsList.Count > 1)
-                        {
-                            Bitmap[] objMugshotImages = new Bitmap[xmlMugshotsList.Count];
-                            token.ThrowIfCancellationRequested();
-                            Parallel.For(0, xmlMugshotsList.Count,
-                                            i =>
-                                            {
-                                                string strLoop = astrMugshotsBase64[i];
-                                                if (!string.IsNullOrEmpty(strLoop))
-                                                    objMugshotImages[i] = strLoop.ToImage(PixelFormat.Format32bppPArgb, token);
-                                                else
-                                                    objMugshotImages[i] = null;
-                                            });
-                            for (int i = 0; i < xmlMugshotsList.Count; ++i)
-                            {
-                                Image objLoop = objMugshotImages[i];
-                                if (objLoop != null)
-                                    _lstMugshots.Add(objLoop);
-                            }
-                        }
-                        else
-                        {
-                            string strLoop = astrMugshotsBase64[0];
-                            if (!string.IsNullOrEmpty(strLoop))
-                                _lstMugshots.Add(strLoop.ToImage(PixelFormat.Format32bppPArgb, token));
-                        }
-                    }
-                    finally
-                    {
-                        ArrayPool<string>.Shared.Return(astrMugshotsBase64);
-                    }
+                    token.ThrowIfCancellationRequested();
+                    string strMugshot = objXmlMugshot.Value;
+                    if (!string.IsNullOrWhiteSpace(strMugshot))
+                        _lstMugshots.Add(Convert.FromBase64String(strMugshot));
                 }
             }
         }
@@ -3706,49 +3827,12 @@ namespace Chummer
             {
                 token.ThrowIfCancellationRequested();
                 xmlSavedNode.TryGetInt32FieldQuickly("mainmugshotindex", ref _intMainMugshotIndex);
-                XPathNodeIterator xmlMugshotsList = xmlSavedNode.SelectAndCacheExpression("mugshots/mugshot", token);
-                if (xmlMugshotsList.Count > 0)
+                foreach (XPathNavigator objXmlMugshot in xmlSavedNode.SelectAndCacheExpression("mugshots/mugshot", token))
                 {
-                    string[] astrMugshotsBase64 = ArrayPool<string>.Shared.Rent(xmlMugshotsList.Count);
-                    try
-                    {
-                        token.ThrowIfCancellationRequested();
-                        int j = 0;
-                        foreach (XPathNavigator objXmlMugshot in xmlMugshotsList)
-                        {
-                            string strMugshot = objXmlMugshot.Value;
-                            if (!string.IsNullOrWhiteSpace(strMugshot))
-                                astrMugshotsBase64[j++] = strMugshot;
-                            else
-                                astrMugshotsBase64[j++] = string.Empty;
-                        }
-
-                        if (xmlMugshotsList.Count > 1)
-                        {
-                            Bitmap[] aobjMugshots = await ParallelExtensions.ForAsync(0, xmlMugshotsList.Count, i =>
-                            {
-                                string strLoop = astrMugshotsBase64[i];
-                                if (!string.IsNullOrEmpty(strLoop))
-                                    return strLoop.ToImageAsync(PixelFormat.Format32bppPArgb, token);
-                                return Task.FromResult<Bitmap>(null);
-                            }, token).ConfigureAwait(false);
-                            foreach (Bitmap objImage in aobjMugshots)
-                            {
-                                if (objImage != null)
-                                    await _lstMugshots.AddAsync(objImage, token).ConfigureAwait(false);
-                            }
-                        }
-                        else
-                        {
-                            string strLoop = astrMugshotsBase64[0];
-                            if (!string.IsNullOrEmpty(strLoop))
-                                await _lstMugshots.AddAsync(await strLoop.ToImageAsync(PixelFormat.Format32bppPArgb, token).ConfigureAwait(false), token).ConfigureAwait(false);
-                        }
-                    }
-                    finally
-                    {
-                        ArrayPool<string>.Shared.Return(astrMugshotsBase64);
-                    }
+                    token.ThrowIfCancellationRequested();
+                    string strMugshot = objXmlMugshot.Value;
+                    if (!string.IsNullOrWhiteSpace(strMugshot))
+                        await _lstMugshots.AddAsync(Convert.FromBase64String(strMugshot), token).ConfigureAwait(false);
                 }
             }
             finally
@@ -3770,27 +3854,26 @@ namespace Chummer
                     await objLinkedCharacter.PrintMugshots(objWriter, token).ConfigureAwait(false);
                 else
                 {
-                    ThreadSafeList<Image> lstMugshots = await GetMugshotsAsync(token).ConfigureAwait(false);
+                    ThreadSafeList<byte[]> lstMugshots = await GetMugshotsAsync(token).ConfigureAwait(false);
                     if (await lstMugshots.GetCountAsync(token).ConfigureAwait(false) > 0)
                     {
                         // Note: Internet Explorer 8 and earlier are the only browsers that do not support data URIs.
                         // The workaround for them would require saving each image to a file first and then referencing that file instead of embedding the image's base64 directly.
                         // However, users who only use IE8 and earlier are so vanishingly small compared to the effort this workaround requires that we are just not going to bother.
 
-                        Image imgMainMugshot = await GetMainMugshotAsync(token).ConfigureAwait(false);
-                        if (imgMainMugshot != null)
+                        byte[] abytMainMugshot = await GetMainMugshotAsync(token).ConfigureAwait(false);
+                        if (abytMainMugshot != null)
                         {
                             // <mainmugshotbase64 />
                             await objWriter
                                   .WriteElementStringAsync("mainmugshotbase64",
-                                                           await imgMainMugshot.ToBase64StringAsJpegAsync(token: token)
-                                                                               .ConfigureAwait(false), token: token)
+                                                           Convert.ToBase64String(abytMainMugshot), token: token)
                                   .ConfigureAwait(false);
                         }
 
                         // <hasothermugshots>
                         await objWriter.WriteElementStringAsync("hasothermugshots",
-                                                                (imgMainMugshot == null || await lstMugshots
+                                                                (abytMainMugshot == null || await lstMugshots
                                                                     .GetCountAsync(token)
                                                                     .ConfigureAwait(false) > 1)
                                                                 .ToString(GlobalSettings.InvariantCultureInfo),
@@ -3805,7 +3888,7 @@ namespace Chummer
                             {
                                 if (i == await GetMainMugshotIndexAsync(token).ConfigureAwait(false))
                                     continue;
-                                Image imgMugshot = await lstMugshots.GetValueAtAsync(i, token).ConfigureAwait(false);
+                                byte[] abytMugshot = await lstMugshots.GetValueAtAsync(i, token).ConfigureAwait(false);
                                 // <mugshot>
                                 XmlElementWriteHelper objMugshotElement
                                     = await objWriter.StartElementAsync("mugshot", token: token).ConfigureAwait(false);
@@ -3813,8 +3896,7 @@ namespace Chummer
                                 {
                                     await objWriter
                                           .WriteElementStringAsync("stringbase64",
-                                                                   await imgMugshot.ToBase64StringAsJpegAsync(token: token)
-                                                                                   .ConfigureAwait(false), token: token)
+                                                                   Convert.ToBase64String(abytMugshot), token: token)
                                           .ConfigureAwait(false);
                                 }
                                 finally
@@ -3850,8 +3932,6 @@ namespace Chummer
                                                 && Program.MainForm.OpenFormsWithCharacters.All(
                                                     x => !x.CharacterObjects.Contains(_objLinkedCharacter)))
                     Program.OpenCharacters.Remove(_objLinkedCharacter);
-                foreach (Image imgMugshot in _lstMugshots)
-                    imgMugshot.Dispose();
                 _lstMugshots.Dispose();
                 // to help the GC
                 PropertyChanged = null;
@@ -3875,7 +3955,6 @@ namespace Chummer
                                                                 .ConfigureAwait(false)
                                                 && !await Program.MainForm.AnyOpenFormContainsCharacter(_objLinkedCharacter).ConfigureAwait(false))
                     await Program.OpenCharacters.RemoveAsync(_objLinkedCharacter).ConfigureAwait(false);
-                await _lstMugshots.ForEachAsync(x => x.Dispose()).ConfigureAwait(false);
                 await _lstMugshots.DisposeAsync().ConfigureAwait(false);
                 // to help the GC
                 PropertyChanged = null;

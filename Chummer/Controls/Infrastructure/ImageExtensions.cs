@@ -285,6 +285,208 @@ namespace Chummer
         }
 
         /// <summary>
+        /// Converts the raw bytes of an encoded image file into an Image.
+        /// This is the presentation-side counterpart of <see cref="IHasMugshots"/>, which stores portraits as raw bytes (DEC-034).
+        /// </summary>
+        /// <param name="abytImage">Bytes of the encoded image file (PNG, JPEG, ...) to decode.</param>
+        /// <param name="token">Cancellation token to listen to.</param>
+        /// <returns>Image decoded from <paramref name="abytImage"/>, or null if there is nothing to decode.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Image ToImage(this byte[] abytImage, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
+            if (abytImage == null || abytImage.Length == 0)
+                return default;
+            using (RecyclableMemoryStream objStream
+                   = new RecyclableMemoryStream(Utils.MemoryStreamManager, null, abytImage.Length))
+            {
+                token.ThrowIfCancellationRequested();
+                objStream.Write(abytImage, 0, abytImage.Length);
+                token.ThrowIfCancellationRequested();
+                return Image.FromStream(objStream, true);
+            }
+        }
+
+        /// <summary>
+        /// Converts the raw bytes of an encoded image file into a Bitmap with a specific format.
+        /// </summary>
+        /// <param name="abytImage">Bytes of the encoded image file (PNG, JPEG, ...) to decode.</param>
+        /// <param name="eFormat">Pixel format in which the Bitmap is returned.</param>
+        /// <param name="token">Cancellation token to listen to.</param>
+        /// <returns>Image decoded from <paramref name="abytImage"/>, or null if there is nothing to decode.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Bitmap ToImage(this byte[] abytImage, PixelFormat eFormat, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
+            if (abytImage == null || abytImage.Length == 0)
+                return default;
+            using (Image imgInput = abytImage.ToImage(token))
+            {
+                Bitmap bmpInput = new Bitmap(imgInput);
+                token.ThrowIfCancellationRequested();
+                if (bmpInput.PixelFormat == eFormat)
+                    return bmpInput;
+                try
+                {
+                    token.ThrowIfCancellationRequested();
+                    return bmpInput.ConvertPixelFormat(eFormat);
+                }
+                finally
+                {
+                    bmpInput.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Converts an Image into the raw bytes of an encoded image file, the form in which portraits are stored (DEC-034).
+        /// </summary>
+        /// <param name="imgToConvert">Image to convert.</param>
+        /// <param name="eOverrideFormat">The image format in which the image should be saved. If null, will use <paramref name="imgToConvert"/>'s RawFormat.</param>
+        /// <param name="token">Cancellation token to listen to.</param>
+        /// <returns>Bytes of the encoded image file.</returns>
+        public static byte[] ToBytes(this Image imgToConvert, ImageFormat eOverrideFormat = null, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
+            if (imgToConvert == null)
+                return Array.Empty<byte>();
+            // We need to clone the image before saving it because of weird GDI+ errors that can happen if we don't
+            Bitmap bmpClone = imgToConvert.CloneSafely(token);
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                using (RecyclableMemoryStream objImageStream = new RecyclableMemoryStream(Utils.MemoryStreamManager))
+                {
+                    if (eOverrideFormat == null)
+                    {
+                        // Need to do this because calling RawFormat on its own will result in the system not finding its encoder
+                        if (Equals(imgToConvert.RawFormat, ImageFormat.Jpeg))
+                            eOverrideFormat = ImageFormat.Jpeg;
+                        else if (Equals(imgToConvert.RawFormat, ImageFormat.Gif))
+                            eOverrideFormat = ImageFormat.Gif;
+                        else
+                            eOverrideFormat = ImageFormat.Png;
+                    }
+
+                    token.ThrowIfCancellationRequested();
+                    bmpClone.Save(objImageStream, eOverrideFormat);
+                    return objImageStream.ToArray();
+                }
+            }
+            finally
+            {
+                bmpClone.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Converts an Image into the raw bytes of a Jpeg file with a custom quality setting (default ImageFormat.Jpeg quality is 50).
+        /// </summary>
+        /// <param name="imgToConvert">Image to convert.</param>
+        /// <param name="intQuality">Jpeg quality to use. Default is -1, which automatically sets quality based on image size down to 50 at worst (larger images get lower quality).</param>
+        /// <param name="token">Cancellation token to listen to.</param>
+        /// <returns>Bytes of the Jpeg file with a quality of <paramref name="intQuality"/>.</returns>
+        public static byte[] ToBytesAsJpeg(this Image imgToConvert, int intQuality = -1, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
+            if (imgToConvert == null)
+                return Array.Empty<byte>();
+            // We need to clone the image before saving it because of weird GDI+ errors that can happen if we don't
+            Bitmap bmpClone = imgToConvert.CloneSafely(token);
+            EncoderParameters lstJpegParameters = new EncoderParameters(1)
+            {
+                Param = { [0] = new EncoderParameter(Encoder.Quality, ProcessJpegQualitySetting(bmpClone, intQuality)) }
+            };
+            try
+            {
+                using (RecyclableMemoryStream objImageStream = new RecyclableMemoryStream(Utils.MemoryStreamManager))
+                {
+                    token.ThrowIfCancellationRequested();
+                    bmpClone.Save(objImageStream, s_LzyJpegEncoder.Value, lstJpegParameters);
+                    return objImageStream.ToArray();
+                }
+            }
+            finally
+            {
+                bmpClone.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Converts the raw bytes of an encoded image file into an Image.
+        /// </summary>
+        /// <param name="abytImage">Bytes of the encoded image file (PNG, JPEG, ...) to decode.</param>
+        /// <param name="token">Cancellation token to listen to.</param>
+        /// <returns>Image decoded from <paramref name="abytImage"/>, or null if there is nothing to decode.</returns>
+        public static Task<Image> ToImageAsync(this byte[] abytImage, CancellationToken token = default)
+        {
+            if (token.IsCancellationRequested)
+                return Task.FromCanceled<Image>(token);
+            return Task.Run(() => abytImage.ToImage(token), token);
+        }
+
+        /// <summary>
+        /// Converts the raw bytes of an encoded image file into a Bitmap with a specific format.
+        /// </summary>
+        /// <param name="abytImage">Bytes of the encoded image file (PNG, JPEG, ...) to decode.</param>
+        /// <param name="eFormat">Pixel format in which the Bitmap is returned.</param>
+        /// <param name="token">Cancellation token to listen to.</param>
+        /// <returns>Image decoded from <paramref name="abytImage"/>, or null if there is nothing to decode.</returns>
+        public static Task<Bitmap> ToImageAsync(this byte[] abytImage, PixelFormat eFormat, CancellationToken token = default)
+        {
+            if (token.IsCancellationRequested)
+                return Task.FromCanceled<Bitmap>(token);
+            return Task.Run(() => abytImage.ToImage(eFormat, token), token);
+        }
+
+        /// <summary>
+        /// Converts an Image into the raw bytes of an encoded image file, the form in which portraits are stored (DEC-034).
+        /// </summary>
+        /// <param name="imgToConvert">Image to convert.</param>
+        /// <param name="eOverrideFormat">The image format in which the image should be saved. If null, will use <paramref name="imgToConvert"/>'s RawFormat.</param>
+        /// <param name="token">Cancellation token to listen to.</param>
+        /// <returns>Bytes of the encoded image file.</returns>
+        public static Task<byte[]> ToBytesAsync(this Image imgToConvert, ImageFormat eOverrideFormat = null, CancellationToken token = default)
+        {
+            if (token.IsCancellationRequested)
+                return Task.FromCanceled<byte[]>(token);
+            return Task.Run(() => imgToConvert.ToBytes(eOverrideFormat, token), token);
+        }
+
+        /// <summary>
+        /// Converts an Image into the raw bytes of a Jpeg file with a custom quality setting (default ImageFormat.Jpeg quality is 50).
+        /// </summary>
+        /// <param name="imgToConvert">Image to convert.</param>
+        /// <param name="intQuality">Jpeg quality to use. Default is -1, which automatically sets quality based on image size down to 50 at worst (larger images get lower quality).</param>
+        /// <param name="token">Cancellation token to listen to.</param>
+        /// <returns>Bytes of the Jpeg file with a quality of <paramref name="intQuality"/>.</returns>
+        public static Task<byte[]> ToBytesAsJpegAsync(this Image imgToConvert, int intQuality = -1, CancellationToken token = default)
+        {
+            if (token.IsCancellationRequested)
+                return Task.FromCanceled<byte[]>(token);
+            return Task.Run(() => imgToConvert.ToBytesAsJpeg(intQuality, token), token);
+        }
+
+        /// <summary>
+        /// Clones an image into a Bitmap, retrying on the transient GDI+ failures that happen when the source image is being used elsewhere.
+        /// </summary>
+        private static Bitmap CloneSafely(this Image imgToConvert, CancellationToken token = default)
+        {
+            while (true)
+            {
+                token.ThrowIfCancellationRequested();
+                try
+                {
+                    return new Bitmap(imgToConvert);
+                }
+                catch (InvalidOperationException)
+                {
+                    Utils.SafeSleep(token);
+                }
+            }
+        }
+
+        /// <summary>
         /// Converts a Base64 String into an Image.
         /// </summary>
         /// <param name="strBase64String">String to convert.</param>
