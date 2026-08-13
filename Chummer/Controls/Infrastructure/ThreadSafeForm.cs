@@ -54,6 +54,19 @@ namespace Chummer
                 await Utils.RunOnMainThreadAsync(() => funcFormConstructor.Invoke(token), token).ConfigureAwait(false));
         }
 
+        /// <summary>
+        /// Get overload for callers that are themselves written once for both the synchronous
+        /// and the asynchronous path (the "blnSync core" pattern). With blnSync it does exactly
+        /// what Get does — including ignoring the token, which Get has no parameter for.
+        /// </summary>
+        public static async Task<ThreadSafeForm<T>> GetCoreAsync(bool blnSync, Func<T> funcFormConstructor, CancellationToken token = default)
+        {
+            return new ThreadSafeForm<T>(blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? Utils.RunOnMainThread(funcFormConstructor)
+                : await Utils.RunOnMainThreadAsync(funcFormConstructor, token).ConfigureAwait(false));
+        }
+
         public void Dispose()
         {
             if (MyForm.IsNullOrDisposed())
@@ -96,6 +109,28 @@ namespace Chummer
         public Task<DialogResult> ShowDialogSafeAsync(Character objCharacter, CancellationToken token = default)
         {
             return MyForm.ShowDialogSafeAsync(objCharacter, token);
+        }
+
+        /// <summary>
+        /// ShowDialogSafe overload for callers written once for both paths ("blnSync core").
+        /// </summary>
+        public Task<DialogResult> ShowDialogSafeCoreAsync(bool blnSync, IWin32Window owner = null, CancellationToken token = default)
+        {
+            return blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? Task.FromResult(MyForm.ShowDialogSafe(owner, token))
+                : MyForm.ShowDialogSafeAsync(owner, token);
+        }
+
+        /// <summary>
+        /// ShowDialogSafe overload for callers written once for both paths ("blnSync core").
+        /// </summary>
+        public Task<DialogResult> ShowDialogSafeCoreAsync(bool blnSync, Character objCharacter, CancellationToken token = default)
+        {
+            return blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? Task.FromResult(MyForm.ShowDialogSafe(objCharacter, token))
+                : MyForm.ShowDialogSafeAsync(objCharacter, token);
         }
 
         public Task<DialogResult> ShowDialogNonBlockingAsync(IWin32Window owner = null, CancellationToken token = default)

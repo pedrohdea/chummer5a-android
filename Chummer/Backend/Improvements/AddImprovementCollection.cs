@@ -3958,17 +3958,27 @@ namespace Chummer
         // Check for Select Side.
         public void selectside(XmlNode bonusNode)
         {
+            Utils.SafelyRunSynchronously(() => selectsideCoreAsync(true, bonusNode));
+        }
+
+        private async Task selectsideCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
             if (bonusNode == null)
                 throw new ArgumentNullException(nameof(bonusNode));
-            using (ThreadSafeForm<SelectSide> frmPickSide = ThreadSafeForm<SelectSide>.Get(() => new SelectSide
+            string strDescription = string.Format(GlobalSettings.CultureInfo, blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? LanguageManager.GetString("Label_SelectSide")
+                : await LanguageManager.GetStringAsync("Label_SelectSide", token: token).ConfigureAwait(false), _strFriendlyName);
+            using (ThreadSafeForm<SelectSide> frmPickSide = await ThreadSafeForm<SelectSide>.GetCoreAsync(blnSync, () => new SelectSide
             {
-                Description = string.Format(GlobalSettings.CultureInfo, LanguageManager.GetString("Label_SelectSide"), _strFriendlyName)
-            }))
+                Description = strDescription
+            }, token).ConfigureAwait(false))
             {
                 if (!string.IsNullOrEmpty(ForcedValue))
                     frmPickSide.MyForm.ForceValue(ForcedValue);
                 // Make sure the dialogue window was not canceled.
-                else if (frmPickSide.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                else if (await frmPickSide.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                 {
                     throw new AbortedException();
                 }
@@ -11262,27 +11272,9 @@ public async Task qualitylevelAsync(XmlNode bonusNode, CancellationToken token =
         }
 
         // Check for Select Side.
-        public async Task selectsideAsync(XmlNode bonusNode, CancellationToken token = default)
+        public Task selectsideAsync(XmlNode bonusNode, CancellationToken token = default)
         {
-            token.ThrowIfCancellationRequested();
-            if (bonusNode == null)
-                throw new ArgumentNullException(nameof(bonusNode));
-            string strDescription = string.Format(GlobalSettings.CultureInfo, await LanguageManager.GetStringAsync("Label_SelectSide", token: token).ConfigureAwait(false), _strFriendlyName);
-            using (ThreadSafeForm<SelectSide> frmPickSide = await ThreadSafeForm<SelectSide>.GetAsync(() => new SelectSide
-                   {
-                       Description = strDescription
-                   }, token).ConfigureAwait(false))
-            {
-                if (!string.IsNullOrEmpty(ForcedValue))
-                    frmPickSide.MyForm.ForceValue(ForcedValue);
-                // Make sure the dialogue window was not canceled.
-                else if (await frmPickSide.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                {
-                    throw new AbortedException();
-                }
-
-                SelectedValue = frmPickSide.MyForm.SelectedSide;
-            }
+            return selectsideCoreAsync(false, bonusNode, token);
         }
 
         // Check for Free Spirit Power Points.
