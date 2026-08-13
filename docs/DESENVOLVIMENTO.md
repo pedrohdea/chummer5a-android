@@ -181,3 +181,53 @@ ele move código, nunca apaga (DEC-033). Se a conta não fechar, ele aborta e re
 - `docs/po/plano.md` — as etapas e o estado de cada uma
 - `docs/po/decisoes.md` — toda decisão técnica, com o motivo e as alternativas descartadas
 - `docs/codebase/` — 14 documentos sobre o código como ele é, com números medidos
+
+---
+
+## Testar o APK sem aparelho — o que funciona e o que não
+
+Medido em 2026-08-13, neste contêiner.
+
+### O emulador SOBE, mas não é utilizável ainda
+
+Não há `/dev/kvm` e a CPU não expõe `vmx`/`svm` — só emulação por software. Ainda assim:
+
+```bash
+./scripts/setup-dev.sh --android
+sdkmanager --install "emulator" "system-images;android-35;google_apis;x86_64"
+avdmanager create avd -n teste -k "system-images;android-35;google_apis;x86_64"
+emulator -avd teste -no-window -no-audio -no-snapshot -gpu swiftshader_indirect \
+         -no-accel -memory 3072 -no-boot-anim &
+```
+
+**Resultado real:** o emulador **completa o boot** (~10 min sem aceleração; `adb devices`
+mostra `device`, `init.svc.bootanim` fica `stopped`). Mas o `adb install` de um APK de 32 MB
+falha com `Failure calling service package: Broken pipe (32)` — o serviço de pacotes não
+aguenta, provavelmente por lentidão.
+
+Conclusão honesta: **subir, sobe. Instalar e rodar, ainda não.** Quem quiser insistir deve
+atacar por aí — APK menor, `-writable-system`, ou mais memória — e não repetir a instalação
+do zero, que já está provada.
+
+### A ABI é uma pegadinha
+
+O APK padrão é **`android-arm64` apenas** (DEC-039), o que é certo para o aparelho e
+economiza 13,2 MiB. Mas **nenhum emulador x86_64 roda esse APK**. Para emulador, edite
+`RuntimeIdentifiers` no `Chummer.Android.csproj` para `android-arm64;android-x64` e publique
+— passar a propriedade pela linha de comando **não funciona**, porque ela vaza para o
+`Chummer.UI` e dá `NETSDK1083`. Com as duas ABIs o APK vai a 32,6 MB.
+
+### O caminho que realmente funciona hoje: logcat do aparelho
+
+Enquanto o emulador não fecha, o diagnóstico vem do celular do PO.
+
+```bash
+adb logcat -c && adb logcat | grep -iE 'chummer|AndroidRuntime|mono'
+```
+
+Sem PC: *Logcat Reader* (F-Droid, sem root), filtrando por `chummer`. O trecho que importa
+começa em `FATAL EXCEPTION`.
+
+**Um sintoma vale mais que uma varredura.** Se o app abre branco, o suspeito imediato é o
+Avalonia resolver estilos subindo até um `TopLevel` — um `UserControl` fora de um `TopLevel`
+renderiza válido e completamente branco. Foi pego uma vez na ferramenta de captura de tela.
