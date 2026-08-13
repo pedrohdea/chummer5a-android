@@ -6,7 +6,7 @@ mexer — tanto faz. Leia este arquivo e o `prompt-agente.md` e continue.
 
 Atualize-o ao fim de toda sessão. Se ele estiver velho, ele é pior que inútil.
 
-**Última atualização:** 2026-08-12
+**Última atualização:** 2026-08-13
 
 ---
 
@@ -27,12 +27,14 @@ Depois leia, nesta ordem: `CLAUDE.md` → `docs/DESENVOLVIMENTO.md` → este arq
 
 | | |
 |---|---|
-| Linhas ainda em `Chummer/Backend/` | 321.901 |
+| Linhas ainda em `Chummer/Backend/` | 322.125 |
 | Linhas já em `src/Chummer.Core/` | 747 |
-| Erros de **declaração** (censo) | 20 — todos mugshots |
-| Distância do domínio até o Android, com stubs | 25 erros |
-| `ThreadSafeForm` no Backend (corpo, não medido pelo censo) | 327 |
-| Linhas de UI Avalonia | 0 |
+| Erros de **declaração** | **zero** |
+| Distância do domínio até o Android, com stubs | **5** |
+| **Acoplamento de CORPO de método** (medido em 13/08) | **1.584** |
+| `ThreadSafeForm` no Backend | 327 |
+| APK esqueleto | **17,86 MiB, gera em ~1 min 38 s** |
+| Linhas de UI Avalonia | 756 |
 
 **0,2% do domínio migrado.** O que existe até aqui é terreno preparado: metades de UI
 separadas, abstração de interação (metade de mensagem), e o ferramental de verificação.
@@ -41,37 +43,60 @@ separadas, abstração de interação (metade de mensagem), e o ferramental de v
 
 ## Em voo neste momento
 
-Duas frentes rodando em worktrees separados. **Se a sessão morreu, verifique se as branches
-abaixo existem no remoto** — o trabalho pode ter sido empurrado antes de eu integrar.
+**Nada.** As duas frentes que rodavam em 12/08 foram entregues e **já integradas** nesta
+branch:
 
-| Frente | Branch | Entrega |
-|---|---|---|
-| Etapa 2.5 — APK esqueleto | `claude/etapa-2.5-apk-esqueleto` | Avalonia + Android + Desktop, spikes de plataforma |
-| Etapa 2 — retratos como bytes | `claude/etapa-2-mugshots` | zerar os 20 erros de declaração |
+- `claude/etapa-2-mugshots` — retratos como bytes. Declarações a zero.
+- `claude/etapa-2.5-apk-esqueleto` — APK esqueleto e os spikes de plataforma (PR #2).
+
+Se você está lendo isto depois de uma interrupção, confira mesmo assim:
 
 ```bash
 git fetch origin && git branch -r | grep claude/
 ```
 
-Se as branches existirem e a sessão tiver morrido, **integre-as antes de recomeçar qualquer
-coisa** — refazer trabalho já feito é o desperdício mais caro deste projeto.
+---
+
+## O que mudou em 13/08, e é grande
+
+**A luz acendeu.** Zerados os erros de declaração, o compilador passou a vincular corpos de
+método (DEC-032) e apareceram **1.584 erros de corpo** — medidos pela primeira vez. O salto
+de 20 para 1.584 **não é regressão**: é a régua trocando de significado. Registro completo em
+`docs/codebase/15-acoplamento-de-corpo.md`.
+
+Onde eles estão:
+
+| Origem | Erros |
+|---|---|
+| `AddImprovementCollection` + `AddImprovementAsyncCollection` | **524** (262 cada, idêntico) |
+| `ColorManager` | 336 |
+| `ThreadSafeForm` + `DialogResult` + `Form` | 337 |
+| `Program` (fachada de UI) | 102 |
+| domínio puro, só falta arrastar | ~200 |
+
+Os 262 idênticos são confirmação mecânica de que os dois `AddImprovement*` são a mesma
+lógica escrita duas vezes — **a maior alavanca isolada do resto da Etapa 2.**
+
+**Dois spikes inverteram premissas:**
+- O risco de tamanho não eram os dados de jogo (2,80 MiB comprimidos), era a ABI `android-x64`
+  (13,2 MiB), que só serve para emulador. Só arm64: **17,86 MiB**.
+- `XslCompiledTransform` **não degrada sem código dinâmico — ele explode.** NativeAOT fica
+  fora do `Chummer.Android` enquanto a impressão for XSLT (DEC-041).
 
 ---
 
 ## Próximo passo, em ordem de valor
 
-1. **Integrar as duas frentes em voo** (acima).
-2. **Rodar o censo depois que os mugshots zerarem.** Este é o item de maior valor do
-   projeto agora: enquanto houver um erro de declaração, o compilador não vincula corpos de
-   método (DEC-032), e metade do acoplamento restante é invisível. Zerar acende a luz. O
-   resultado deve virar `docs/codebase/15-acoplamento-de-corpo.md`.
-3. **Testar o spike de stubs de verdade** (DEC-037): carregar um `.chum5` no Android e ver
-   se algum diálogo é atingido. Hoje só medimos distância de **compilação**, não execução.
-4. **Metade de seleção** da abstração de interação — os 327 `ThreadSafeForm`. É o grosso do
-   que falta na Etapa 2.
-5. **Mover o `Backend/` inteiro** para `Chummer.Core`, de uma vez, quando o censo zerar.
-
----
+1. **QA-009 — o PO instala o APK no A56.** É a única coisa que ninguém aqui dentro pode
+   fazer: não há emulador nem `/dev/kvm`. Também responde se o Android suporta código
+   dinâmico, que é a pergunta aberta de DEC-041.
+2. **Consolidar `AddImprovementCollection` e `AddImprovementAsyncCollection`.** 524 dos 1.584
+   erros, e ~15 mil linhas duplicadas. Nenhuma outra tarefa chega perto dessa alavanca.
+3. **Metade de seleção** da abstração de interação — 337 erros, 24 diálogos `Select*`
+   distintos. O inventário exato já está em `15-acoplamento-de-corpo.md`.
+4. **Testar o spike de stubs de verdade** (DEC-037): carregar um `.chum5` no Android e ver se
+   algum diálogo é atingido. Hoje só medimos distância de **compilação**, não execução.
+5. **Mover o `Backend/` inteiro** para `Chummer.Core`, quando o acoplamento de corpo zerar.
 
 ## O que já é resiliente, e o que não é
 
