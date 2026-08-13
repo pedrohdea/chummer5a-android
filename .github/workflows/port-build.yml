@@ -113,6 +113,12 @@ jobs:
           restore-keys: ${{ runner.os }}-nuget-apk-
 
       - name: Instalar o workload de Android
+        # De dentro de src/, e isso NÃO é detalhe: o dotnet resolve o global.json pelo
+        # diretório de trabalho, e o da raiz fixa o SDK 8 do build legado (DEC-012). Rodando
+        # da raiz, o workload é instalado para a banda 8.0.x enquanto o publish usa o SDK 9 —
+        # e o build falha com NETSDK1147 dizendo que o workload não está instalado, mesmo
+        # tendo acabado de instalá-lo. Foi exatamente o que aconteceu na primeira execução.
+        working-directory: src
         run: dotnet workload install android
 
       - name: Gerar o APK
