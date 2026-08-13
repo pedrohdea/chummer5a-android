@@ -50,8 +50,12 @@ Tornar todo o `Backend/` compilável sob net9.0, sem UI e sem `System.Drawing`.
     declaração do `Backend/` está zerada.
 - 🔄 **Acoplamento de corpo de método** — medido pela primeira vez em
   `docs/codebase/15-acoplamento-de-corpo.md`: **1.584 erros**. Em ordem de retorno:
-  - ⬜ Consolidar `AddImprovementCollection` com `AddImprovementAsyncCollection` — 524
-    erros (262 cada, número idêntico), um terço do total, e ~15 mil linhas duplicadas
+  - 🔄 Consolidar `AddImprovementCollection` com `AddImprovementAsyncCollection` — eram 524
+    erros (262 cada, número idêntico), um terço do total, e ~15 mil linhas duplicadas.
+    **Uma classe só desde 13/08 (DEC-047); 11 dos 42 pares com diálogo fundidos em núcleo
+    `blnSync`. Censo 1.584 → 1.489.** Faltam 31 pares de diálogo (~215 erros) e ~281 pares
+    sem diálogo (~6 mil linhas, quase nenhum erro). Receita em DEC-047, ferramenta em
+    `scripts/fundir-par.py` — repetição, não decisão
   - ⬜ `ColorManager` — 336 ocorrências de um símbolo só; o domínio decide cor de item
   - ⬜ **Metade de seleção** da abstração de interação: `ThreadSafeForm` + `DialogResult`
     (337) e os **24 diálogos `Select*` distintos** que o domínio instancia

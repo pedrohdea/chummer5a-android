@@ -213,7 +213,7 @@ artefato dourado dá detecção de regressão de regra por propriedade, quase de
 - **69 dos 245** arquivos de `Backend/` usam `System.Windows.Forms`; o domínio instancia diálogos e chama `MessageBox` 329 vezes.
 - `GlobalSettings.*` tem **6.448** acessos. Preserve a fachada; troque só o backing store.
 - 146 `Application.DoEvents()` e 279 execuções síncronas de código async — no Android isso é ANR.
-- `AddImprovementCollection.cs` e `AddImprovementAsyncCollection.cs` são a **mesma lógica escrita duas vezes** (~15k linhas). Consolidar é ganho grande.
+- `AddImprovementCollection.cs` e `AddImprovementAsyncCollection.cs` **eram** a mesma lógica escrita duas vezes (~15k linhas). Desde 13/08 são **uma classe só**, e a fusão par a par em núcleos `blnSync` está em andamento (DEC-047). Ao mexer ali, leia DEC-047 e use `scripts/fundir-par.py` — não funda à mão.
 
 ## Ambiente
 

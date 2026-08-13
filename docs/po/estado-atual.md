@@ -6,7 +6,7 @@ mexer — tanto faz. Leia este arquivo e o `prompt-agente.md` e continue.
 
 Atualize-o ao fim de toda sessão. Se ele estiver velho, ele é pior que inútil.
 
-**Última atualização:** 2026-08-13
+**Última atualização:** 2026-08-13 (segunda sessão do dia)
 
 ---
 
@@ -27,11 +27,11 @@ Depois leia, nesta ordem: `CLAUDE.md` → `docs/DESENVOLVIMENTO.md` → este arq
 
 | | |
 |---|---|
-| Linhas ainda em `Chummer/Backend/` | 322.125 |
+| Linhas ainda em `Chummer/Backend/` | 321.655 |
 | Linhas já em `src/Chummer.Core/` | 747 |
 | Erros de **declaração** | **zero** |
 | Distância do domínio até o Android, com stubs | **5** |
-| **Acoplamento de CORPO de método** (medido em 13/08) | **1.584** |
+| **Acoplamento de CORPO de método** | **1.489** (era 1.584) |
 | `ThreadSafeForm` no Backend | 327 |
 | APK esqueleto | **17,86 MiB, gera em ~1 min 38 s** |
 | Linhas de UI Avalonia | 756 |
@@ -43,8 +43,12 @@ separadas, abstração de interação (metade de mensagem), e o ferramental de v
 
 ## Em voo neste momento
 
-**Nada.** As duas frentes que rodavam em 12/08 foram entregues e **já integradas** nesta
-branch:
+**`claude/consolidar-addimprovement`** — a consolidação de `AddImprovementCollection`
+(DEC-047). Entregue **parcial e verde**: a união das classes está pronta e 11 dos 42 pares
+com diálogo estão fundidos. Os 31 restantes seguem a mesma receita, um a um, com
+`scripts/fundir-par.py`. Nada nessa branch está pela metade — cada commit compila.
+
+Entregue e já integrado antes disso:
 
 - `claude/etapa-2-mugshots` — retratos como bytes. Declarações a zero.
 - `claude/etapa-2.5-apk-esqueleto` — APK esqueleto e os spikes de plataforma (PR #2).
@@ -68,7 +72,7 @@ Onde eles estão:
 
 | Origem | Erros |
 |---|---|
-| `AddImprovementCollection` + `AddImprovementAsyncCollection` | **524** (262 cada, idêntico) |
+| `AddImprovementCollection` (as duas metades, agora uma classe) | **429** — era 524 (262 cada) |
 | `ColorManager` | 336 |
 | `ThreadSafeForm` + `DialogResult` + `Form` | 337 |
 | `Program` (fachada de UI) | 102 |
@@ -90,8 +94,10 @@ lógica escrita duas vezes — **a maior alavanca isolada do resto da Etapa 2.**
 1. **QA-009 — o PO instala o APK no A56.** É a única coisa que ninguém aqui dentro pode
    fazer: não há emulador nem `/dev/kvm`. Também responde se o Android suporta código
    dinâmico, que é a pergunta aberta de DEC-041.
-2. **Consolidar `AddImprovementCollection` e `AddImprovementAsyncCollection`.** 524 dos 1.584
-   erros, e ~15 mil linhas duplicadas. Nenhuma outra tarefa chega perto dessa alavanca.
+2. **Terminar a consolidação de `AddImprovementCollection`** (DEC-047, em voo). Faltam 31
+   dos 42 pares com diálogo — vale ~215 erros de censo — e depois os ~281 pares sem diálogo,
+   que quase não movem o censo mas são ~6 mil linhas duplicadas. Receita e ferramenta
+   prontas; é trabalho de repetição, não de decisão.
 3. **Metade de seleção** da abstração de interação — 337 erros, 24 diálogos `Select*`
    distintos. O inventário exato já está em `15-acoplamento-de-corpo.md`.
 4. **Testar o spike de stubs de verdade** (DEC-037): carregar um `.chum5` no Android e ver se
