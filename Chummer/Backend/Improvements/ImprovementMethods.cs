@@ -697,12 +697,12 @@ namespace Chummer
         }
 
         /// <summary>
-        /// Gets an AddImprovementAsyncCollection function based on its name.
+        /// Gets an asynchronous AddImprovementCollection function based on its name.
         /// </summary>
         /// <param name="strMethodName">Name of the function, in all uppercase.</param>
         /// <param name="objImprovementAsyncAdder">Container for the function (since they're not static, we need a container).</param>
         /// <returns>Function pointer to the named function if one is found. If none are found, returns a null pointer.</returns>
-        public static Func<XmlNode, CancellationToken, Task> GetAsyncMethod(string strMethodName, [Annotations.NotNull] AddImprovementAsyncCollection objImprovementAsyncAdder)
+        public static Func<XmlNode, CancellationToken, Task> GetAsyncMethod(string strMethodName, [Annotations.NotNull] AddImprovementCollection objImprovementAsyncAdder)
         {
             if (objImprovementAsyncAdder == null)
                 throw new ArgumentNullException(nameof(objImprovementAsyncAdder));
@@ -710,651 +710,651 @@ namespace Chummer
             switch (strMethodName)
             {
                 case "SURPRISE":
-                    return objImprovementAsyncAdder.surprise;
+                    return objImprovementAsyncAdder.surpriseAsync;
                 case "SPELLRESISTANCE":
-                    return objImprovementAsyncAdder.spellresistance;
+                    return objImprovementAsyncAdder.spellresistanceAsync;
                 case "MENTALMANIPULATIONRESIST":
-                    return objImprovementAsyncAdder.mentalmanipulationresist;
+                    return objImprovementAsyncAdder.mentalmanipulationresistAsync;
                 case "PHYSICALMANIPULATIONRESIST":
-                    return objImprovementAsyncAdder.physicalmanipulationresist;
+                    return objImprovementAsyncAdder.physicalmanipulationresistAsync;
                 case "MANAILLUSIONRESIST":
-                    return objImprovementAsyncAdder.manaillusionresist;
+                    return objImprovementAsyncAdder.manaillusionresistAsync;
                 case "PHYSICALILLUSIONRESIST":
-                    return objImprovementAsyncAdder.physicalillusionresist;
+                    return objImprovementAsyncAdder.physicalillusionresistAsync;
                 case "DETECTIONSPELLRESIST":
-                    return objImprovementAsyncAdder.detectionspellresist;
+                    return objImprovementAsyncAdder.detectionspellresistAsync;
                 case "DIRECTMANASPELLRESIST":
-                    return objImprovementAsyncAdder.directmanaspellresist;
+                    return objImprovementAsyncAdder.directmanaspellresistAsync;
                 case "DIRECTPHYSICALSPELLRESIST":
-                    return objImprovementAsyncAdder.directphysicalspellresist;
+                    return objImprovementAsyncAdder.directphysicalspellresistAsync;
                 case "DECREASEBODRESIST":
-                    return objImprovementAsyncAdder.decreasebodresist;
+                    return objImprovementAsyncAdder.decreasebodresistAsync;
                 case "DECREASEAGIRESIST":
-                    return objImprovementAsyncAdder.decreaseagiresist;
+                    return objImprovementAsyncAdder.decreaseagiresistAsync;
                 case "DECREASEREARESIST":
-                    return objImprovementAsyncAdder.decreaserearesist;
+                    return objImprovementAsyncAdder.decreaserearesistAsync;
                 case "DECREASESTRRESIST":
-                    return objImprovementAsyncAdder.decreasestrresist;
+                    return objImprovementAsyncAdder.decreasestrresistAsync;
                 case "DECREASECHARESIST":
-                    return objImprovementAsyncAdder.decreasecharesist;
+                    return objImprovementAsyncAdder.decreasecharesistAsync;
                 case "DECREASEINTRESIST":
-                    return objImprovementAsyncAdder.decreaseintresist;
+                    return objImprovementAsyncAdder.decreaseintresistAsync;
                 case "DECREASELOGRESIST":
-                    return objImprovementAsyncAdder.decreaselogresist;
+                    return objImprovementAsyncAdder.decreaselogresistAsync;
                 case "DECREASEWILRESIST":
-                    return objImprovementAsyncAdder.decreasewilresist;
+                    return objImprovementAsyncAdder.decreasewilresistAsync;
                 case "ENABLEATTRIBUTE":
-                    return objImprovementAsyncAdder.enableattribute;
+                    return objImprovementAsyncAdder.enableattributeAsync;
                 case "REPLACEATTRIBUTES":
-                    return objImprovementAsyncAdder.replaceattributes;
+                    return objImprovementAsyncAdder.replaceattributesAsync;
                 case "ENABLETAB":
-                    return objImprovementAsyncAdder.enabletab;
+                    return objImprovementAsyncAdder.enabletabAsync;
                 case "DISABLETAB":
-                    return objImprovementAsyncAdder.disabletab;
+                    return objImprovementAsyncAdder.disabletabAsync;
                 case "SELECTRESTRICTED":
-                    return objImprovementAsyncAdder.selectrestricted;
+                    return objImprovementAsyncAdder.selectrestrictedAsync;
                 case "SELECTTRADITION":
-                    return objImprovementAsyncAdder.selecttradition;
+                    return objImprovementAsyncAdder.selecttraditionAsync;
                 case "CYBERSEEKER":
-                    return objImprovementAsyncAdder.cyberseeker;
+                    return objImprovementAsyncAdder.cyberseekerAsync;
                 case "CYBERLIMBATTRIBUTEBONUS":
-                    return objImprovementAsyncAdder.cyberlimbattributebonus;
+                    return objImprovementAsyncAdder.cyberlimbattributebonusAsync;
                 case "BLOCKSKILLCATEGORYDEFAULTING":
-                    return objImprovementAsyncAdder.blockskillcategorydefaulting;
+                    return objImprovementAsyncAdder.blockskillcategorydefaultingAsync;
                 case "BLOCKSKILLGROUPDEFAULTING":
-                    return objImprovementAsyncAdder.blockskillgroupdefaulting;
+                    return objImprovementAsyncAdder.blockskillgroupdefaultingAsync;
                 case "BLOCKSKILLDEFAULTING":
-                    return objImprovementAsyncAdder.blockskilldefaulting;
+                    return objImprovementAsyncAdder.blockskilldefaultingAsync;
                 case "ALLOWSKILLDEFAULTING":
-                    return objImprovementAsyncAdder.allowskilldefaulting;
+                    return objImprovementAsyncAdder.allowskilldefaultingAsync;
                 case "SELECTSKILL":
-                    return objImprovementAsyncAdder.selectskill;
+                    return objImprovementAsyncAdder.selectskillAsync;
                 case "SELECTSKILLGROUP":
-                    return objImprovementAsyncAdder.selectskillgroup;
+                    return objImprovementAsyncAdder.selectskillgroupAsync;
                 case "SELECTATTRIBUTES":
-                    return objImprovementAsyncAdder.selectattributes;
+                    return objImprovementAsyncAdder.selectattributesAsync;
                 case "SELECTATTRIBUTE":
-                    return objImprovementAsyncAdder.selectattribute;
+                    return objImprovementAsyncAdder.selectattributeAsync;
                 case "SELECTLIMIT":
-                    return objImprovementAsyncAdder.selectlimit;
+                    return objImprovementAsyncAdder.selectlimitAsync;
                 case "SWAPSKILLATTRIBUTE":
-                    return objImprovementAsyncAdder.swapskillattribute;
+                    return objImprovementAsyncAdder.swapskillattributeAsync;
                 case "SWAPSKILLSPECATTRIBUTE":
-                    return objImprovementAsyncAdder.swapskillspecattribute;
+                    return objImprovementAsyncAdder.swapskillspecattributeAsync;
                 case "SELECTSPELL":
-                    return objImprovementAsyncAdder.selectspell;
+                    return objImprovementAsyncAdder.selectspellAsync;
                 case "ADDSPELL":
-                    return objImprovementAsyncAdder.addspell;
+                    return objImprovementAsyncAdder.addspellAsync;
                 case "SELECTCOMPLEXFORM":
-                    return objImprovementAsyncAdder.selectcomplexform;
+                    return objImprovementAsyncAdder.selectcomplexformAsync;
                 case "ADDCOMPLEXFORM":
-                    return objImprovementAsyncAdder.addcomplexform;
+                    return objImprovementAsyncAdder.addcomplexformAsync;
                 case "ADDGEAR":
-                    return objImprovementAsyncAdder.addgear;
+                    return objImprovementAsyncAdder.addgearAsync;
                 case "ADDWEAPON":
-                    return objImprovementAsyncAdder.addweapon;
+                    return objImprovementAsyncAdder.addweaponAsync;
                 case "NATURALWEAPON":
-                    return objImprovementAsyncAdder.naturalweapon;
+                    return objImprovementAsyncAdder.naturalweaponAsync;
                 case "SELECTAIPROGRAM":
-                    return objImprovementAsyncAdder.selectaiprogram;
+                    return objImprovementAsyncAdder.selectaiprogramAsync;
                 case "SELECTINHERENTAIPROGRAM":
-                    return objImprovementAsyncAdder.selectinherentaiprogram;
+                    return objImprovementAsyncAdder.selectinherentaiprogramAsync;
                 case "SELECTCONTACT":
-                    return objImprovementAsyncAdder.selectcontact;
+                    return objImprovementAsyncAdder.selectcontactAsync;
                 case "ADDCONTACT":
-                    return objImprovementAsyncAdder.addcontact;
+                    return objImprovementAsyncAdder.addcontactAsync;
                 case "SPECIFICATTRIBUTE":
-                    return objImprovementAsyncAdder.specificattribute;
+                    return objImprovementAsyncAdder.specificattributeAsync;
                 case "ATTRIBUTELEVEL":
-                    return objImprovementAsyncAdder.attributelevel;
+                    return objImprovementAsyncAdder.attributelevelAsync;
                 case "SKILLLEVEL":
-                    return objImprovementAsyncAdder.skilllevel;
+                    return objImprovementAsyncAdder.skilllevelAsync;
                 case "PUSHTEXT":
-                    return objImprovementAsyncAdder.pushtext;
+                    return objImprovementAsyncAdder.pushtextAsync;
                 case "ACTIVESOFT":
-                    return objImprovementAsyncAdder.activesoft;
+                    return objImprovementAsyncAdder.activesoftAsync;
                 case "SKILLSOFT":
-                    return objImprovementAsyncAdder.skillsoft;
+                    return objImprovementAsyncAdder.skillsoftAsync;
                 case "KNOWLEDGESKILLLEVEL":
-                    return objImprovementAsyncAdder.knowledgeskilllevel;
+                    return objImprovementAsyncAdder.knowledgeskilllevelAsync;
                 case "KNOWLEDGESKILLPOINTS":
-                    return objImprovementAsyncAdder.knowledgeskillpoints;
+                    return objImprovementAsyncAdder.knowledgeskillpointsAsync;
                 case "SKILLGROUPLEVEL":
-                    return objImprovementAsyncAdder.skillgrouplevel;
+                    return objImprovementAsyncAdder.skillgrouplevelAsync;
                 case "NUYENMAXBP":
-                    return objImprovementAsyncAdder.nuyenmaxbp;
+                    return objImprovementAsyncAdder.nuyenmaxbpAsync;
                 case "PHYSICALLIMIT":
-                    return objImprovementAsyncAdder.physicallimit;
+                    return objImprovementAsyncAdder.physicallimitAsync;
                 case "MENTALLIMIT":
-                    return objImprovementAsyncAdder.mentallimit;
+                    return objImprovementAsyncAdder.mentallimitAsync;
                 case "SOCIALLIMIT":
-                    return objImprovementAsyncAdder.sociallimit;
+                    return objImprovementAsyncAdder.sociallimitAsync;
                 case "NUYENAMT":
-                    return objImprovementAsyncAdder.nuyenamt;
+                    return objImprovementAsyncAdder.nuyenamtAsync;
                 case "CONDITIONMONITOR":
-                    return objImprovementAsyncAdder.conditionmonitor;
+                    return objImprovementAsyncAdder.conditionmonitorAsync;
                 case "LIVINGPERSONA":
-                    return objImprovementAsyncAdder.livingpersona;
+                    return objImprovementAsyncAdder.livingpersonaAsync;
                 case "SPECIFICSKILL":
-                    return objImprovementAsyncAdder.specificskill;
+                    return objImprovementAsyncAdder.specificskillAsync;
                 case "REFLEXRECORDEROPTIMIZATION":
-                    return objImprovementAsyncAdder.reflexrecorderoptimization;
+                    return objImprovementAsyncAdder.reflexrecorderoptimizationAsync;
                 case "REMOVESKILLCATEGORYDEFAULTPENALTY":
-                    return objImprovementAsyncAdder.removeskillcategorydefaultpenalty;
+                    return objImprovementAsyncAdder.removeskillcategorydefaultpenaltyAsync;
                 case "REMOVESKILLGROUPDEFAULTPENALTY":
-                    return objImprovementAsyncAdder.removeskillgroupdefaultpenalty;
+                    return objImprovementAsyncAdder.removeskillgroupdefaultpenaltyAsync;
                 case "REMOVESKILLDEFAULTPENALTY":
-                    return objImprovementAsyncAdder.removeskilldefaultpenalty;
+                    return objImprovementAsyncAdder.removeskilldefaultpenaltyAsync;
                 case "MARTIALART":
-                    return objImprovementAsyncAdder.martialart;
+                    return objImprovementAsyncAdder.martialartAsync;
                 case "LIMITMODIFIER":
-                    return objImprovementAsyncAdder.limitmodifier;
+                    return objImprovementAsyncAdder.limitmodifierAsync;
                 case "SKILLCATEGORY":
-                    return objImprovementAsyncAdder.skillcategory;
+                    return objImprovementAsyncAdder.skillcategoryAsync;
                 case "SKILLGROUP":
-                    return objImprovementAsyncAdder.skillgroup;
+                    return objImprovementAsyncAdder.skillgroupAsync;
                 case "SKILLATTRIBUTE":
-                    return objImprovementAsyncAdder.skillattribute;
+                    return objImprovementAsyncAdder.skillattributeAsync;
                 case "SKILLLINKEDATTRIBUTE":
-                    return objImprovementAsyncAdder.skilllinkedattribute;
+                    return objImprovementAsyncAdder.skilllinkedattributeAsync;
                 case "SKILLARTICULATION":
-                    return objImprovementAsyncAdder.skillarticulation;
+                    return objImprovementAsyncAdder.skillarticulationAsync;
                 case "ARMOR":
-                    return objImprovementAsyncAdder.armor;
+                    return objImprovementAsyncAdder.armorAsync;
                 case "FIREARMOR":
-                    return objImprovementAsyncAdder.firearmor;
+                    return objImprovementAsyncAdder.firearmorAsync;
                 case "COLDARMOR":
-                    return objImprovementAsyncAdder.coldarmor;
+                    return objImprovementAsyncAdder.coldarmorAsync;
                 case "ELECTRICITYARMOR":
-                    return objImprovementAsyncAdder.electricityarmor;
+                    return objImprovementAsyncAdder.electricityarmorAsync;
                 case "ACIDARMOR":
-                    return objImprovementAsyncAdder.acidarmor;
+                    return objImprovementAsyncAdder.acidarmorAsync;
                 case "FALLINGARMOR":
-                    return objImprovementAsyncAdder.fallingarmor;
+                    return objImprovementAsyncAdder.fallingarmorAsync;
                 case "DODGE":
-                    return objImprovementAsyncAdder.dodge;
+                    return objImprovementAsyncAdder.dodgeAsync;
                 case "REACH":
-                    return objImprovementAsyncAdder.reach;
+                    return objImprovementAsyncAdder.reachAsync;
                 case "UNARMEDDV":
-                    return objImprovementAsyncAdder.unarmeddv;
+                    return objImprovementAsyncAdder.unarmeddvAsync;
                 case "UNARMEDDVPHYSICAL":
-                    return objImprovementAsyncAdder.unarmeddvphysical;
+                    return objImprovementAsyncAdder.unarmeddvphysicalAsync;
                 case "UNARMEDAP":
-                    return objImprovementAsyncAdder.unarmedap;
+                    return objImprovementAsyncAdder.unarmedapAsync;
                 case "UNARMEDREACH":
-                    return objImprovementAsyncAdder.unarmedreach;
+                    return objImprovementAsyncAdder.unarmedreachAsync;
                 case "INITIATIVE":
-                    return objImprovementAsyncAdder.initiative;
+                    return objImprovementAsyncAdder.initiativeAsync;
                 case "INITIATIVEPASS":
-                    return objImprovementAsyncAdder.initiativepass;
+                    return objImprovementAsyncAdder.initiativepassAsync;
                 case "INITIATIVEDICE":
-                    return objImprovementAsyncAdder.initiativedice;
+                    return objImprovementAsyncAdder.initiativediceAsync;
                 case "INITIATIVEPASSADD":
-                    return objImprovementAsyncAdder.initiativepassadd;
+                    return objImprovementAsyncAdder.initiativepassaddAsync;
                 case "INITIATIVEDICEADD":
-                    return objImprovementAsyncAdder.initiativediceadd;
+                    return objImprovementAsyncAdder.initiativediceaddAsync;
                 case "MATRIXINITIATIVE":
-                    return objImprovementAsyncAdder.matrixinitiative;
+                    return objImprovementAsyncAdder.matrixinitiativeAsync;
                 case "MATRIXINITIATIVEPASS":
-                    return objImprovementAsyncAdder.matrixinitiativepass;
+                    return objImprovementAsyncAdder.matrixinitiativepassAsync;
                 case "MATRIXINITIATIVEDICE":
-                    return objImprovementAsyncAdder.matrixinitiativedice;
+                    return objImprovementAsyncAdder.matrixinitiativediceAsync;
                 case "MATRIXINITIATIVEPASSADD":
-                    return objImprovementAsyncAdder.matrixinitiativepassadd;
+                    return objImprovementAsyncAdder.matrixinitiativepassaddAsync;
                 case "MATRIXINITIATIVEDICEADD":
-                    return objImprovementAsyncAdder.matrixinitiativediceadd;
+                    return objImprovementAsyncAdder.matrixinitiativediceaddAsync;
                 case "AVAILABILITY":
-                    return objImprovementAsyncAdder.availability;
+                    return objImprovementAsyncAdder.availabilityAsync;
                 case "LIFESTYLECOST":
-                    return objImprovementAsyncAdder.lifestylecost;
+                    return objImprovementAsyncAdder.lifestylecostAsync;
                 case "BASICLIFESTYLECOST":
-                    return objImprovementAsyncAdder.basiclifestylecost;
+                    return objImprovementAsyncAdder.basiclifestylecostAsync;
                 case "GENETECHCOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.genetechcostmultiplier;
+                    return objImprovementAsyncAdder.genetechcostmultiplierAsync;
                 case "GENETECHESSMULTIPLIER":
-                    return objImprovementAsyncAdder.genetechessmultiplier;
+                    return objImprovementAsyncAdder.genetechessmultiplierAsync;
                 case "BASICBIOWAREESSMULTIPLIER":
-                    return objImprovementAsyncAdder.basicbiowareessmultiplier;
+                    return objImprovementAsyncAdder.basicbiowareessmultiplierAsync;
                 case "BIOWAREESSMULTIPLIER":
-                    return objImprovementAsyncAdder.biowareessmultiplier;
+                    return objImprovementAsyncAdder.biowareessmultiplierAsync;
                 case "BIOWARETOTALESSMULTIPLIER":
-                    return objImprovementAsyncAdder.biowaretotalessmultiplier;
+                    return objImprovementAsyncAdder.biowaretotalessmultiplierAsync;
                 case "CYBERWAREESSMULTIPLIER":
-                    return objImprovementAsyncAdder.cyberwareessmultiplier;
+                    return objImprovementAsyncAdder.cyberwareessmultiplierAsync;
                 case "CYBERWARETOTALESSMULTIPLIER":
-                    return objImprovementAsyncAdder.cyberwaretotalessmultiplier;
+                    return objImprovementAsyncAdder.cyberwaretotalessmultiplierAsync;
                 case "BIOWAREESSMULTIPLIERNONRETROACTIVE":
-                    return objImprovementAsyncAdder.biowareessmultipliernonretroactive;
+                    return objImprovementAsyncAdder.biowareessmultipliernonretroactiveAsync;
                 case "BIOWARETOTALESSMULTIPLIERNONRETROACTIVE":
-                    return objImprovementAsyncAdder.biowaretotalessmultipliernonretroactive;
+                    return objImprovementAsyncAdder.biowaretotalessmultipliernonretroactiveAsync;
                 case "CYBERWAREESSMULTIPLIERNONRETROACTIVE":
-                    return objImprovementAsyncAdder.cyberwareessmultipliernonretroactive;
+                    return objImprovementAsyncAdder.cyberwareessmultipliernonretroactiveAsync;
                 case "CYBERWARETOTALESSMULTIPLIERNONRETROACTIVE":
-                    return objImprovementAsyncAdder.cyberwaretotalessmultipliernonretroactive;
+                    return objImprovementAsyncAdder.cyberwaretotalessmultipliernonretroactiveAsync;
                 case "PROTOTYPETRANSHUMAN":
-                    return objImprovementAsyncAdder.prototypetranshuman;
+                    return objImprovementAsyncAdder.prototypetranshumanAsync;
                 case "FRIENDSINHIGHPLACES":
-                    return objImprovementAsyncAdder.friendsinhighplaces;
+                    return objImprovementAsyncAdder.friendsinhighplacesAsync;
                 case "EXCON":
-                    return objImprovementAsyncAdder.excon;
+                    return objImprovementAsyncAdder.exconAsync;
                 case "TRUSTFUND":
-                    return objImprovementAsyncAdder.trustfund;
+                    return objImprovementAsyncAdder.trustfundAsync;
                 case "MADEMAN":
-                    return objImprovementAsyncAdder.mademan;
+                    return objImprovementAsyncAdder.mademanAsync;
                 case "FAME":
-                    return objImprovementAsyncAdder.fame;
+                    return objImprovementAsyncAdder.fameAsync;
                 case "ERASED":
-                    return objImprovementAsyncAdder.erased;
+                    return objImprovementAsyncAdder.erasedAsync;
                 case "OVERCLOCKER":
-                    return objImprovementAsyncAdder.overclocker;
+                    return objImprovementAsyncAdder.overclockerAsync;
                 case "RESTRICTEDGEAR":
-                    return objImprovementAsyncAdder.restrictedgear;
+                    return objImprovementAsyncAdder.restrictedgearAsync;
                 case "NATIVELANGUAGELIMIT":
-                    return objImprovementAsyncAdder.nativelanguagelimit;
+                    return objImprovementAsyncAdder.nativelanguagelimitAsync;
                 case "AMBIDEXTROUS":
-                    return objImprovementAsyncAdder.ambidextrous;
+                    return objImprovementAsyncAdder.ambidextrousAsync;
                 case "WEAPONCATEGORYDV":
-                    return objImprovementAsyncAdder.weaponcategorydv;
+                    return objImprovementAsyncAdder.weaponcategorydvAsync;
                 case "WEAPONCATEGORYDICE":
-                    return objImprovementAsyncAdder.weaponcategorydice;
+                    return objImprovementAsyncAdder.weaponcategorydiceAsync;
                 case "WEAPONSPECIFICDICE":
-                    return objImprovementAsyncAdder.weaponspecificdice;
+                    return objImprovementAsyncAdder.weaponspecificdiceAsync;
                 case "WEAPONCATEGORYAP":
-                    return objImprovementAsyncAdder.weaponcategoryap;
+                    return objImprovementAsyncAdder.weaponcategoryapAsync;
                 case "WEAPONCATEGORYACCURACY":
-                    return objImprovementAsyncAdder.weaponcategoryaccuracy;
+                    return objImprovementAsyncAdder.weaponcategoryaccuracyAsync;
                 case "WEAPONCATEGORYREACH":
-                    return objImprovementAsyncAdder.weaponcategoryreach;
+                    return objImprovementAsyncAdder.weaponcategoryreachAsync;
                 case "WEAPONSPECIFICDV":
-                    return objImprovementAsyncAdder.weaponspecificdv;
+                    return objImprovementAsyncAdder.weaponspecificdvAsync;
                 case "WEAPONSPECIFICAP":
-                    return objImprovementAsyncAdder.weaponspecificap;
+                    return objImprovementAsyncAdder.weaponspecificapAsync;
                 case "WEAPONSPECIFICACCURACY":
-                    return objImprovementAsyncAdder.weaponspecificaccuracy;
+                    return objImprovementAsyncAdder.weaponspecificaccuracyAsync;
                 case "WEAPONSPECIFICRANGE":
-                    return objImprovementAsyncAdder.weaponspecificrange;
+                    return objImprovementAsyncAdder.weaponspecificrangeAsync;
                 case "SELECTMENTORSPIRIT":
-                    return objImprovementAsyncAdder.selectmentorspirit;
+                    return objImprovementAsyncAdder.selectmentorspiritAsync;
                 case "SELECTPARAGON":
-                    return objImprovementAsyncAdder.selectparagon;
+                    return objImprovementAsyncAdder.selectparagonAsync;
                 case "SMARTLINK":
-                    return objImprovementAsyncAdder.smartlink;
+                    return objImprovementAsyncAdder.smartlinkAsync;
                 case "ADAPSIN":
-                    return objImprovementAsyncAdder.adapsin;
+                    return objImprovementAsyncAdder.adapsinAsync;
                 case "SOFTWEAVE":
-                    return objImprovementAsyncAdder.softweave;
+                    return objImprovementAsyncAdder.softweaveAsync;
                 case "DISABLEBIOWARE":
-                    return objImprovementAsyncAdder.disablebioware;
+                    return objImprovementAsyncAdder.disablebiowareAsync;
                 case "DISABLECYBERWARE":
-                    return objImprovementAsyncAdder.disablecyberware;
+                    return objImprovementAsyncAdder.disablecyberwareAsync;
                 case "DISABLEBIOWAREGRADE":
-                    return objImprovementAsyncAdder.disablebiowaregrade;
+                    return objImprovementAsyncAdder.disablebiowaregradeAsync;
                 case "DISABLECYBERWAREGRADE":
-                    return objImprovementAsyncAdder.disablecyberwaregrade;
+                    return objImprovementAsyncAdder.disablecyberwaregradeAsync;
                 case "WALKMULTIPLIER":
-                    return objImprovementAsyncAdder.walkmultiplier;
+                    return objImprovementAsyncAdder.walkmultiplierAsync;
                 case "RUNMULTIPLIER":
-                    return objImprovementAsyncAdder.runmultiplier;
+                    return objImprovementAsyncAdder.runmultiplierAsync;
                 case "SPRINTBONUS":
-                    return objImprovementAsyncAdder.sprintbonus;
+                    return objImprovementAsyncAdder.sprintbonusAsync;
                 case "FREEPOSITIVEQUALITIES":
-                    return objImprovementAsyncAdder.freepositivequalities;
+                    return objImprovementAsyncAdder.freepositivequalitiesAsync;
                 case "FREENEGATIVEQUALITIES":
-                    return objImprovementAsyncAdder.freenegativequalities;
+                    return objImprovementAsyncAdder.freenegativequalitiesAsync;
                 case "SELECTSIDE":
-                    return objImprovementAsyncAdder.selectside;
+                    return objImprovementAsyncAdder.selectsideAsync;
                 case "FREESPIRITPOWERPOINTS":
-                    return objImprovementAsyncAdder.freespiritpowerpoints;
+                    return objImprovementAsyncAdder.freespiritpowerpointsAsync;
                 case "ADEPTPOWERPOINTS":
-                    return objImprovementAsyncAdder.adeptpowerpoints;
+                    return objImprovementAsyncAdder.adeptpowerpointsAsync;
                 case "SPECIFICPOWER":
-                    return objImprovementAsyncAdder.specificpower;
+                    return objImprovementAsyncAdder.specificpowerAsync;
                 case "SELECTPOWERS":
-                    return objImprovementAsyncAdder.selectpowers;
+                    return objImprovementAsyncAdder.selectpowersAsync;
                 case "ARMORENCUMBRANCEPENALTY":
-                    return objImprovementAsyncAdder.armorencumbrancepenalty;
+                    return objImprovementAsyncAdder.armorencumbrancepenaltyAsync;
                 case "ADDART":
-                    return objImprovementAsyncAdder.addart;
+                    return objImprovementAsyncAdder.addartAsync;
                 case "SELECTART":
-                    return objImprovementAsyncAdder.selectart;
+                    return objImprovementAsyncAdder.selectartAsync;
                 case "ADDMETAMAGIC":
-                    return objImprovementAsyncAdder.addmetamagic;
+                    return objImprovementAsyncAdder.addmetamagicAsync;
                 case "SELECTMETAMAGIC":
-                    return objImprovementAsyncAdder.selectmetamagic;
+                    return objImprovementAsyncAdder.selectmetamagicAsync;
                 case "ADDECHO":
-                    return objImprovementAsyncAdder.addecho;
+                    return objImprovementAsyncAdder.addechoAsync;
                 case "SELECTECHO":
-                    return objImprovementAsyncAdder.selectecho;
+                    return objImprovementAsyncAdder.selectechoAsync;
                 case "SKILLWIRE":
-                    return objImprovementAsyncAdder.skillwire;
+                    return objImprovementAsyncAdder.skillwireAsync;
                 case "HARDWIRES":
-                    return objImprovementAsyncAdder.hardwires;
+                    return objImprovementAsyncAdder.hardwiresAsync;
                 case "DAMAGERESISTANCE":
-                    return objImprovementAsyncAdder.damageresistance;
+                    return objImprovementAsyncAdder.damageresistanceAsync;
                 case "JUDGEINTENTIONS":
-                    return objImprovementAsyncAdder.judgeintentions;
+                    return objImprovementAsyncAdder.judgeintentionsAsync;
                 case "JUDGEINTENTIONSOFFENSE":
-                    return objImprovementAsyncAdder.judgeintentionsoffense;
+                    return objImprovementAsyncAdder.judgeintentionsoffenseAsync;
                 case "JUDGEINTENTIONSDEFENSE":
-                    return objImprovementAsyncAdder.judgeintentionsdefense;
+                    return objImprovementAsyncAdder.judgeintentionsdefenseAsync;
                 case "COMPOSURE":
-                    return objImprovementAsyncAdder.composure;
+                    return objImprovementAsyncAdder.composureAsync;
                 case "LIFTANDCARRY":
-                    return objImprovementAsyncAdder.liftandcarry;
+                    return objImprovementAsyncAdder.liftandcarryAsync;
                 case "MEMORY":
-                    return objImprovementAsyncAdder.memory;
+                    return objImprovementAsyncAdder.memoryAsync;
                 case "FATIGUERESIST":
-                    return objImprovementAsyncAdder.fatigueresist;
+                    return objImprovementAsyncAdder.fatigueresistAsync;
                 case "RADIATIONRESIST":
-                    return objImprovementAsyncAdder.radiationresist;
+                    return objImprovementAsyncAdder.radiationresistAsync;
                 case "SONICRESIST":
-                    return objImprovementAsyncAdder.sonicresist;
+                    return objImprovementAsyncAdder.sonicresistAsync;
                 case "TOXINCONTACTRESIST":
-                    return objImprovementAsyncAdder.toxincontactresist;
+                    return objImprovementAsyncAdder.toxincontactresistAsync;
                 case "TOXININGESTIONRESIST":
-                    return objImprovementAsyncAdder.toxiningestionresist;
+                    return objImprovementAsyncAdder.toxiningestionresistAsync;
                 case "TOXININHALATIONRESIST":
-                    return objImprovementAsyncAdder.toxininhalationresist;
+                    return objImprovementAsyncAdder.toxininhalationresistAsync;
                 case "TOXININJECTIONRESIST":
-                    return objImprovementAsyncAdder.toxininjectionresist;
+                    return objImprovementAsyncAdder.toxininjectionresistAsync;
                 case "PATHOGENCONTACTRESIST":
-                    return objImprovementAsyncAdder.pathogencontactresist;
+                    return objImprovementAsyncAdder.pathogencontactresistAsync;
                 case "PATHOGENINGESTIONRESIST":
-                    return objImprovementAsyncAdder.pathogeningestionresist;
+                    return objImprovementAsyncAdder.pathogeningestionresistAsync;
                 case "PATHOGENINHALATIONRESIST":
-                    return objImprovementAsyncAdder.pathogeninhalationresist;
+                    return objImprovementAsyncAdder.pathogeninhalationresistAsync;
                 case "PATHOGENINJECTIONRESIST":
-                    return objImprovementAsyncAdder.pathogeninjectionresist;
+                    return objImprovementAsyncAdder.pathogeninjectionresistAsync;
                 case "TOXINCONTACTIMMUNE":
-                    return objImprovementAsyncAdder.toxincontactimmune;
+                    return objImprovementAsyncAdder.toxincontactimmuneAsync;
                 case "TOXININGESTIONIMMUNE":
-                    return objImprovementAsyncAdder.toxiningestionimmune;
+                    return objImprovementAsyncAdder.toxiningestionimmuneAsync;
                 case "TOXININHALATIONIMMUNE":
-                    return objImprovementAsyncAdder.toxininhalationimmune;
+                    return objImprovementAsyncAdder.toxininhalationimmuneAsync;
                 case "TOXININJECTIONIMMUNE":
-                    return objImprovementAsyncAdder.toxininjectionimmune;
+                    return objImprovementAsyncAdder.toxininjectionimmuneAsync;
                 case "PATHOGENCONTACTIMMUNE":
-                    return objImprovementAsyncAdder.pathogencontactimmune;
+                    return objImprovementAsyncAdder.pathogencontactimmuneAsync;
                 case "PATHOGENINGESTIONIMMUNE":
-                    return objImprovementAsyncAdder.pathogeningestionimmune;
+                    return objImprovementAsyncAdder.pathogeningestionimmuneAsync;
                 case "PATHOGENINHALATIONIMMUNE":
-                    return objImprovementAsyncAdder.pathogeninhalationimmune;
+                    return objImprovementAsyncAdder.pathogeninhalationimmuneAsync;
                 case "PATHOGENINJECTIONIMMUNE":
-                    return objImprovementAsyncAdder.pathogeninjectionimmune;
+                    return objImprovementAsyncAdder.pathogeninjectionimmuneAsync;
                 case "PHYSIOLOGICALADDICTIONFIRSTTIME":
-                    return objImprovementAsyncAdder.physiologicaladdictionfirsttime;
+                    return objImprovementAsyncAdder.physiologicaladdictionfirsttimeAsync;
                 case "PSYCHOLOGICALADDICTIONFIRSTTIME":
-                    return objImprovementAsyncAdder.psychologicaladdictionfirsttime;
+                    return objImprovementAsyncAdder.psychologicaladdictionfirsttimeAsync;
                 case "PHYSIOLOGICALADDICTIONALREADYADDICTED":
-                    return objImprovementAsyncAdder.physiologicaladdictionalreadyaddicted;
+                    return objImprovementAsyncAdder.physiologicaladdictionalreadyaddictedAsync;
                 case "PSYCHOLOGICALADDICTIONALREADYADDICTED":
-                    return objImprovementAsyncAdder.psychologicaladdictionalreadyaddicted;
+                    return objImprovementAsyncAdder.psychologicaladdictionalreadyaddictedAsync;
                 case "STUNCMRECOVERY":
-                    return objImprovementAsyncAdder.stuncmrecovery;
+                    return objImprovementAsyncAdder.stuncmrecoveryAsync;
                 case "PHYSICALCMRECOVERY":
-                    return objImprovementAsyncAdder.physicalcmrecovery;
+                    return objImprovementAsyncAdder.physicalcmrecoveryAsync;
                 case "ADDESSTOSTUNCMRECOVERY":
-                    return objImprovementAsyncAdder.addesstostuncmrecovery;
+                    return objImprovementAsyncAdder.addesstostuncmrecoveryAsync;
                 case "ADDESSTOPHYSICALCMRECOVERY":
-                    return objImprovementAsyncAdder.addesstophysicalcmrecovery;
+                    return objImprovementAsyncAdder.addesstophysicalcmrecoveryAsync;
                 case "CONCEALABILITY":
-                    return objImprovementAsyncAdder.concealability;
+                    return objImprovementAsyncAdder.concealabilityAsync;
                 case "DRAINRESIST":
-                    return objImprovementAsyncAdder.drainresist;
+                    return objImprovementAsyncAdder.drainresistAsync;
                 case "DRAINVALUE":
-                    return objImprovementAsyncAdder.drainvalue;
+                    return objImprovementAsyncAdder.drainvalueAsync;
                 case "FADINGRESIST":
-                    return objImprovementAsyncAdder.fadingresist;
+                    return objImprovementAsyncAdder.fadingresistAsync;
                 case "FADINGVALUE":
-                    return objImprovementAsyncAdder.fadingvalue;
+                    return objImprovementAsyncAdder.fadingvalueAsync;
                 case "NOTORIETY":
-                    return objImprovementAsyncAdder.notoriety;
+                    return objImprovementAsyncAdder.notorietyAsync;
                 case "STREETCRED":
-                    return objImprovementAsyncAdder.streetcred;
+                    return objImprovementAsyncAdder.streetcredAsync;
                 case "STREETCREDMULTIPLIER":
-                    return objImprovementAsyncAdder.streetcredmultiplier;
+                    return objImprovementAsyncAdder.streetcredmultiplierAsync;
                 case "COMPLEXFORMLIMIT":
-                    return objImprovementAsyncAdder.complexformlimit;
+                    return objImprovementAsyncAdder.complexformlimitAsync;
                 case "SPELLLIMIT":
-                    return objImprovementAsyncAdder.spelllimit;
+                    return objImprovementAsyncAdder.spelllimitAsync;
                 case "FREESPELLS":
-                    return objImprovementAsyncAdder.freespells;
+                    return objImprovementAsyncAdder.freespellsAsync;
                 case "SPELLCATEGORY":
-                    return objImprovementAsyncAdder.spellcategory;
+                    return objImprovementAsyncAdder.spellcategoryAsync;
                 case "SPELLCATEGORYDICEPOOL":
-                    return objImprovementAsyncAdder.spellcategorydicepool;
+                    return objImprovementAsyncAdder.spellcategorydicepoolAsync;
                 case "SPELLDICEPOOL":
-                    return objImprovementAsyncAdder.spelldicepool;
+                    return objImprovementAsyncAdder.spelldicepoolAsync;
                 case "SPELLCATEGORYDRAIN":
-                    return objImprovementAsyncAdder.spellcategorydrain;
+                    return objImprovementAsyncAdder.spellcategorydrainAsync;
                 case "SPELLCATEGORYDAMAGE":
-                    return objImprovementAsyncAdder.spellcategorydamage;
+                    return objImprovementAsyncAdder.spellcategorydamageAsync;
                 case "SPELLDESCRIPTORDAMAGE":
-                    return objImprovementAsyncAdder.spelldescriptordamage;
+                    return objImprovementAsyncAdder.spelldescriptordamageAsync;
                 case "SPELLDESCRIPTORDRAIN":
-                    return objImprovementAsyncAdder.spelldescriptordrain;
+                    return objImprovementAsyncAdder.spelldescriptordrainAsync;
                 case "THROWRANGE":
-                    return objImprovementAsyncAdder.throwrange;
+                    return objImprovementAsyncAdder.throwrangeAsync;
                 case "THROWRANGESTR":
-                    return objImprovementAsyncAdder.throwrangestr;
+                    return objImprovementAsyncAdder.throwrangestrAsync;
                 case "THROWSTR":
-                    return objImprovementAsyncAdder.throwstr;
+                    return objImprovementAsyncAdder.throwstrAsync;
                 case "SKILLSOFTACCESS":
-                    return objImprovementAsyncAdder.skillsoftaccess;
+                    return objImprovementAsyncAdder.skillsoftaccessAsync;
                 case "QUICKENINGMETAMAGIC":
-                    return objImprovementAsyncAdder.quickeningmetamagic;
+                    return objImprovementAsyncAdder.quickeningmetamagicAsync;
                 case "IGNORECMPENALTYSTUN":
-                    return objImprovementAsyncAdder.ignorecmpenaltystun;
+                    return objImprovementAsyncAdder.ignorecmpenaltystunAsync;
                 case "IGNORECMPENALTYPHYSICAL":
-                    return objImprovementAsyncAdder.ignorecmpenaltyphysical;
+                    return objImprovementAsyncAdder.ignorecmpenaltyphysicalAsync;
                 case "CYBORGESSENCE":
-                    return objImprovementAsyncAdder.cyborgessence;
+                    return objImprovementAsyncAdder.cyborgessenceAsync;
                 case "ESSENCEPENALTY":
-                    return objImprovementAsyncAdder.essencepenalty;
+                    return objImprovementAsyncAdder.essencepenaltyAsync;
                 case "ESSENCEPENALTYT100":
-                    return objImprovementAsyncAdder.essencepenaltyt100;
+                    return objImprovementAsyncAdder.essencepenaltyt100Async;
                 case "ESSENCEPENALTYMAGONLYT100":
-                    return objImprovementAsyncAdder.essencepenaltymagonlyt100;
+                    return objImprovementAsyncAdder.essencepenaltymagonlyt100Async;
                 case "ESSENCEPENALTYRESONLYT100":
-                    return objImprovementAsyncAdder.essencepenaltyresonlyt100;
+                    return objImprovementAsyncAdder.essencepenaltyresonlyt100Async;
                 case "ESSENCEPENALTYDEPONLYT100":
-                    return objImprovementAsyncAdder.essencepenaltydeponlyt100;
+                    return objImprovementAsyncAdder.essencepenaltydeponlyt100Async;
                 case "SPECIALATTBURNMULTIPLIER":
-                    return objImprovementAsyncAdder.specialattburnmultiplier;
+                    return objImprovementAsyncAdder.specialattburnmultiplierAsync;
                 case "SPECIALATTTOTALBURNMULTIPLIER":
-                    return objImprovementAsyncAdder.specialatttotalburnmultiplier;
+                    return objImprovementAsyncAdder.specialatttotalburnmultiplierAsync;
                 case "ESSENCEMAX":
-                    return objImprovementAsyncAdder.essencemax;
+                    return objImprovementAsyncAdder.essencemaxAsync;
                 case "SELECTSPRITE":
-                    return objImprovementAsyncAdder.selectsprite;
+                    return objImprovementAsyncAdder.selectspriteAsync;
                 case "BLACKMARKETDISCOUNT":
-                    return objImprovementAsyncAdder.blackmarketdiscount;
+                    return objImprovementAsyncAdder.blackmarketdiscountAsync;
                 case "SELECTARMOR":
-                    return objImprovementAsyncAdder.selectarmor;
+                    return objImprovementAsyncAdder.selectarmorAsync;
                 case "SELECTCYBERWARE":
-                    return objImprovementAsyncAdder.selectcyberware;
+                    return objImprovementAsyncAdder.selectcyberwareAsync;
                 case "SELECTWEAPON":
-                    return objImprovementAsyncAdder.selectweapon;
+                    return objImprovementAsyncAdder.selectweaponAsync;
                 case "OPTIONALPOWERS":
-                    return objImprovementAsyncAdder.optionalpowers;
+                    return objImprovementAsyncAdder.optionalpowersAsync;
                 case "CRITTERPOWERS":
-                    return objImprovementAsyncAdder.critterpowers;
+                    return objImprovementAsyncAdder.critterpowersAsync;
                 case "CRITTERPOWERLEVELS":
-                    return objImprovementAsyncAdder.critterpowerlevels;
+                    return objImprovementAsyncAdder.critterpowerlevelsAsync;
                 case "PUBLICAWARENESS":
-                    return objImprovementAsyncAdder.publicawareness;
+                    return objImprovementAsyncAdder.publicawarenessAsync;
                 case "DEALERCONNECTION":
-                    return objImprovementAsyncAdder.dealerconnection;
+                    return objImprovementAsyncAdder.dealerconnectionAsync;
                 case "UNLOCKSKILLS":
-                    return objImprovementAsyncAdder.unlockskills;
+                    return objImprovementAsyncAdder.unlockskillsAsync;
                 case "ADDQUALITIES":
-                    return objImprovementAsyncAdder.addqualities;
+                    return objImprovementAsyncAdder.addqualitiesAsync;
                 case "SELECTQUALITY":
-                    return objImprovementAsyncAdder.selectquality;
+                    return objImprovementAsyncAdder.selectqualityAsync;
                 case "ADDSKILLSPECIALIZATION":
-                    return objImprovementAsyncAdder.addskillspecialization;
+                    return objImprovementAsyncAdder.addskillspecializationAsync;
                 case "ADDSKILLSPECIALIZATIONOPTION":
-                    return objImprovementAsyncAdder.addskillspecializationoption;
+                    return objImprovementAsyncAdder.addskillspecializationoptionAsync;
                 case "ALLOWSPELLRANGE":
-                    return objImprovementAsyncAdder.allowspellrange;
+                    return objImprovementAsyncAdder.allowspellrangeAsync;
                 case "ALLOWSPELLCATEGORY":
-                    return objImprovementAsyncAdder.allowspellcategory;
+                    return objImprovementAsyncAdder.allowspellcategoryAsync;
                 case "LIMITSPELLRANGE":
-                    return objImprovementAsyncAdder.limitspellrange;
+                    return objImprovementAsyncAdder.limitspellrangeAsync;
                 case "LIMITSPELLCATEGORY":
-                    return objImprovementAsyncAdder.limitspellcategory;
+                    return objImprovementAsyncAdder.limitspellcategoryAsync;
                 case "LIMITSPELLDESCRIPTOR":
-                    return objImprovementAsyncAdder.limitspelldescriptor;
+                    return objImprovementAsyncAdder.limitspelldescriptorAsync;
                 case "BLOCKSPELLDESCRIPTOR":
-                    return objImprovementAsyncAdder.blockspelldescriptor;
+                    return objImprovementAsyncAdder.blockspelldescriptorAsync;
                 case "ADDSPRITE":
-                    return objImprovementAsyncAdder.addsprite;
+                    return objImprovementAsyncAdder.addspriteAsync;
                 case "ADDSPIRIT":
-                    return objImprovementAsyncAdder.addspirit;
+                    return objImprovementAsyncAdder.addspiritAsync;
                 case "LIMITSPIRITCATEGORY":
-                    return objImprovementAsyncAdder.limitspiritcategory;
+                    return objImprovementAsyncAdder.limitspiritcategoryAsync;
                 case "MOVEMENTREPLACE":
-                    return objImprovementAsyncAdder.movementreplace;
+                    return objImprovementAsyncAdder.movementreplaceAsync;
                 case "ADDLIMB":
-                    return objImprovementAsyncAdder.addlimb;
+                    return objImprovementAsyncAdder.addlimbAsync;
                 case "ATTRIBUTEKARMACOST":
-                    return objImprovementAsyncAdder.attributekarmacost;
+                    return objImprovementAsyncAdder.attributekarmacostAsync;
                 case "ACTIVESKILLKARMACOST":
-                    return objImprovementAsyncAdder.activeskillkarmacost;
+                    return objImprovementAsyncAdder.activeskillkarmacostAsync;
                 case "SKILLGROUPKARMACOST":
-                    return objImprovementAsyncAdder.skillgroupkarmacost;
+                    return objImprovementAsyncAdder.skillgroupkarmacostAsync;
                 case "KNOWLEDGESKILLKARMACOST":
-                    return objImprovementAsyncAdder.knowledgeskillkarmacost;
+                    return objImprovementAsyncAdder.knowledgeskillkarmacostAsync;
                 case "KNOWLEDGESKILLKARMACOSTMIN":
-                    return objImprovementAsyncAdder.knowledgeskillkarmacostmin;
+                    return objImprovementAsyncAdder.knowledgeskillkarmacostminAsync;
                 case "SKILLENABLEMOVEMENT":
-                    return objImprovementAsyncAdder.skillenablemovement;
+                    return objImprovementAsyncAdder.skillenablemovementAsync;
                 case "SKILLDISABLE":
-                    return objImprovementAsyncAdder.skilldisable;
+                    return objImprovementAsyncAdder.skilldisableAsync;
                 case "SKILLGROUPDISABLE":
-                    return objImprovementAsyncAdder.skillgroupdisable;
+                    return objImprovementAsyncAdder.skillgroupdisableAsync;
                 case "SKILLGROUPDISABLECHOICE":
-                    return objImprovementAsyncAdder.skillgroupdisablechoice;
+                    return objImprovementAsyncAdder.skillgroupdisablechoiceAsync;
                 case "SKILLGROUPCATEGORYDISABLE":
-                    return objImprovementAsyncAdder.skillgroupcategorydisable;
+                    return objImprovementAsyncAdder.skillgroupcategorydisableAsync;
                 case "SKILLGROUPCATEGORYKARMACOST":
-                    return objImprovementAsyncAdder.skillgroupcategorykarmacost;
+                    return objImprovementAsyncAdder.skillgroupcategorykarmacostAsync;
                 case "SKILLCATEGORYKARMACOST":
-                    return objImprovementAsyncAdder.skillcategorykarmacost;
+                    return objImprovementAsyncAdder.skillcategorykarmacostAsync;
                 case "SKILLCATEGORYSPECIALIZATIONKARMACOST":
-                    return objImprovementAsyncAdder.skillcategoryspecializationkarmacost;
+                    return objImprovementAsyncAdder.skillcategoryspecializationkarmacostAsync;
                 case "ATTRIBUTEPOINTCOST":
-                    return objImprovementAsyncAdder.attributepointcost;
+                    return objImprovementAsyncAdder.attributepointcostAsync;
                 case "ACTIVESKILLPOINTCOST":
-                    return objImprovementAsyncAdder.activeskillpointcost;
+                    return objImprovementAsyncAdder.activeskillpointcostAsync;
                 case "SKILLGROUPPOINTCOST":
-                    return objImprovementAsyncAdder.skillgrouppointcost;
+                    return objImprovementAsyncAdder.skillgrouppointcostAsync;
                 case "KNOWLEDGESKILLPOINTCOST":
-                    return objImprovementAsyncAdder.knowledgeskillpointcost;
+                    return objImprovementAsyncAdder.knowledgeskillpointcostAsync;
                 case "SKILLGROUPCATEGORYPOINTCOST":
-                    return objImprovementAsyncAdder.skillgroupcategorypointcost;
+                    return objImprovementAsyncAdder.skillgroupcategorypointcostAsync;
                 case "SKILLCATEGORYPOINTCOST":
-                    return objImprovementAsyncAdder.skillcategorypointcost;
+                    return objImprovementAsyncAdder.skillcategorypointcostAsync;
                 case "NEWSPELLKARMACOST":
-                    return objImprovementAsyncAdder.newspellkarmacost;
+                    return objImprovementAsyncAdder.newspellkarmacostAsync;
                 case "NEWCOMPLEXFORMKARMACOST":
-                    return objImprovementAsyncAdder.newcomplexformkarmacost;
+                    return objImprovementAsyncAdder.newcomplexformkarmacostAsync;
                 case "NEWAIPROGRAMKARMACOST":
-                    return objImprovementAsyncAdder.newaiprogramkarmacost;
+                    return objImprovementAsyncAdder.newaiprogramkarmacostAsync;
                 case "NEWAIADVANCEDPROGRAMKARMACOST":
-                    return objImprovementAsyncAdder.newaiadvancedprogramkarmacost;
+                    return objImprovementAsyncAdder.newaiadvancedprogramkarmacostAsync;
                 case "ATTRIBUTEKARMACOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.attributekarmacostmultiplier;
+                    return objImprovementAsyncAdder.attributekarmacostmultiplierAsync;
                 case "ACTIVESKILLKARMACOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.activeskillkarmacostmultiplier;
+                    return objImprovementAsyncAdder.activeskillkarmacostmultiplierAsync;
                 case "SKILLGROUPKARMACOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.skillgroupkarmacostmultiplier;
+                    return objImprovementAsyncAdder.skillgroupkarmacostmultiplierAsync;
                 case "KNOWLEDGESKILLKARMACOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.knowledgeskillkarmacostmultiplier;
+                    return objImprovementAsyncAdder.knowledgeskillkarmacostmultiplierAsync;
                 case "SKILLGROUPCATEGORYKARMACOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.skillgroupcategorykarmacostmultiplier;
+                    return objImprovementAsyncAdder.skillgroupcategorykarmacostmultiplierAsync;
                 case "SKILLCATEGORYKARMACOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.skillcategorykarmacostmultiplier;
+                    return objImprovementAsyncAdder.skillcategorykarmacostmultiplierAsync;
                 case "SKILLCATEGORYSPECIALIZATIONKARMACOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.skillcategoryspecializationkarmacostmultiplier;
+                    return objImprovementAsyncAdder.skillcategoryspecializationkarmacostmultiplierAsync;
                 case "ATTRIBUTEPOINTCOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.attributepointcostmultiplier;
+                    return objImprovementAsyncAdder.attributepointcostmultiplierAsync;
                 case "ACTIVESKILLPOINTCOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.activeskillpointcostmultiplier;
+                    return objImprovementAsyncAdder.activeskillpointcostmultiplierAsync;
                 case "SKILLGROUPPOINTCOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.skillgrouppointcostmultiplier;
+                    return objImprovementAsyncAdder.skillgrouppointcostmultiplierAsync;
                 case "KNOWLEDGESKILLPOINTCOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.knowledgeskillpointcostmultiplier;
+                    return objImprovementAsyncAdder.knowledgeskillpointcostmultiplierAsync;
                 case "SKILLGROUPCATEGORYPOINTCOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.skillgroupcategorypointcostmultiplier;
+                    return objImprovementAsyncAdder.skillgroupcategorypointcostmultiplierAsync;
                 case "SKILLCATEGORYPOINTCOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.skillcategorypointcostmultiplier;
+                    return objImprovementAsyncAdder.skillcategorypointcostmultiplierAsync;
                 case "NEWSPELLKARMACOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.newspellkarmacostmultiplier;
+                    return objImprovementAsyncAdder.newspellkarmacostmultiplierAsync;
                 case "NEWCOMPLEXFORMKARMACOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.newcomplexformkarmacostmultiplier;
+                    return objImprovementAsyncAdder.newcomplexformkarmacostmultiplierAsync;
                 case "NEWAIPROGRAMKARMACOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.newaiprogramkarmacostmultiplier;
+                    return objImprovementAsyncAdder.newaiprogramkarmacostmultiplierAsync;
                 case "NEWAIADVANCEDPROGRAMKARMACOSTMULTIPLIER":
-                    return objImprovementAsyncAdder.newaiadvancedprogramkarmacostmultiplier;
+                    return objImprovementAsyncAdder.newaiadvancedprogramkarmacostmultiplierAsync;
                 case "BLOCKSKILLSPECIALIZATIONS":
-                    return objImprovementAsyncAdder.blockskillspecializations;
+                    return objImprovementAsyncAdder.blockskillspecializationsAsync;
                 case "BLOCKSKILLCATEGORYSPECIALIZATIONS":
-                    return objImprovementAsyncAdder.blockskillcategoryspecializations;
+                    return objImprovementAsyncAdder.blockskillcategoryspecializationsAsync;
                 case "FOCUSBINDINGKARMACOST":
-                    return objImprovementAsyncAdder.focusbindingkarmacost;
+                    return objImprovementAsyncAdder.focusbindingkarmacostAsync;
                 case "FOCUSBINDINGKARMAMULTIPLIER":
-                    return objImprovementAsyncAdder.focusbindingkarmamultiplier;
+                    return objImprovementAsyncAdder.focusbindingkarmamultiplierAsync;
                 case "MAGICIANSWAYDISCOUNT":
-                    return objImprovementAsyncAdder.magicianswaydiscount;
+                    return objImprovementAsyncAdder.magicianswaydiscountAsync;
                 case "BURNOUTSWAY":
-                    return objImprovementAsyncAdder.burnoutsway;
+                    return objImprovementAsyncAdder.burnoutswayAsync;
                 case "ADDWARE":
-                    return objImprovementAsyncAdder.addware;
+                    return objImprovementAsyncAdder.addwareAsync;
                 case "WEAPONACCURACY":
-                    return objImprovementAsyncAdder.weaponaccuracy;
+                    return objImprovementAsyncAdder.weaponaccuracyAsync;
                 case "WEAPONRANGEMODIFIER":
-                    return objImprovementAsyncAdder.weaponrangemodifier;
+                    return objImprovementAsyncAdder.weaponrangemodifierAsync;
                 case "WEAPONSKILLACCURACY":
-                    return objImprovementAsyncAdder.weaponskillaccuracy;
+                    return objImprovementAsyncAdder.weaponskillaccuracyAsync;
                 case "METAGENICLIMIT":
-                    return objImprovementAsyncAdder.metageniclimit;
+                    return objImprovementAsyncAdder.metageniclimitAsync;
                 case "SPECIALMODIFICATIONLIMIT":
-                    return objImprovementAsyncAdder.specialmodificationlimit;
+                    return objImprovementAsyncAdder.specialmodificationlimitAsync;
                 case "CYBERADEPTDAEMON":
-                    return objImprovementAsyncAdder.cyberadeptdaemon;
+                    return objImprovementAsyncAdder.cyberadeptdaemonAsync;
                 case "ACTIONDICEPOOL":
-                    return objImprovementAsyncAdder.actiondicepool;
+                    return objImprovementAsyncAdder.actiondicepoolAsync;
                 case "CONTACTKARMA":
-                    return objImprovementAsyncAdder.contactkarma;
+                    return objImprovementAsyncAdder.contactkarmaAsync;
                 case "CONTACTKARMAMINIMUM":
-                    return objImprovementAsyncAdder.contactkarmaminimum;
+                    return objImprovementAsyncAdder.contactkarmaminimumAsync;
                 case "ALLOWSPRITEFETTERING":
-                    return objImprovementAsyncAdder.allowspritefettering;
+                    return objImprovementAsyncAdder.allowspritefetteringAsync;
                 case "ENABLECYBERZOMBIE":
-                    return objImprovementAsyncAdder.enablecyberzombie;
+                    return objImprovementAsyncAdder.enablecyberzombieAsync;
                 case "ALLOWCRITTERPOWERCATEGORY":
-                    return objImprovementAsyncAdder.allowcritterpowercategory;
+                    return objImprovementAsyncAdder.allowcritterpowercategoryAsync;
                 case "LIMITCRITTERPOWERCATEGORY":
-                    return objImprovementAsyncAdder.limitcritterpowercategory;
+                    return objImprovementAsyncAdder.limitcritterpowercategoryAsync;
                 case "ATTRIBUTEMAXCLAMP":
-                    return objImprovementAsyncAdder.attributemaxclamp;
+                    return objImprovementAsyncAdder.attributemaxclampAsync;
                 case "METAMAGICLIMIT":
-                    return objImprovementAsyncAdder.metamagiclimit;
+                    return objImprovementAsyncAdder.metamagiclimitAsync;
                 case "DISABLEQUALITY":
-                    return objImprovementAsyncAdder.disablequality;
+                    return objImprovementAsyncAdder.disablequalityAsync;
                 case "FREEQUALITY":
-                    return objImprovementAsyncAdder.freequality;
+                    return objImprovementAsyncAdder.freequalityAsync;
                 case "SELECTEXPERTISE":
-                    return objImprovementAsyncAdder.selectexpertise;
+                    return objImprovementAsyncAdder.selectexpertiseAsync;
                 case "PENALTYFREESUSTAIN":
-                    return objImprovementAsyncAdder.penaltyfreesustain;
+                    return objImprovementAsyncAdder.penaltyfreesustainAsync;
                 case "REPLACESKILLSPELL":
-                    return objImprovementAsyncAdder.replaceskillspell;
+                    return objImprovementAsyncAdder.replaceskillspellAsync;
                 case "QUALITYLEVEL":
-                    return objImprovementAsyncAdder.qualitylevel;
+                    return objImprovementAsyncAdder.qualitylevelAsync;
                 case "SELECTTEXT":
-                    return AddImprovementAsyncCollection.selecttext;
+                    return AddImprovementCollection.selecttextAsync;
                 // No method matches, return a null pointer
                 default:
                     return null;

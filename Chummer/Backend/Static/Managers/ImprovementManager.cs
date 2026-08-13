@@ -2863,7 +2863,7 @@ namespace Chummer
             //So far it is just a slower Dictionary<string, Action> but should (in theory...) be able to leverage this in the future to do it smarter with methods that are the same but
             //getting a different parameter injected
 
-            AddImprovementAsyncCollection container = new AddImprovementAsyncCollection(objCharacter,
+            AddImprovementCollection container = new AddImprovementCollection(objCharacter,
                 objImprovementSource,
                 strSourceName, strUnique, GetForcedValue(objCharacter),
                 GetLimitSelection(objCharacter), GetSelectedValue(objCharacter),
