@@ -5565,6 +5565,12 @@ namespace Chummer
         // Select Weapon (custom entry for things like Spare Clip).
         public void selectweapon(XmlNode bonusNode)
         {
+            Utils.SafelyRunSynchronously(() => selectweaponCoreAsync(true, bonusNode));
+        }
+
+        private async Task selectweaponCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
             if (bonusNode == null)
                 throw new ArgumentNullException(nameof(bonusNode));
             if (!string.IsNullOrEmpty(ForcedValue))
@@ -5574,10 +5580,13 @@ namespace Chummer
             {
                 // If the character is null (this is a Vehicle), the user must enter their own string.
                 // Display the Select Item window and record the value that was entered.
-                using (ThreadSafeForm<SelectText> frmPickText = ThreadSafeForm<SelectText>.Get(() => new SelectText
-                {
-                    Description = string.Format(GlobalSettings.CultureInfo, LanguageManager.GetString("String_Improvement_SelectText"), _strFriendlyName)
-                }))
+                string strDescription = string.Format(GlobalSettings.CultureInfo,
+                    await LanguageManager.GetStringCoreAsync(blnSync, "String_Improvement_SelectText", string.Empty, true, token).ConfigureAwait(false),
+                    _strFriendlyName);
+                using (ThreadSafeForm<SelectText> frmPickText = await ThreadSafeForm<SelectText>.GetCoreAsync(blnSync, () => new SelectText
+                       {
+                           Description = strDescription
+                       }, token).ConfigureAwait(false))
                 {
                     if (!string.IsNullOrEmpty(LimitSelection))
                     {
@@ -5586,7 +5595,7 @@ namespace Chummer
                     }
 
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickText.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (await frmPickText.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -5598,20 +5607,29 @@ namespace Chummer
             {
                 using (new FetchSafelyFromSafeObjectPool<List<ListItem>>(Utils.ListItemListPool, out List<ListItem> lstWeapons))
                 {
-                    bool blnIncludeUnarmed = bonusNode.SelectSingleNodeAndCacheExpressionAsNavigator("@includeunarmed")?.Value == bool.TrueString;
-                    string strExclude = bonusNode.SelectSingleNodeAndCacheExpressionAsNavigator("@excludecategory")?.Value ?? string.Empty;
-                    string strWeaponDetails = bonusNode.SelectSingleNodeAndCacheExpressionAsNavigator("@weapondetails")?.Value ?? string.Empty;
-                    foreach (Weapon objWeapon in _objCharacter.Weapons.GetAllDescendants(x => x.Children))
+                    bool blnIncludeUnarmed = bonusNode.SelectSingleNodeAndCacheExpressionAsNavigator("@includeunarmed", token)?.Value == bool.TrueString;
+                    string strExclude = bonusNode.SelectSingleNodeAndCacheExpressionAsNavigator("@excludecategory", token)?.Value ?? string.Empty;
+                    string strWeaponDetails = bonusNode.SelectSingleNodeAndCacheExpressionAsNavigator("@weapondetails", token)?.Value ?? string.Empty;
+                    foreach (Weapon objWeapon in blnSync
+                                 // ReSharper disable once MethodHasAsyncOverload
+                                 ? _objCharacter.Weapons.GetAllDescendants(x => x.Children)
+                                 : await _objCharacter.Weapons.GetAllDescendantsAsync(x => x.Children, token).ConfigureAwait(false))
                     {
                         if (!string.IsNullOrEmpty(strExclude) && objWeapon.RangeType == strExclude)
                             continue;
                         if (!blnIncludeUnarmed && objWeapon.Name == "Unarmed Attack")
                             continue;
                         if (!string.IsNullOrEmpty(strWeaponDetails)
-                            && objWeapon.GetNodeXPath()?.SelectSingleNode("self::node()[" + strWeaponDetails + "]") == null)
+                            && (blnSync
+                                // ReSharper disable once MethodHasAsyncOverload
+                                ? objWeapon.GetNodeXPath()
+                                : await objWeapon.GetNodeXPathAsync(token: token).ConfigureAwait(false))?.SelectSingleNode("self::node()[" + strWeaponDetails + "]") == null)
                             continue;
                         lstWeapons.Add(new ListItem(objWeapon.InternalId,
-                                                    objWeapon.CurrentDisplayNameShort));
+                                                    blnSync
+                                                        // ReSharper disable once MethodHasAsyncOverload
+                                                        ? objWeapon.CurrentDisplayNameShort
+                                                        : await objWeapon.GetCurrentDisplayNameShortAsync(token).ConfigureAwait(false)));
                     }
 
                     if (string.IsNullOrWhiteSpace(LimitSelection)
@@ -5619,20 +5637,29 @@ namespace Chummer
                     {
                         if (lstWeapons.Count == 0)
                         {
-                            UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
-                                                                 LanguageManager.GetString(
-                                                                     "Message_Improvement_EmptySelectionListNamed"),
-                                                                 SourceName));
+                            string strMessage = string.Format(GlobalSettings.CultureInfo,
+                                await LanguageManager.GetStringCoreAsync(blnSync,
+                                    "Message_Improvement_EmptySelectionListNamed", string.Empty, true, token).ConfigureAwait(false),
+                                SourceName);
+                            if (blnSync)
+                                // ReSharper disable once MethodHasAsyncOverload
+                                UserInteraction.ShowScrollableMessage(strMessage);
+                            else
+                                await UserInteraction.ShowScrollableMessageAsync(strMessage, token: token).ConfigureAwait(false);
                             throw new AbortedException();
                         }
 
-                        using (ThreadSafeForm<SelectItem> frmPickItem = ThreadSafeForm<SelectItem>.Get(() => new SelectItem
+                        string strDescription = string.Format(GlobalSettings.CultureInfo,
+                            await LanguageManager.GetStringCoreAsync(blnSync, "String_Improvement_SelectText", string.Empty, true, token).ConfigureAwait(false),
+                            _strFriendlyName);
+                        // O lado síncrono põe a descrição no inicializador do objeto; o assíncrono
+                        // a aplica depois, por DoThreadSafeAsync. Os dois comportamentos ficam.
+                        using (ThreadSafeForm<SelectItem> frmPickItem = await ThreadSafeForm<SelectItem>.GetCoreAsync(blnSync, () => blnSync
+                                   ? new SelectItem { Description = strDescription }
+                                   : new SelectItem(), token).ConfigureAwait(false))
                         {
-                            Description = string.Format(GlobalSettings.CultureInfo,
-                                                               LanguageManager.GetString(
-                                                                   "String_Improvement_SelectText"), _strFriendlyName)
-                        }))
-                        {
+                            if (!blnSync)
+                                await frmPickItem.MyForm.DoThreadSafeAsync(x => x.Description = strDescription, token).ConfigureAwait(false);
                             frmPickItem.MyForm.SetGeneralItemsMode(lstWeapons);
 
                             if (!string.IsNullOrEmpty(LimitSelection))
@@ -5642,12 +5669,15 @@ namespace Chummer
                             }
 
                             // Make sure the dialogue window was not canceled.
-                            if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                            if (await frmPickItem.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                             {
                                 throw new AbortedException();
                             }
 
-                            SelectedValue = frmPickItem.MyForm.SelectedName;
+                            SelectedValue = blnSync
+                                // ReSharper disable once MethodHasAsyncOverload
+                                ? frmPickItem.MyForm.SelectedName
+                                : await frmPickItem.MyForm.DoThreadSafeFuncAsync(x => x.SelectedName, token).ConfigureAwait(false);
                         }
                     }
                     else
@@ -5658,7 +5688,7 @@ namespace Chummer
             }
 
             // Create the Improvement.
-            CreateImprovement(SelectedValue, _objImprovementSource, SourceName, Improvement.ImprovementType.Text, _strUnique);
+            await CreateImprovementCoreAsync(blnSync, SelectedValue, _objImprovementSource, SourceName, Improvement.ImprovementType.Text, _strUnique, token: token).ConfigureAwait(false);
         }
 
         // Select an Optional Power.
@@ -6157,27 +6187,34 @@ namespace Chummer
 
         public void allowspellcategory(XmlNode bonusNode)
         {
+            Utils.SafelyRunSynchronously(() => allowspellcategoryCoreAsync(true, bonusNode));
+        }
+
+        private async Task allowspellcategoryCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
             if (bonusNode == null)
                 throw new ArgumentNullException(nameof(bonusNode));
             if (!bonusNode.IsNullOrInnerTextIsEmpty())
             {
-                CreateImprovement(bonusNode.InnerTextViaPool(), Improvement.ImprovementType.AllowSpellCategory);
+                await CreateImprovementCoreAsync(blnSync, bonusNode.InnerTextViaPool(token), Improvement.ImprovementType.AllowSpellCategory, token).ConfigureAwait(false);
             }
             else
             {
                 // Display the Select Spell window.
-                using (ThreadSafeForm<SelectSpellCategory> frmPickSpellCategory = ThreadSafeForm<SelectSpellCategory>.Get(() => new SelectSpellCategory(_objCharacter)
-                {
-                    Description = LanguageManager.GetString("Title_SelectSpellCategory")
-                }))
+                string strDescription = await LanguageManager.GetStringCoreAsync(blnSync, "Title_SelectSpellCategory", string.Empty, true, token).ConfigureAwait(false);
+                using (ThreadSafeForm<SelectSpellCategory> frmPickSpellCategory = await ThreadSafeForm<SelectSpellCategory>.GetCoreAsync(blnSync, () => new SelectSpellCategory(_objCharacter)
+                       {
+                           Description = strDescription
+                       }, token).ConfigureAwait(false))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickSpellCategory.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (await frmPickSpellCategory.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                     {
                         throw new AbortedException();
                     }
 
-                    CreateImprovement(frmPickSpellCategory.MyForm.SelectedCategory, Improvement.ImprovementType.AllowSpellCategory);
+                    await CreateImprovementCoreAsync(blnSync, frmPickSpellCategory.MyForm.SelectedCategory, Improvement.ImprovementType.AllowSpellCategory, token).ConfigureAwait(false);
                 }
             }
         }
@@ -6191,89 +6228,122 @@ namespace Chummer
 
         public void limitspellcategory(XmlNode bonusNode)
         {
+            Utils.SafelyRunSynchronously(() => limitspellcategoryCoreAsync(true, bonusNode));
+        }
+
+        private async Task limitspellcategoryCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
             if (bonusNode == null)
                 throw new ArgumentNullException(nameof(bonusNode));
             if (!bonusNode.IsNullOrInnerTextIsEmpty())
             {
-                CreateImprovement(bonusNode.InnerTextViaPool(), Improvement.ImprovementType.LimitSpellCategory);
+                await CreateImprovementCoreAsync(blnSync, bonusNode.InnerTextViaPool(token), Improvement.ImprovementType.LimitSpellCategory, token).ConfigureAwait(false);
             }
             else
             {
                 // Display the Select Spell window.
-                using (ThreadSafeForm<SelectSpellCategory> frmPickSpellCategory = ThreadSafeForm<SelectSpellCategory>.Get(() => new SelectSpellCategory(_objCharacter)
+                string strDescription = await LanguageManager.GetStringCoreAsync(blnSync, "Title_SelectSpellCategory", string.Empty, true, token).ConfigureAwait(false);
+                using (ThreadSafeForm<SelectSpellCategory> frmPickSpellCategory = await ThreadSafeForm<SelectSpellCategory>.GetCoreAsync(blnSync, () => new SelectSpellCategory(_objCharacter)
+                       {
+                           Description = strDescription
+                       }, token).ConfigureAwait(false))
                 {
-                    Description = LanguageManager.GetString("Title_SelectSpellCategory")
-                }))
-                {
-                    frmPickSpellCategory.MyForm.SetExcludeCategories(bonusNode.Attributes?["exclude"]?.InnerTextViaPool().SplitNoAlloc(',', StringSplitOptions.RemoveEmptyEntries));
+                    frmPickSpellCategory.MyForm.SetExcludeCategories(bonusNode.Attributes?["exclude"]?.InnerTextViaPool(token).SplitNoAlloc(',', StringSplitOptions.RemoveEmptyEntries));
 
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickSpellCategory.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (await frmPickSpellCategory.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                     {
                         throw new AbortedException();
                     }
 
-                    CreateImprovement(frmPickSpellCategory.MyForm.SelectedCategory, Improvement.ImprovementType.LimitSpellCategory);
+                    await CreateImprovementCoreAsync(blnSync, frmPickSpellCategory.MyForm.SelectedCategory, Improvement.ImprovementType.LimitSpellCategory, token).ConfigureAwait(false);
                 }
             }
         }
 
         public void limitspelldescriptor(XmlNode bonusNode)
         {
+            Utils.SafelyRunSynchronously(() => limitspelldescriptorCoreAsync(true, bonusNode));
+        }
+
+        private async Task limitspelldescriptorCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
             if (bonusNode == null)
                 throw new ArgumentNullException(nameof(bonusNode));
             // Display the Select Spell window.
             string strSelected;
             if (!bonusNode.IsNullOrInnerTextIsEmpty())
             {
-                strSelected = bonusNode.InnerTextViaPool();
+                strSelected = bonusNode.InnerTextViaPool(token);
             }
             else
             {
-                using (ThreadSafeForm<SelectItem> frmPickItem = ThreadSafeForm<SelectItem>.Get(() => new SelectItem
+                string strDescription = await LanguageManager.GetStringCoreAsync(blnSync, "Title_SelectSpellDescriptor", string.Empty, true, token).ConfigureAwait(false);
+                // O lado síncrono põe a descrição no inicializador; o assíncrono a aplica
+                // depois, por DoThreadSafeAsync. Os dois comportamentos ficam.
+                using (ThreadSafeForm<SelectItem> frmPickItem = await ThreadSafeForm<SelectItem>.GetCoreAsync(blnSync, () => blnSync
+                           ? new SelectItem { Description = strDescription }
+                           : new SelectItem(), token).ConfigureAwait(false))
                 {
-                    Description = LanguageManager.GetString("Title_SelectSpellDescriptor")
-                }))
-                {
+                    if (!blnSync)
+                        await frmPickItem.MyForm.DoThreadSafeAsync(x => x.Description = strDescription, token).ConfigureAwait(false);
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (await frmPickItem.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                     {
                         throw new AbortedException();
                     }
 
-                    strSelected = frmPickItem.MyForm.SelectedItem;
+                    strSelected = blnSync
+                        // ReSharper disable once MethodHasAsyncOverload
+                        ? frmPickItem.MyForm.SelectedItem
+                        : await frmPickItem.MyForm.DoThreadSafeFuncAsync(x => x.SelectedItem, token).ConfigureAwait(false);
                 }
             }
-            CreateImprovement(strSelected, Improvement.ImprovementType.LimitSpellDescriptor);
+            await CreateImprovementCoreAsync(blnSync, strSelected, Improvement.ImprovementType.LimitSpellDescriptor, token).ConfigureAwait(false);
         }
 
         public void blockspelldescriptor(XmlNode bonusNode)
         {
+            Utils.SafelyRunSynchronously(() => blockspelldescriptorCoreAsync(true, bonusNode));
+        }
+
+        private async Task blockspelldescriptorCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
             if (bonusNode == null)
                 throw new ArgumentNullException(nameof(bonusNode));
             // Display the Select Spell window.
             string strSelected;
             if (!bonusNode.IsNullOrInnerTextIsEmpty())
             {
-                strSelected = bonusNode.InnerTextViaPool();
+                strSelected = bonusNode.InnerTextViaPool(token);
             }
             else
             {
-                using (ThreadSafeForm<SelectItem> frmPickItem = ThreadSafeForm<SelectItem>.Get(() => new SelectItem
+                string strDescription = await LanguageManager.GetStringCoreAsync(blnSync, "Title_SelectSpellDescriptor", string.Empty, true, token).ConfigureAwait(false);
+                // O lado síncrono põe a descrição no inicializador; o assíncrono a aplica
+                // depois, por DoThreadSafeAsync. Os dois comportamentos ficam.
+                using (ThreadSafeForm<SelectItem> frmPickItem = await ThreadSafeForm<SelectItem>.GetCoreAsync(blnSync, () => blnSync
+                           ? new SelectItem { Description = strDescription }
+                           : new SelectItem(), token).ConfigureAwait(false))
                 {
-                    Description = LanguageManager.GetString("Title_SelectSpellDescriptor")
-                }))
-                {
+                    if (!blnSync)
+                        await frmPickItem.MyForm.DoThreadSafeAsync(x => x.Description = strDescription, token).ConfigureAwait(false);
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (await frmPickItem.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                     {
                         throw new AbortedException();
                     }
 
-                    strSelected = frmPickItem.MyForm.SelectedItem;
+                    strSelected = blnSync
+                        // ReSharper disable once MethodHasAsyncOverload
+                        ? frmPickItem.MyForm.SelectedItem
+                        : await frmPickItem.MyForm.DoThreadSafeFuncAsync(x => x.SelectedItem, token).ConfigureAwait(false);
                 }
             }
-            CreateImprovement(strSelected, Improvement.ImprovementType.BlockSpellDescriptor);
+            await CreateImprovementCoreAsync(blnSync, strSelected, Improvement.ImprovementType.BlockSpellDescriptor, token).ConfigureAwait(false);
         }
 
         #region addspiritorsprite
@@ -12511,105 +12581,9 @@ public async Task qualitylevelAsync(XmlNode bonusNode, CancellationToken token =
         }
 
         // Select Weapon (custom entry for things like Spare Clip).
-        public async Task selectweaponAsync(XmlNode bonusNode, CancellationToken token = default)
+        public Task selectweaponAsync(XmlNode bonusNode, CancellationToken token = default)
         {
-            token.ThrowIfCancellationRequested();
-            if (bonusNode == null)
-                throw new ArgumentNullException(nameof(bonusNode));
-            if (!string.IsNullOrEmpty(ForcedValue))
-                LimitSelection = ForcedValue;
-
-            if (_objCharacter == null)
-            {
-                // If the character is null (this is a Vehicle), the user must enter their own string.
-                // Display the Select Item window and record the value that was entered.
-                string strDescription = string.Format(GlobalSettings.CultureInfo,
-                    await LanguageManager.GetStringAsync("String_Improvement_SelectText", token: token).ConfigureAwait(false),
-                    _strFriendlyName);
-                using (ThreadSafeForm<SelectText> frmPickText = await ThreadSafeForm<SelectText>.GetAsync(() => new SelectText
-                       {
-                           Description = strDescription
-                       }, token).ConfigureAwait(false))
-                {
-                    if (!string.IsNullOrEmpty(LimitSelection))
-                    {
-                        frmPickText.MyForm.SelectedValue = LimitSelection;
-                        frmPickText.MyForm.Opacity = 0;
-                    }
-
-                    // Make sure the dialogue window was not canceled.
-                    if (await frmPickText.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                    {
-                        throw new AbortedException();
-                    }
-
-                    SelectedValue = frmPickText.MyForm.SelectedValue;
-                }
-            }
-            else
-            {
-                using (new FetchSafelyFromSafeObjectPool<List<ListItem>>(Utils.ListItemListPool, out List<ListItem> lstWeapons))
-                {
-                    bool blnIncludeUnarmed = bonusNode.SelectSingleNodeAndCacheExpressionAsNavigator("@includeunarmed", token)?.Value == bool.TrueString;
-                    string strExclude = bonusNode.SelectSingleNodeAndCacheExpressionAsNavigator("@excludecategory", token)?.Value ?? string.Empty;
-                    string strWeaponDetails = bonusNode.SelectSingleNodeAndCacheExpressionAsNavigator("@weapondetails", token)?.Value ?? string.Empty;
-                    foreach (Weapon objWeapon in await _objCharacter.Weapons.GetAllDescendantsAsync(x => x.Children, token).ConfigureAwait(false))
-                    {
-                        if (!string.IsNullOrEmpty(strExclude) && objWeapon.RangeType == strExclude)
-                            continue;
-                        if (!blnIncludeUnarmed && objWeapon.Name == "Unarmed Attack")
-                            continue;
-                        if (!string.IsNullOrEmpty(strWeaponDetails)
-                            && (await objWeapon.GetNodeXPathAsync(token: token).ConfigureAwait(false))?.SelectSingleNode("self::node()[" + strWeaponDetails + "]") == null)
-                            continue;
-                        lstWeapons.Add(new ListItem(objWeapon.InternalId,
-                                                    await objWeapon.GetCurrentDisplayNameShortAsync(token).ConfigureAwait(false)));
-                    }
-
-                    if (string.IsNullOrWhiteSpace(LimitSelection)
-                        || lstWeapons.Exists(item => item.Name == LimitSelection))
-                    {
-                        if (lstWeapons.Count == 0)
-                        {
-                            await UserInteraction.ShowScrollableMessageAsync(string.Format(GlobalSettings.CultureInfo,
-                                await LanguageManager.GetStringAsync(
-                                    "Message_Improvement_EmptySelectionListNamed", token: token).ConfigureAwait(false),
-                                SourceName), token: token).ConfigureAwait(false);
-                            throw new AbortedException();
-                        }
-
-                        string strDescription = string.Format(GlobalSettings.CultureInfo,
-                            await LanguageManager.GetStringAsync("String_Improvement_SelectText", token: token).ConfigureAwait(false),
-                            _strFriendlyName);
-                        using (ThreadSafeForm<SelectItem> frmPickItem = await ThreadSafeForm<SelectItem>.GetAsync(() => new SelectItem(), token).ConfigureAwait(false))
-                        {
-                            await frmPickItem.MyForm.DoThreadSafeAsync(x => x.Description = strDescription, token).ConfigureAwait(false);
-                            frmPickItem.MyForm.SetGeneralItemsMode(lstWeapons);
-
-                            if (!string.IsNullOrEmpty(LimitSelection))
-                            {
-                                frmPickItem.MyForm.ForceItem(LimitSelection);
-                                frmPickItem.MyForm.Opacity = 0;
-                            }
-
-                            // Make sure the dialogue window was not canceled.
-                            if (await frmPickItem.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                            {
-                                throw new AbortedException();
-                            }
-
-                            SelectedValue = await frmPickItem.MyForm.DoThreadSafeFuncAsync(x => x.SelectedName, token).ConfigureAwait(false);
-                        }
-                    }
-                    else
-                    {
-                        SelectedValue = LimitSelection;
-                    }
-                }
-            }
-
-            // Create the Improvement.
-            await CreateImprovementAsync(SelectedValue, _objImprovementSource, SourceName, Improvement.ImprovementType.Text, _strUnique, token: token).ConfigureAwait(false);
+            return selectweaponCoreAsync(false, bonusNode, token);
         }
 
         // Select an Optional Power.
@@ -13121,33 +13095,9 @@ public async Task qualitylevelAsync(XmlNode bonusNode, CancellationToken token =
             return CreateImprovementAsync(bonusNode.InnerTextViaPool(token), Improvement.ImprovementType.AllowSpellRange, token);
         }
 
-        public async Task allowspellcategoryAsync(XmlNode bonusNode, CancellationToken token = default)
+        public Task allowspellcategoryAsync(XmlNode bonusNode, CancellationToken token = default)
         {
-            token.ThrowIfCancellationRequested();
-            if (bonusNode == null)
-                throw new ArgumentNullException(nameof(bonusNode));
-            if (!bonusNode.IsNullOrInnerTextIsEmpty())
-            {
-                await CreateImprovementAsync(bonusNode.InnerTextViaPool(token), Improvement.ImprovementType.AllowSpellCategory, token).ConfigureAwait(false);
-            }
-            else
-            {
-                // Display the Select Spell window.
-                string strDescription = await LanguageManager.GetStringAsync("Title_SelectSpellCategory", token: token).ConfigureAwait(false);
-                using (ThreadSafeForm<SelectSpellCategory> frmPickSpellCategory = await ThreadSafeForm<SelectSpellCategory>.GetAsync(() => new SelectSpellCategory(_objCharacter)
-                       {
-                           Description = strDescription
-                       }, token).ConfigureAwait(false))
-                {
-                    // Make sure the dialogue window was not canceled.
-                    if (await frmPickSpellCategory.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                    {
-                        throw new AbortedException();
-                    }
-
-                    await CreateImprovementAsync(frmPickSpellCategory.MyForm.SelectedCategory, Improvement.ImprovementType.AllowSpellCategory, token).ConfigureAwait(false);
-                }
-            }
+            return allowspellcategoryCoreAsync(false, bonusNode, token);
         }
 
         public Task limitspellrangeAsync(XmlNode bonusNode, CancellationToken token = default)
@@ -13159,93 +13109,19 @@ public async Task qualitylevelAsync(XmlNode bonusNode, CancellationToken token =
             return CreateImprovementAsync(bonusNode.InnerTextViaPool(token), Improvement.ImprovementType.LimitSpellRange, token);
         }
 
-        public async Task limitspellcategoryAsync(XmlNode bonusNode, CancellationToken token = default)
+        public Task limitspellcategoryAsync(XmlNode bonusNode, CancellationToken token = default)
         {
-            token.ThrowIfCancellationRequested();
-            if (bonusNode == null)
-                throw new ArgumentNullException(nameof(bonusNode));
-            if (!bonusNode.IsNullOrInnerTextIsEmpty())
-            {
-                await CreateImprovementAsync(bonusNode.InnerTextViaPool(token), Improvement.ImprovementType.LimitSpellCategory, token).ConfigureAwait(false);
-            }
-            else
-            {
-                // Display the Select Spell window.
-                string strDescription = await LanguageManager.GetStringAsync("Title_SelectSpellCategory", token: token).ConfigureAwait(false);
-                using (ThreadSafeForm<SelectSpellCategory> frmPickSpellCategory = await ThreadSafeForm<SelectSpellCategory>.GetAsync(() => new SelectSpellCategory(_objCharacter)
-                       {
-                           Description = strDescription
-                       }, token).ConfigureAwait(false))
-                {
-                    frmPickSpellCategory.MyForm.SetExcludeCategories(bonusNode.Attributes?["exclude"]?.InnerTextViaPool(token).SplitNoAlloc(',', StringSplitOptions.RemoveEmptyEntries));
-
-                    // Make sure the dialogue window was not canceled.
-                    if (await frmPickSpellCategory.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                    {
-                        throw new AbortedException();
-                    }
-
-                    await CreateImprovementAsync(frmPickSpellCategory.MyForm.SelectedCategory, Improvement.ImprovementType.LimitSpellCategory, token).ConfigureAwait(false);
-                }
-            }
+            return limitspellcategoryCoreAsync(false, bonusNode, token);
         }
 
-        public async Task limitspelldescriptorAsync(XmlNode bonusNode, CancellationToken token = default)
+        public Task limitspelldescriptorAsync(XmlNode bonusNode, CancellationToken token = default)
         {
-            token.ThrowIfCancellationRequested();
-            if (bonusNode == null)
-                throw new ArgumentNullException(nameof(bonusNode));
-            // Display the Select Spell window.
-            string strSelected;
-            if (!bonusNode.IsNullOrInnerTextIsEmpty())
-            {
-                strSelected = bonusNode.InnerTextViaPool(token);
-            }
-            else
-            {
-                string strDescription = await LanguageManager.GetStringAsync("Title_SelectSpellDescriptor", token: token).ConfigureAwait(false);
-                using (ThreadSafeForm<SelectItem> frmPickItem = await ThreadSafeForm<SelectItem>.GetAsync(() => new SelectItem(), token).ConfigureAwait(false))
-                {
-                    await frmPickItem.MyForm.DoThreadSafeAsync(x => x.Description = strDescription, token).ConfigureAwait(false);
-                    // Make sure the dialogue window was not canceled.
-                    if (await frmPickItem.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                    {
-                        throw new AbortedException();
-                    }
-
-                    strSelected = await frmPickItem.MyForm.DoThreadSafeFuncAsync(x => x.SelectedItem, token).ConfigureAwait(false);
-                }
-            }
-            await CreateImprovementAsync(strSelected, Improvement.ImprovementType.LimitSpellDescriptor, token).ConfigureAwait(false);
+            return limitspelldescriptorCoreAsync(false, bonusNode, token);
         }
 
-        public async Task blockspelldescriptorAsync(XmlNode bonusNode, CancellationToken token = default)
+        public Task blockspelldescriptorAsync(XmlNode bonusNode, CancellationToken token = default)
         {
-            token.ThrowIfCancellationRequested();
-            if (bonusNode == null)
-                throw new ArgumentNullException(nameof(bonusNode));
-            // Display the Select Spell window.
-            string strSelected;
-            if (!bonusNode.IsNullOrInnerTextIsEmpty())
-            {
-                strSelected = bonusNode.InnerTextViaPool(token);
-            }
-            else
-            {
-                string strDescription = await LanguageManager.GetStringAsync("Title_SelectSpellDescriptor", token: token).ConfigureAwait(false);
-                using (ThreadSafeForm<SelectItem> frmPickItem = await ThreadSafeForm<SelectItem>.GetAsync(() => new SelectItem(), token).ConfigureAwait(false))
-                {
-                    await frmPickItem.MyForm.DoThreadSafeAsync(x => x.Description = strDescription, token).ConfigureAwait(false);
-                    // Make sure the dialogue window was not canceled.
-                    if (await frmPickItem.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                    {
-                        throw new AbortedException();
-                    }
-
-                    strSelected = await frmPickItem.MyForm.DoThreadSafeFuncAsync(x => x.SelectedItem, token).ConfigureAwait(false);
-                }
-            }
-            await CreateImprovementAsync(strSelected, Improvement.ImprovementType.BlockSpellDescriptor, token).ConfigureAwait(false);
+            return blockspelldescriptorCoreAsync(false, bonusNode, token);
         }
 
         #region addspiritorsprite
