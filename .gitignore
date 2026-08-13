@@ -212,3 +212,6 @@ FakesAssemblies/
 
 # Mac Specific Generated Files
 .DS_Store
+
+# artefatos de ferramentas Python do porte
+scripts/**/__pycache__/
