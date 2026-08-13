@@ -43,20 +43,24 @@ separadas, abstração de interação (metade de mensagem), e o ferramental de v
 
 ## Em voo neste momento
 
-**`claude/consolidar-addimprovement`** — a consolidação de `AddImprovementCollection`
-(DEC-047). Entregue **parcial e verde**: a união das classes está pronta e 11 dos 42 pares
-com diálogo estão fundidos. Os 31 restantes seguem a mesma receita, um a um, com
-`scripts/fundir-par.py`. Nada nessa branch está pela metade — cada commit compila.
+**Nada.** As três frentes foram entregues, **integradas nesta branch e verificadas aqui**
+(`./scripts/dev.sh check` verde após cada integração):
 
-Entregue e já integrado antes disso:
+| Frente | PR | Estado |
+|---|---|---|
+| `claude/etapa-2-mugshots` | — | integrada · declarações a zero |
+| `claude/etapa-2.5-apk-esqueleto` | #2 mergeado | integrada · APK de 17,86 MiB |
+| `claude/consolidar-addimprovement` | #3 mergeado | integrada · censo 1.584 → 1.489 |
 
-- `claude/etapa-2-mugshots` — retratos como bytes. Declarações a zero.
-- `claude/etapa-2.5-apk-esqueleto` — APK esqueleto e os spikes de plataforma (PR #2).
+As branches continuam existindo no remoto; isso é histórico, não trabalho pendente.
+`AddImprovementAsyncCollection.cs` não existe mais na árvore — é a prova de que a
+consolidação entrou.
 
 Se você está lendo isto depois de uma interrupção, confira mesmo assim:
 
 ```bash
 git fetch origin && git branch -r | grep claude/
+git log --oneline -1
 ```
 
 ---
