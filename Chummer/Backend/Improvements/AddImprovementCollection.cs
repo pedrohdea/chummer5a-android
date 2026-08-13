@@ -159,6 +159,48 @@ namespace Chummer
                 0, 1, 0, 0, 0, 0, string.Empty, false, strTarget);
         }
 
+        // ------------------------------------------------------------------
+        // Núcleos blnSync de CreateImprovement.
+        //
+        // Existem para que os métodos de bônus, que são escritos uma vez só para os dois
+        // caminhos, não precisem de um `if (blnSync) ... else ...` a cada chamada — e são
+        // 310 chamadas. Cada núcleo despacha para o par síncrono/assíncrono já existente,
+        // sem mudar o comportamento de nenhum dos dois: com blnSync, a Task já volta
+        // completa e o `await` não cede o fio.
+        // ------------------------------------------------------------------
+
+        private Task<Improvement> CreateImprovementCoreAsync(bool blnSync, string strImprovedName, Improvement.ImprovementSource objImprovementSource,
+            string strSourceName, Improvement.ImprovementType objImprovementType, string strUnique,
+            decimal decValue = 0, int intRating = 1, int intMinimum = 0, int intMaximum = 0, decimal decAugmented = 0,
+            int intAugmentedMaximum = 0, string strExclude = "", bool blnAddToRating = false, string strTarget = "", string strCondition = "", CancellationToken token = default)
+        {
+            return blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? Task.FromResult(CreateImprovement(strImprovedName, objImprovementSource, strSourceName,
+                    objImprovementType, strUnique, decValue, intRating, intMinimum, intMaximum, decAugmented,
+                    intAugmentedMaximum, strExclude, blnAddToRating, strTarget, strCondition))
+                : CreateImprovementAsync(strImprovedName, objImprovementSource, strSourceName, objImprovementType,
+                    strUnique, decValue, intRating, intMinimum, intMaximum, decAugmented, intAugmentedMaximum,
+                    strExclude, blnAddToRating, strTarget, strCondition, token);
+        }
+
+        private Task<Improvement> CreateImprovementCoreAsync(bool blnSync, string selectedValue, Improvement.ImprovementType improvementType, CancellationToken token = default)
+        {
+            return blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? Task.FromResult(CreateImprovement(selectedValue, improvementType))
+                : CreateImprovementAsync(selectedValue, improvementType, token);
+        }
+
+        private Task<Improvement> CreateImprovementCoreAsync(bool blnSync, string strImprovementName, string strTarget,
+            Improvement.ImprovementType improvementType, CancellationToken token = default)
+        {
+            return blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? Task.FromResult(CreateImprovement(strImprovementName, strTarget, improvementType))
+                : CreateImprovementAsync(strImprovementName, strTarget, improvementType, token);
+        }
+
         #region Improvement Methods
 
 #pragma warning disable IDE1006 // Naming Styles
@@ -1552,14 +1594,19 @@ namespace Chummer
         // Select a Spell.
         public void selectspell(XmlNode bonusNode)
         {
+            Utils.SafelyRunSynchronously(() => selectspellCoreAsync(true, bonusNode));
+        }
+
+        private async Task selectspellCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+        {
             if (bonusNode == null)
                 throw new ArgumentNullException(nameof(bonusNode));
 
             XmlNode node;
             // Display the Select Spell window.
-            using (ThreadSafeForm<SelectSpell> frmPickSpell = ThreadSafeForm<SelectSpell>.Get(() => new SelectSpell(_objCharacter)))
+            using (ThreadSafeForm<SelectSpell> frmPickSpell = await ThreadSafeForm<SelectSpell>.GetCoreAsync(blnSync, () => new SelectSpell(_objCharacter), token).ConfigureAwait(false))
             {
-                string strCategory = bonusNode.Attributes?["category"]?.InnerTextViaPool();
+                string strCategory = bonusNode.Attributes?["category"]?.InnerTextViaPool(token);
                 if (!string.IsNullOrEmpty(strCategory))
                     frmPickSpell.MyForm.LimitCategory = strCategory;
 
@@ -1572,13 +1619,13 @@ namespace Chummer
                 frmPickSpell.MyForm.IgnoreRequirements = bonusNode.Attributes?["ignorerequirements"]?.InnerTextIsTrueString() == true;
 
                 // Make sure the dialogue window was not canceled.
-                if (frmPickSpell.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                if (await frmPickSpell.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                 {
                     throw new AbortedException();
                 }
 
                 // Open the Spells XML file and locate the selected piece.
-                XmlDocument objXmlDocument = _objCharacter.LoadData("spells.xml");
+                XmlDocument objXmlDocument = await _objCharacter.LoadDataCoreAsync(blnSync, "spells.xml", token: token).ConfigureAwait(false);
 
                 node = objXmlDocument.TryGetNodeByNameOrId("/chummer/spells/spell",
                     frmPickSpell.MyForm.SelectedSpell);
@@ -1587,22 +1634,23 @@ namespace Chummer
             if (node == null)
                 throw new AbortedException();
 
-            SelectedValue = node["name"]?.InnerTextViaPool();
+            SelectedValue = node["name"]?.InnerTextViaPool(token);
 
             // Check for SelectText.
             string strExtra = string.Empty;
-            XPathNavigator xmlSelectText = node.SelectSingleNodeAndCacheExpressionAsNavigator("bonus/selecttext");
+            XPathNavigator xmlSelectText = node.SelectSingleNodeAndCacheExpressionAsNavigator("bonus/selecttext", token);
             if (xmlSelectText != null)
             {
-                using (ThreadSafeForm<SelectText> frmPickText = ThreadSafeForm<SelectText>.Get(() => new SelectText
+                string strDescription = string.Format(GlobalSettings.CultureInfo,
+                    await LanguageManager.GetStringCoreAsync(blnSync, "String_Improvement_SelectText", string.Empty, true, token).ConfigureAwait(false),
+                    node["translate"]?.InnerTextViaPool(token) ?? node["name"]?.InnerTextViaPool(token));
+                using (ThreadSafeForm<SelectText> frmPickText = await ThreadSafeForm<SelectText>.GetCoreAsync(blnSync, () => new SelectText
                        {
-                           Description = string.Format(GlobalSettings.CultureInfo,
-                               LanguageManager.GetString("String_Improvement_SelectText"),
-                               node["translate"]?.InnerTextViaPool() ?? node["name"]?.InnerTextViaPool())
-                       }))
+                           Description = strDescription
+                       }, token).ConfigureAwait(false))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickText.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (await frmPickText.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                         throw new AbortedException();
 
                     strExtra = frmPickText.MyForm.SelectedValue;
@@ -1612,19 +1660,31 @@ namespace Chummer
             Spell spell = new Spell(_objCharacter);
             try
             {
-                spell.Create(node, strExtra);
+                if (blnSync)
+                    // ReSharper disable once MethodHasAsyncOverload
+                    spell.Create(node, strExtra);
+                else
+                    await spell.CreateAsync(node, strExtra, token: token).ConfigureAwait(false);
                 if (spell.InternalId.IsEmptyGuid())
                     throw new AbortedException();
                 spell.Grade = -1;
-                _objCharacter.Spells.Add(spell);
+                if (blnSync)
+                    // ReSharper disable once MethodHasAsyncOverload
+                    _objCharacter.Spells.Add(spell);
+                else
+                    await _objCharacter.Spells.AddAsync(spell, token).ConfigureAwait(false);
 
-                CreateImprovement(spell.InternalId, _objImprovementSource, SourceName,
+                await CreateImprovementCoreAsync(blnSync, spell.InternalId, _objImprovementSource, SourceName,
                     Improvement.ImprovementType.Spell,
-                    _strUnique);
+                    _strUnique, token: token).ConfigureAwait(false);
             }
             catch
             {
-                spell.Remove(false);
+                if (blnSync)
+                    // ReSharper disable once MethodHasAsyncOverload
+                    spell.Remove(false);
+                else
+                    await spell.RemoveAsync(false, CancellationToken.None).ConfigureAwait(false);
                 throw;
             }
         }
@@ -8739,84 +8799,9 @@ public async Task qualitylevelAsync(XmlNode bonusNode, CancellationToken token =
         }
 
         // Select a Spell.
-        public async Task selectspellAsync(XmlNode bonusNode, CancellationToken token = default)
+        public Task selectspellAsync(XmlNode bonusNode, CancellationToken token = default)
         {
-            if (bonusNode == null)
-                throw new ArgumentNullException(nameof(bonusNode));
-
-            XmlNode node;
-            // Display the Select Spell window.
-            using (ThreadSafeForm<SelectSpell> frmPickSpell = await ThreadSafeForm<SelectSpell>.GetAsync(() => new SelectSpell(_objCharacter), token).ConfigureAwait(false))
-            {
-                string strCategory = bonusNode.Attributes?["category"]?.InnerTextViaPool(token);
-                if (!string.IsNullOrEmpty(strCategory))
-                    frmPickSpell.MyForm.LimitCategory = strCategory;
-
-                if (!string.IsNullOrEmpty(ForcedValue))
-                {
-                    frmPickSpell.MyForm.ForceSpellName = ForcedValue;
-                    frmPickSpell.MyForm.Opacity = 0;
-                }
-
-                frmPickSpell.MyForm.IgnoreRequirements = bonusNode.Attributes?["ignorerequirements"]?.InnerTextIsTrueString() == true;
-
-                // Make sure the dialogue window was not canceled.
-                if (await frmPickSpell.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                {
-                    throw new AbortedException();
-                }
-
-                // Open the Spells XML file and locate the selected piece.
-                XmlDocument objXmlDocument = await _objCharacter.LoadDataAsync("spells.xml", token: token).ConfigureAwait(false);
-
-                node = objXmlDocument.TryGetNodeByNameOrId("/chummer/spells/spell",
-                    frmPickSpell.MyForm.SelectedSpell);
-            }
-
-            if (node == null)
-                throw new AbortedException();
-
-            SelectedValue = node["name"]?.InnerTextViaPool(token);
-
-            // Check for SelectText.
-            string strExtra = string.Empty;
-            XPathNavigator xmlSelectText = node.SelectSingleNodeAndCacheExpressionAsNavigator("bonus/selecttext", token);
-            if (xmlSelectText != null)
-            {
-                string strDescription = string.Format(GlobalSettings.CultureInfo,
-                    await LanguageManager.GetStringAsync("String_Improvement_SelectText", token: token).ConfigureAwait(false),
-                    node["translate"]?.InnerTextViaPool(token) ?? node["name"]?.InnerTextViaPool(token));
-                using (ThreadSafeForm<SelectText> frmPickText = await ThreadSafeForm<SelectText>.GetAsync(() => new SelectText
-                       {
-                           Description = strDescription
-                       }, token).ConfigureAwait(false))
-                {
-                    // Make sure the dialogue window was not canceled.
-                    if (await frmPickText.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                        throw new AbortedException();
-
-                    strExtra = frmPickText.MyForm.SelectedValue;
-                }
-            }
-
-            Spell spell = new Spell(_objCharacter);
-            try
-            {
-                await spell.CreateAsync(node, strExtra, token: token).ConfigureAwait(false);
-                if (spell.InternalId.IsEmptyGuid())
-                    throw new AbortedException();
-                spell.Grade = -1;
-                await _objCharacter.Spells.AddAsync(spell, token).ConfigureAwait(false);
-
-                await CreateImprovementAsync(spell.InternalId, _objImprovementSource, SourceName,
-                    Improvement.ImprovementType.Spell,
-                    _strUnique, token: token).ConfigureAwait(false);
-            }
-            catch
-            {
-                await spell.RemoveAsync(false, CancellationToken.None).ConfigureAwait(false);
-                throw;
-            }
+            return selectspellCoreAsync(false, bonusNode, token);
         }
 
         // Add a specific Spell to the Character.

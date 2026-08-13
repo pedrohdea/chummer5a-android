@@ -6037,6 +6037,20 @@ namespace Chummer
             return await (await GetSettingsAsync(token).ConfigureAwait(false)).LoadDataAsync(strFileName, strLanguage, blnLoadFile, token).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// LoadData para quem é escrito uma vez só para os dois caminhos (padrão "núcleo
+        /// blnSync"). Despacha para o par já existente; não muda o comportamento de nenhum
+        /// dos dois.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<XmlDocument> LoadDataCoreAsync(bool blnSync, string strFileName, string strLanguage = "", bool blnLoadFile = false, CancellationToken token = default)
+        {
+            return blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? Task.FromResult(LoadData(strFileName, strLanguage, blnLoadFile, token))
+                : LoadDataAsync(strFileName, strLanguage, blnLoadFile, token);
+        }
+
         private int _intIsLoading;
 
         /// <summary>

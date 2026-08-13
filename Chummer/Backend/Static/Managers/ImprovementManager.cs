@@ -1540,6 +1540,30 @@ namespace Chummer
         }
 
         /// <summary>
+        /// ValueToInt for callers written once for both paths (the "blnSync core" pattern).
+        /// Despacha para o par já existente; não muda o comportamento de nenhum dos dois.
+        /// </summary>
+        public static Task<int> ValueToIntCoreAsync(bool blnSync, Character objCharacter, string strValue, int intRating, CancellationToken token = default)
+        {
+            return blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? Task.FromResult(ValueToInt(objCharacter, strValue, intRating, token))
+                : ValueToIntAsync(objCharacter, strValue, intRating, token);
+        }
+
+        /// <summary>
+        /// ValueToDec for callers written once for both paths (the "blnSync core" pattern).
+        /// Despacha para o par já existente; não muda o comportamento de nenhum dos dois.
+        /// </summary>
+        public static Task<decimal> ValueToDecCoreAsync(bool blnSync, Character objCharacter, string strValue, int intRating, CancellationToken token = default)
+        {
+            return blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? Task.FromResult(ValueToDec(objCharacter, strValue, intRating, token))
+                : ValueToDecAsync(objCharacter, strValue, intRating, token);
+        }
+
+        /// <summary>
         /// Shows a skill selection dialog and returns the selected skill name.
         /// </summary>
         /// <param name="xmlBonusNode">XML node (e.g. a selectskill element) defining filters: skillcategory, limittoskill, skillcategories, excludecategory, knowledgeskills, etc.</param>
