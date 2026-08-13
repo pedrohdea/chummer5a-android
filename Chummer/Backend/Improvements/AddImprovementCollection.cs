@@ -2013,11 +2013,17 @@ namespace Chummer
         // Select an AI program.
         public void selectaiprogram(XmlNode bonusNode)
         {
+            Utils.SafelyRunSynchronously(() => selectaiprogramCoreAsync(true, bonusNode));
+        }
+
+        private async Task selectaiprogramCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
             if (bonusNode == null)
                 throw new ArgumentNullException(nameof(bonusNode));
 
             XmlNode xmlProgram = null;
-            XmlDocument xmlDocument = _objCharacter.LoadData("programs.xml");
+            XmlDocument xmlDocument = await _objCharacter.LoadDataCoreAsync(blnSync, "programs.xml", token: token).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(ForcedValue))
             {
                 xmlProgram = xmlDocument.TryGetNodeByNameOrId("/chummer/programs/program", ForcedValue)
@@ -2027,10 +2033,10 @@ namespace Chummer
             if (xmlProgram == null)
             {
                 // Display the Select Program window.
-                using (ThreadSafeForm<SelectAIProgram> frmPickProgram = ThreadSafeForm<SelectAIProgram>.Get(() => new SelectAIProgram(_objCharacter)))
+                using (ThreadSafeForm<SelectAIProgram> frmPickProgram = await ThreadSafeForm<SelectAIProgram>.GetCoreAsync(blnSync, () => new SelectAIProgram(_objCharacter), token).ConfigureAwait(false))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickProgram.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (await frmPickProgram.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -2042,18 +2048,19 @@ namespace Chummer
 
             // Check for SelectText.
             string strExtra = string.Empty;
-            XPathNavigator xmlSelectText = xmlProgram.SelectSingleNodeAndCacheExpressionAsNavigator("bonus/selecttext");
+            XPathNavigator xmlSelectText = xmlProgram.SelectSingleNodeAndCacheExpressionAsNavigator("bonus/selecttext", token);
             if (xmlSelectText != null)
             {
-                using (ThreadSafeForm<SelectText> frmPickText = ThreadSafeForm<SelectText>.Get(() => new SelectText
+                string strDescription = string.Format(GlobalSettings.CultureInfo,
+                    await LanguageManager.GetStringCoreAsync(blnSync, "String_Improvement_SelectText", string.Empty, true, token).ConfigureAwait(false),
+                    xmlProgram["translate"]?.InnerTextViaPool(token) ?? xmlProgram["name"]?.InnerTextViaPool(token));
+                using (ThreadSafeForm<SelectText> frmPickText = await ThreadSafeForm<SelectText>.GetCoreAsync(blnSync, () => new SelectText
                        {
-                           Description = string.Format(GlobalSettings.CultureInfo,
-                               LanguageManager.GetString("String_Improvement_SelectText"),
-                               xmlProgram["translate"]?.InnerTextViaPool() ?? xmlProgram["name"]?.InnerTextViaPool())
-                       }))
+                           Description = strDescription
+                       }, token).ConfigureAwait(false))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickText.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (await frmPickText.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -2063,27 +2070,44 @@ namespace Chummer
             }
 
             AIProgram objProgram = new AIProgram(_objCharacter);
-            objProgram.Create(xmlProgram, strExtra, false);
+            if (blnSync)
+                // ReSharper disable once MethodHasAsyncOverload
+                objProgram.Create(xmlProgram, strExtra, false);
+            else
+                await objProgram.CreateAsync(xmlProgram, strExtra, false, token).ConfigureAwait(false);
             if (objProgram.InternalId.IsEmptyGuid())
                 throw new AbortedException();
 
-            _objCharacter.AIPrograms.Add(objProgram);
+            if (blnSync)
+                // ReSharper disable once MethodHasAsyncOverload
+                _objCharacter.AIPrograms.Add(objProgram);
+            else
+                await _objCharacter.AIPrograms.AddAsync(objProgram, token).ConfigureAwait(false);
 
-            SelectedValue = objProgram.CurrentDisplayNameShort;
+            SelectedValue = blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? objProgram.CurrentDisplayNameShort
+                : await objProgram.GetCurrentDisplayNameShortAsync(token).ConfigureAwait(false);
 
-            CreateImprovement(objProgram.InternalId, _objImprovementSource, SourceName,
+            await CreateImprovementCoreAsync(blnSync, objProgram.InternalId, _objImprovementSource, SourceName,
                 Improvement.ImprovementType.AIProgram,
-                _strUnique);
+                _strUnique, token: token).ConfigureAwait(false);
         }
 
         // Select an AI program.
         public void selectinherentaiprogram(XmlNode bonusNode)
         {
+            Utils.SafelyRunSynchronously(() => selectinherentaiprogramCoreAsync(true, bonusNode));
+        }
+
+        private async Task selectinherentaiprogramCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
             if (bonusNode == null)
                 throw new ArgumentNullException(nameof(bonusNode));
 
             XmlNode xmlProgram = null;
-            XmlDocument xmlDocument = _objCharacter.LoadData("programs.xml");
+            XmlDocument xmlDocument = await _objCharacter.LoadDataCoreAsync(blnSync, "programs.xml", token: token).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(ForcedValue))
             {
                 xmlProgram = xmlDocument.TryGetNodeByNameOrId("/chummer/programs/program", ForcedValue)
@@ -2093,10 +2117,10 @@ namespace Chummer
             if (xmlProgram == null)
             {
                 // Display the Select Spell window.
-                using (ThreadSafeForm<SelectAIProgram> frmPickProgram = ThreadSafeForm<SelectAIProgram>.Get(() => new SelectAIProgram(_objCharacter, false, true)))
+                using (ThreadSafeForm<SelectAIProgram> frmPickProgram = await ThreadSafeForm<SelectAIProgram>.GetCoreAsync(blnSync, () => new SelectAIProgram(_objCharacter, false, true), token).ConfigureAwait(false))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickProgram.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (await frmPickProgram.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -2108,18 +2132,19 @@ namespace Chummer
 
             // Check for SelectText.
             string strExtra = string.Empty;
-            XPathNavigator xmlSelectText = xmlProgram.SelectSingleNodeAndCacheExpressionAsNavigator("bonus/selecttext");
+            XPathNavigator xmlSelectText = xmlProgram.SelectSingleNodeAndCacheExpressionAsNavigator("bonus/selecttext", token);
             if (xmlSelectText != null)
             {
-                using (ThreadSafeForm<SelectText> frmPickText = ThreadSafeForm<SelectText>.Get(() => new SelectText
+                string strDescription = string.Format(GlobalSettings.CultureInfo,
+                    await LanguageManager.GetStringCoreAsync(blnSync, "String_Improvement_SelectText", string.Empty, true, token).ConfigureAwait(false),
+                    xmlProgram["translate"]?.InnerTextViaPool(token) ?? xmlProgram["name"]?.InnerTextViaPool(token));
+                using (ThreadSafeForm<SelectText> frmPickText = await ThreadSafeForm<SelectText>.GetCoreAsync(blnSync, () => new SelectText
                        {
-                           Description = string.Format(GlobalSettings.CultureInfo,
-                               LanguageManager.GetString("String_Improvement_SelectText"),
-                               xmlProgram["translate"]?.InnerTextViaPool() ?? xmlProgram["name"]?.InnerTextViaPool())
-                       }))
+                           Description = strDescription
+                       }, token).ConfigureAwait(false))
                 {
                     // Make sure the dialogue window was not canceled.
-                    if (frmPickText.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                    if (await frmPickText.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                     {
                         throw new AbortedException();
                     }
@@ -2129,17 +2154,28 @@ namespace Chummer
             }
 
             AIProgram objProgram = new AIProgram(_objCharacter);
-            objProgram.Create(xmlProgram, strExtra, false);
+            if (blnSync)
+                // ReSharper disable once MethodHasAsyncOverload
+                objProgram.Create(xmlProgram, strExtra, false);
+            else
+                await objProgram.CreateAsync(xmlProgram, strExtra, false, token).ConfigureAwait(false);
             if (objProgram.InternalId.IsEmptyGuid())
                 throw new AbortedException();
 
-            SelectedValue = objProgram.CurrentDisplayNameShort;
+            SelectedValue = blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? objProgram.CurrentDisplayNameShort
+                : await objProgram.GetCurrentDisplayNameShortAsync(token).ConfigureAwait(false);
 
-            _objCharacter.AIPrograms.Add(objProgram);
+            if (blnSync)
+                // ReSharper disable once MethodHasAsyncOverload
+                _objCharacter.AIPrograms.Add(objProgram);
+            else
+                await _objCharacter.AIPrograms.AddAsync(objProgram, token).ConfigureAwait(false);
 
-            CreateImprovement(objProgram.InternalId, _objImprovementSource, SourceName,
+            await CreateImprovementCoreAsync(blnSync, objProgram.InternalId, _objImprovementSource, SourceName,
                 Improvement.ImprovementType.AIProgram,
-                _strUnique);
+                _strUnique, token: token).ConfigureAwait(false);
         }
 
         // Select a Contact
@@ -4243,9 +4279,15 @@ namespace Chummer
 
         public void selectart(XmlNode bonusNode)
         {
+            Utils.SafelyRunSynchronously(() => selectartCoreAsync(true, bonusNode));
+        }
+
+        private async Task selectartCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
             if (bonusNode == null)
                 throw new ArgumentNullException(nameof(bonusNode));
-            XmlDocument objXmlDocument = _objCharacter.LoadData("metamagic.xml");
+            XmlDocument objXmlDocument = await _objCharacter.LoadDataCoreAsync(blnSync, "metamagic.xml", token: token).ConfigureAwait(false);
             XmlNode objXmlSelectedArt;
             using (XmlNodeList xmlArtList = bonusNode.SelectNodes("art"))
             {
@@ -4256,47 +4298,58 @@ namespace Chummer
                     {
                         foreach (XmlNode objXmlAddArt in xmlArtList)
                         {
-                            string strLoopName = objXmlAddArt.InnerTextViaPool();
+                            string strLoopName = objXmlAddArt.InnerTextViaPool(token);
                             XmlNode objXmlArt = objXmlDocument.TryGetNodeByNameOrId("/chummer/arts/art", strLoopName);
                             // Makes sure we aren't over our limits for this particular metamagic from this overall source
-                            if (objXmlArt != null && objXmlAddArt.CreateNavigator().RequirementsMet(_objCharacter))
+                            if (objXmlArt != null && (blnSync
+                                    // ReSharper disable once MethodHasAsyncOverload
+                                    ? objXmlAddArt.CreateNavigator().RequirementsMet(_objCharacter)
+                                    : await objXmlAddArt.CreateNavigator().RequirementsMetAsync(_objCharacter, token: token).ConfigureAwait(false)))
                             {
-                                lstArts.Add(new ListItem(objXmlArt["id"]?.InnerTextViaPool(),
-                                    objXmlArt["translate"]?.InnerTextViaPool() ?? strLoopName));
+                                lstArts.Add(new ListItem(objXmlArt["id"]?.InnerTextViaPool(token),
+                                    objXmlArt["translate"]?.InnerTextViaPool(token) ?? strLoopName));
                             }
                         }
 
                         if (lstArts.Count == 0)
                         {
-                            UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
-                                LanguageManager.GetString(
-                                    "Message_Improvement_EmptySelectionListNamed"),
-                                SourceName));
+                            string strMessage = string.Format(GlobalSettings.CultureInfo,
+                                await LanguageManager.GetStringCoreAsync(blnSync,
+                                    "Message_Improvement_EmptySelectionListNamed", string.Empty, true, token).ConfigureAwait(false),
+                                SourceName);
+                            if (blnSync)
+                                // ReSharper disable once MethodHasAsyncOverload
+                                UserInteraction.ShowScrollableMessage(strMessage);
+                            else
+                                await UserInteraction.ShowScrollableMessageAsync(strMessage, token: token).ConfigureAwait(false);
                             throw new AbortedException();
                         }
 
-                        using (ThreadSafeForm<SelectItem> frmPickItem = ThreadSafeForm<SelectItem>.Get(() => new SelectItem()))
+                        using (ThreadSafeForm<SelectItem> frmPickItem = await ThreadSafeForm<SelectItem>.GetCoreAsync(blnSync, () => new SelectItem(), token).ConfigureAwait(false))
                         {
                             frmPickItem.MyForm.SetGeneralItemsMode(lstArts);
                             // Don't do anything else if the form was canceled.
-                            if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                            if (await frmPickItem.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                                 throw new AbortedException();
 
-                            objXmlSelectedArt = objXmlDocument.TryGetNodeByNameOrId("/chummer/powers/power", frmPickItem.MyForm.SelectedItem)
+                            objXmlSelectedArt = objXmlDocument.TryGetNodeByNameOrId("/chummer/powers/power", blnSync
+                                                    // ReSharper disable once MethodHasAsyncOverload
+                                                    ? frmPickItem.MyForm.SelectedItem
+                                                    : await frmPickItem.MyForm.DoThreadSafeFuncAsync(x => x.SelectedItem, token).ConfigureAwait(false))
                                                 ?? throw new AbortedException();
                         }
                     }
 
-                    string strSelectedName = objXmlSelectedArt["name"]?.InnerTextViaPool();
+                    string strSelectedName = objXmlSelectedArt["name"]?.InnerTextViaPool(token);
                     if (string.IsNullOrEmpty(strSelectedName))
                         throw new AbortedException();
                 }
                 else
                 {
-                    using (ThreadSafeForm<SelectArt> frmPickArt = ThreadSafeForm<SelectArt>.Get(() => new SelectArt(_objCharacter, SelectArt.Mode.Art)))
+                    using (ThreadSafeForm<SelectArt> frmPickArt = await ThreadSafeForm<SelectArt>.GetCoreAsync(blnSync, () => new SelectArt(_objCharacter, SelectArt.Mode.Art), token).ConfigureAwait(false))
                     {
                         // Don't do anything else if the form was canceled.
-                        if (frmPickArt.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (await frmPickArt.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                             throw new AbortedException();
 
                         objXmlSelectedArt = objXmlDocument.TryGetNodeByNameOrId("/chummer/powers/power", frmPickArt.MyForm.SelectedItem)
@@ -4306,15 +4359,26 @@ namespace Chummer
             }
 
             Art objAddArt = new Art(_objCharacter);
-            objAddArt.Create(objXmlSelectedArt, Improvement.ImprovementSource.Metamagic);
+            if (blnSync)
+                // ReSharper disable once MethodHasAsyncOverload
+                objAddArt.Create(objXmlSelectedArt, Improvement.ImprovementSource.Metamagic);
+            else
+                await objAddArt.CreateAsync(objXmlSelectedArt, Improvement.ImprovementSource.Metamagic, token).ConfigureAwait(false);
             objAddArt.Grade = -1;
             if (objAddArt.InternalId.IsEmptyGuid())
                 throw new AbortedException();
 
-            SelectedValue = objAddArt.CurrentDisplayName;
+            SelectedValue = blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? objAddArt.CurrentDisplayName
+                : await objAddArt.GetCurrentDisplayNameAsync(token).ConfigureAwait(false);
 
-            _objCharacter.Arts.Add(objAddArt);
-            CreateImprovement(objAddArt.InternalId, _objImprovementSource, SourceName, Improvement.ImprovementType.Art, _strUnique);
+            if (blnSync)
+                // ReSharper disable once MethodHasAsyncOverload
+                _objCharacter.Arts.Add(objAddArt);
+            else
+                await (await _objCharacter.GetArtsAsync(token).ConfigureAwait(false)).AddAsync(objAddArt, token).ConfigureAwait(false);
+            await CreateImprovementCoreAsync(blnSync, objAddArt.InternalId, _objImprovementSource, SourceName, Improvement.ImprovementType.Art, _strUnique, token: token).ConfigureAwait(false);
         }
 
         public void addmetamagic(XmlNode bonusNode)
@@ -4344,9 +4408,15 @@ namespace Chummer
 
         public void selectmetamagic(XmlNode bonusNode)
         {
+            Utils.SafelyRunSynchronously(() => selectmetamagicCoreAsync(true, bonusNode));
+        }
+
+        private async Task selectmetamagicCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
             if (bonusNode == null)
                 throw new ArgumentNullException(nameof(bonusNode));
-            XmlDocument objXmlDocument = _objCharacter.LoadData("metamagic.xml");
+            XmlDocument objXmlDocument = await _objCharacter.LoadDataCoreAsync(blnSync, "metamagic.xml", token: token).ConfigureAwait(false);
             string strForceValue = string.Empty;
             XmlNode objXmlSelectedMetamagic;
             using (XmlNodeList xmlMetamagicList = bonusNode.SelectNodes("metamagic"))
@@ -4358,47 +4428,58 @@ namespace Chummer
                     {
                         foreach (XmlNode objXmlAddMetamagic in xmlMetamagicList)
                         {
-                            string strLoopName = objXmlAddMetamagic.InnerTextViaPool();
+                            string strLoopName = objXmlAddMetamagic.InnerTextViaPool(token);
                             XmlNode objXmlMetamagic
                                 = objXmlDocument.TryGetNodeByNameOrId("/chummer/metamagics/metamagic", strLoopName);
                             // Makes sure we aren't over our limits for this particular metamagic from this overall source
-                            if (objXmlMetamagic != null && objXmlAddMetamagic.CreateNavigator().RequirementsMet(_objCharacter))
+                            if (objXmlMetamagic != null && (blnSync
+                                    // ReSharper disable once MethodHasAsyncOverload
+                                    ? objXmlAddMetamagic.CreateNavigator().RequirementsMet(_objCharacter)
+                                    : await objXmlAddMetamagic.CreateNavigator().RequirementsMetAsync(_objCharacter, token: token).ConfigureAwait(false)))
                             {
-                                lstMetamagics.Add(new ListItem(objXmlMetamagic["id"]?.InnerTextViaPool(),
-                                    objXmlMetamagic["translate"]?.InnerTextViaPool()
+                                lstMetamagics.Add(new ListItem(objXmlMetamagic["id"]?.InnerTextViaPool(token),
+                                    objXmlMetamagic["translate"]?.InnerTextViaPool(token)
                                     ?? strLoopName));
                             }
                         }
 
                         if (lstMetamagics.Count == 0)
                         {
-                            UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
-                                LanguageManager.GetString(
-                                    "Message_Improvement_EmptySelectionListNamed"),
-                                SourceName));
+                            string strMessage = string.Format(GlobalSettings.CultureInfo,
+                                await LanguageManager.GetStringCoreAsync(blnSync,
+                                    "Message_Improvement_EmptySelectionListNamed", string.Empty, true, token).ConfigureAwait(false),
+                                SourceName);
+                            if (blnSync)
+                                // ReSharper disable once MethodHasAsyncOverload
+                                UserInteraction.ShowScrollableMessage(strMessage);
+                            else
+                                await UserInteraction.ShowScrollableMessageAsync(strMessage, token: token).ConfigureAwait(false);
                             throw new AbortedException();
                         }
 
-                        using (ThreadSafeForm<SelectItem> frmPickItem = ThreadSafeForm<SelectItem>.Get(() => new SelectItem()))
+                        using (ThreadSafeForm<SelectItem> frmPickItem = await ThreadSafeForm<SelectItem>.GetCoreAsync(blnSync, () => new SelectItem(), token).ConfigureAwait(false))
                         {
                             frmPickItem.MyForm.SetGeneralItemsMode(lstMetamagics);
                             // Don't do anything else if the form was canceled.
-                            if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                            if (await frmPickItem.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                                 throw new AbortedException();
 
-                            objXmlSelectedMetamagic = objXmlDocument.TryGetNodeByNameOrId("/chummer/metamagics/metamagic", frmPickItem.MyForm.SelectedItem)
+                            objXmlSelectedMetamagic = objXmlDocument.TryGetNodeByNameOrId("/chummer/metamagics/metamagic", blnSync
+                                                          // ReSharper disable once MethodHasAsyncOverload
+                                                          ? frmPickItem.MyForm.SelectedItem
+                                                          : await frmPickItem.MyForm.DoThreadSafeFuncAsync(x => x.SelectedItem, token).ConfigureAwait(false))
                                                       ?? throw new AbortedException();
                         }
                     }
 
-                    string strSelectedName = objXmlSelectedMetamagic["name"]?.InnerTextViaPool();
+                    string strSelectedName = objXmlSelectedMetamagic["name"]?.InnerTextViaPool(token);
                     if (string.IsNullOrEmpty(strSelectedName))
                         throw new AbortedException();
                     foreach (XmlNode objXmlAddMetamagic in xmlMetamagicList)
                     {
-                        if (strSelectedName == objXmlAddMetamagic.InnerTextViaPool())
+                        if (strSelectedName == objXmlAddMetamagic.InnerTextViaPool(token))
                         {
-                            strForceValue = objXmlAddMetamagic.Attributes?["select"]?.InnerTextViaPool() ?? string.Empty;
+                            strForceValue = objXmlAddMetamagic.Attributes?["select"]?.InnerTextViaPool(token) ?? string.Empty;
                             break;
                         }
                     }
@@ -4406,10 +4487,10 @@ namespace Chummer
                 else
                 {
                     InitiationGrade objGrade = new InitiationGrade(_objCharacter) { Grade = -1 };
-                    using (ThreadSafeForm<SelectMetamagic> frmPickMetamagic = ThreadSafeForm<SelectMetamagic>.Get(() => new SelectMetamagic(_objCharacter, objGrade)))
+                    using (ThreadSafeForm<SelectMetamagic> frmPickMetamagic = await ThreadSafeForm<SelectMetamagic>.GetCoreAsync(blnSync, () => new SelectMetamagic(_objCharacter, objGrade), token).ConfigureAwait(false))
                     {
                         // Don't do anything else if the form was canceled.
-                        if (frmPickMetamagic.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (await frmPickMetamagic.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                             throw new AbortedException();
 
                         objXmlSelectedMetamagic = objXmlDocument.TryGetNodeByNameOrId("/chummer/metamagics/metamagic", frmPickMetamagic.MyForm.SelectedMetamagic)
@@ -4419,15 +4500,26 @@ namespace Chummer
             }
 
             Metamagic objAddMetamagic = new Metamagic(_objCharacter);
-            objAddMetamagic.Create(objXmlSelectedMetamagic, Improvement.ImprovementSource.Metamagic, strForceValue);
+            if (blnSync)
+                // ReSharper disable once MethodHasAsyncOverload
+                objAddMetamagic.Create(objXmlSelectedMetamagic, Improvement.ImprovementSource.Metamagic, strForceValue);
+            else
+                await objAddMetamagic.CreateAsync(objXmlSelectedMetamagic, Improvement.ImprovementSource.Metamagic, strForceValue, token).ConfigureAwait(false);
             objAddMetamagic.Grade = -1;
             if (objAddMetamagic.InternalId.IsEmptyGuid())
                 throw new AbortedException();
 
-            SelectedValue = objAddMetamagic.CurrentDisplayName;
+            SelectedValue = blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? objAddMetamagic.CurrentDisplayName
+                : await objAddMetamagic.GetCurrentDisplayNameAsync(token).ConfigureAwait(false);
 
-            _objCharacter.Metamagics.Add(objAddMetamagic);
-            CreateImprovement(objAddMetamagic.InternalId, _objImprovementSource, SourceName, Improvement.ImprovementType.Metamagic, _strUnique);
+            if (blnSync)
+                // ReSharper disable once MethodHasAsyncOverload
+                _objCharacter.Metamagics.Add(objAddMetamagic);
+            else
+                await (await _objCharacter.GetMetamagicsAsync(token).ConfigureAwait(false)).AddAsync(objAddMetamagic, token).ConfigureAwait(false);
+            await CreateImprovementCoreAsync(blnSync, objAddMetamagic.InternalId, _objImprovementSource, SourceName, Improvement.ImprovementType.Metamagic, _strUnique, token: token).ConfigureAwait(false);
         }
 
         public void addecho(XmlNode bonusNode)
@@ -4459,9 +4551,15 @@ namespace Chummer
 
         public void selectecho(XmlNode bonusNode)
         {
+            Utils.SafelyRunSynchronously(() => selectechoCoreAsync(true, bonusNode));
+        }
+
+        private async Task selectechoCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
             if (bonusNode == null)
                 throw new ArgumentNullException(nameof(bonusNode));
-            XmlDocument objXmlDocument = _objCharacter.LoadData("echoes.xml");
+            XmlDocument objXmlDocument = await _objCharacter.LoadDataCoreAsync(blnSync, "echoes.xml", token: token).ConfigureAwait(false);
             string strForceValue = string.Empty;
             XmlNode xmlSelectedEcho;
             using (XmlNodeList xmlEchoList = bonusNode.SelectNodes("echo"))
@@ -4473,46 +4571,57 @@ namespace Chummer
                     {
                         foreach (XmlNode objXmlAddEcho in xmlEchoList)
                         {
-                            string strLoopName = objXmlAddEcho.InnerTextViaPool();
+                            string strLoopName = objXmlAddEcho.InnerTextViaPool(token);
                             XmlNode objXmlEcho = objXmlDocument.TryGetNodeByNameOrId(
                                 "/chummer/metamagics/metamagic", strLoopName);
                             // Makes sure we aren't over our limits for this particular metamagic from this overall source
-                            if (objXmlEcho != null && objXmlAddEcho.CreateNavigator().RequirementsMet(_objCharacter))
+                            if (objXmlEcho != null && (blnSync
+                                    // ReSharper disable once MethodHasAsyncOverload
+                                    ? objXmlAddEcho.CreateNavigator().RequirementsMet(_objCharacter)
+                                    : await objXmlAddEcho.CreateNavigator().RequirementsMetAsync(_objCharacter, token: token).ConfigureAwait(false)))
                             {
-                                lstEchoes.Add(new ListItem(objXmlEcho["id"]?.InnerTextViaPool(),
-                                    objXmlEcho["translate"]?.InnerTextViaPool() ?? strLoopName));
+                                lstEchoes.Add(new ListItem(objXmlEcho["id"]?.InnerTextViaPool(token),
+                                    objXmlEcho["translate"]?.InnerTextViaPool(token) ?? strLoopName));
                             }
                         }
 
                         if (lstEchoes.Count == 0)
                         {
-                            UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
-                                LanguageManager.GetString(
-                                    "Message_Improvement_EmptySelectionListNamed"),
-                                SourceName));
+                            string strMessage = string.Format(GlobalSettings.CultureInfo,
+                                await LanguageManager.GetStringCoreAsync(blnSync,
+                                    "Message_Improvement_EmptySelectionListNamed", string.Empty, true, token).ConfigureAwait(false),
+                                SourceName);
+                            if (blnSync)
+                                // ReSharper disable once MethodHasAsyncOverload
+                                UserInteraction.ShowScrollableMessage(strMessage);
+                            else
+                                await UserInteraction.ShowScrollableMessageAsync(strMessage, token: token).ConfigureAwait(false);
                             throw new AbortedException();
                         }
 
-                        using (ThreadSafeForm<SelectItem> frmPickItem = ThreadSafeForm<SelectItem>.Get(() => new SelectItem()))
+                        using (ThreadSafeForm<SelectItem> frmPickItem = await ThreadSafeForm<SelectItem>.GetCoreAsync(blnSync, () => new SelectItem(), token).ConfigureAwait(false))
                         {
                             frmPickItem.MyForm.SetGeneralItemsMode(lstEchoes);
                             // Don't do anything else if the form was canceled.
-                            if (frmPickItem.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                            if (await frmPickItem.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                                 throw new AbortedException();
 
-                            xmlSelectedEcho = objXmlDocument.TryGetNodeByNameOrId("/chummer/echoes/echo", frmPickItem.MyForm.SelectedItem)
+                            xmlSelectedEcho = objXmlDocument.TryGetNodeByNameOrId("/chummer/echoes/echo", blnSync
+                                                  // ReSharper disable once MethodHasAsyncOverload
+                                                  ? frmPickItem.MyForm.SelectedItem
+                                                  : await frmPickItem.MyForm.DoThreadSafeFuncAsync(x => x.SelectedItem, token).ConfigureAwait(false))
                                               ?? throw new AbortedException();
                         }
                     }
 
-                    string strSelectedName = xmlSelectedEcho["name"]?.InnerTextViaPool();
+                    string strSelectedName = xmlSelectedEcho["name"]?.InnerTextViaPool(token);
                     if (string.IsNullOrEmpty(strSelectedName))
                         throw new AbortedException();
                     foreach (XmlNode objXmlAddEcho in xmlEchoList)
                     {
-                        if (strSelectedName == objXmlAddEcho.InnerTextViaPool())
+                        if (strSelectedName == objXmlAddEcho.InnerTextViaPool(token))
                         {
-                            strForceValue = objXmlAddEcho.Attributes?["select"]?.InnerTextViaPool() ?? string.Empty;
+                            strForceValue = objXmlAddEcho.Attributes?["select"]?.InnerTextViaPool(token) ?? string.Empty;
                             break;
                         }
                     }
@@ -4520,10 +4629,10 @@ namespace Chummer
                 else
                 {
                     InitiationGrade objGrade = new InitiationGrade(_objCharacter) { Grade = -1, Technomancer = true };
-                    using (ThreadSafeForm<SelectMetamagic> frmPickMetamagic = ThreadSafeForm<SelectMetamagic>.Get(() => new SelectMetamagic(_objCharacter, objGrade)))
+                    using (ThreadSafeForm<SelectMetamagic> frmPickMetamagic = await ThreadSafeForm<SelectMetamagic>.GetCoreAsync(blnSync, () => new SelectMetamagic(_objCharacter, objGrade), token).ConfigureAwait(false))
                     {
                         // Don't do anything else if the form was canceled.
-                        if (frmPickMetamagic.ShowDialogSafe(_objCharacter) == DialogResult.Cancel)
+                        if (await frmPickMetamagic.ShowDialogSafeCoreAsync(blnSync, _objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
                             throw new AbortedException();
 
                         xmlSelectedEcho = objXmlDocument.TryGetNodeByNameOrId("/chummer/echoes/echo", frmPickMetamagic.MyForm.SelectedMetamagic)
@@ -4533,15 +4642,26 @@ namespace Chummer
             }
 
             Metamagic objAddEcho = new Metamagic(_objCharacter);
-            objAddEcho.Create(xmlSelectedEcho, Improvement.ImprovementSource.Echo, strForceValue);
+            if (blnSync)
+                // ReSharper disable once MethodHasAsyncOverload
+                objAddEcho.Create(xmlSelectedEcho, Improvement.ImprovementSource.Echo, strForceValue);
+            else
+                await objAddEcho.CreateAsync(xmlSelectedEcho, Improvement.ImprovementSource.Echo, strForceValue, token).ConfigureAwait(false);
             objAddEcho.Grade = -1;
             if (objAddEcho.InternalId.IsEmptyGuid())
                 throw new AbortedException();
 
-            SelectedValue = objAddEcho.CurrentDisplayName;
+            SelectedValue = blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? objAddEcho.CurrentDisplayName
+                : await objAddEcho.GetCurrentDisplayNameAsync(token).ConfigureAwait(false);
 
-            _objCharacter.Metamagics.Add(objAddEcho);
-            CreateImprovement(objAddEcho.InternalId, _objImprovementSource, SourceName, Improvement.ImprovementType.Echo, _strUnique);
+            if (blnSync)
+                // ReSharper disable once MethodHasAsyncOverload
+                _objCharacter.Metamagics.Add(objAddEcho);
+            else
+                await _objCharacter.Metamagics.AddAsync(objAddEcho, token).ConfigureAwait(false);
+            await CreateImprovementCoreAsync(blnSync, objAddEcho.InternalId, _objImprovementSource, SourceName, Improvement.ImprovementType.Echo, _strUnique, token: token).ConfigureAwait(false);
         }
 
         // Check for Skillwires.
@@ -9133,139 +9253,15 @@ public async Task qualitylevelAsync(XmlNode bonusNode, CancellationToken token =
         }
 
         // Select an AI program.
-        public async Task selectaiprogramAsync(XmlNode bonusNode, CancellationToken token = default)
+        public Task selectaiprogramAsync(XmlNode bonusNode, CancellationToken token = default)
         {
-            token.ThrowIfCancellationRequested();
-            if (bonusNode == null)
-                throw new ArgumentNullException(nameof(bonusNode));
-
-            XmlNode xmlProgram = null;
-            XmlDocument xmlDocument = await _objCharacter.LoadDataAsync("programs.xml", token: token).ConfigureAwait(false);
-            if (!string.IsNullOrEmpty(ForcedValue))
-            {
-                xmlProgram = xmlDocument.TryGetNodeByNameOrId("/chummer/programs/program", ForcedValue)
-                             ?? throw new AbortedException();
-            }
-
-            if (xmlProgram == null)
-            {
-                // Display the Select Program window.
-                using (ThreadSafeForm<SelectAIProgram> frmPickProgram = await ThreadSafeForm<SelectAIProgram>.GetAsync(() => new SelectAIProgram(_objCharacter), token).ConfigureAwait(false))
-                {
-                    // Make sure the dialogue window was not canceled.
-                    if (await frmPickProgram.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                    {
-                        throw new AbortedException();
-                    }
-
-                    xmlProgram = xmlDocument.TryGetNodeByNameOrId("/chummer/programs/program", frmPickProgram.MyForm.SelectedProgram)
-                                 ?? throw new AbortedException();
-                }
-            }
-
-            // Check for SelectText.
-            string strExtra = string.Empty;
-            XPathNavigator xmlSelectText = xmlProgram.SelectSingleNodeAndCacheExpressionAsNavigator("bonus/selecttext", token);
-            if (xmlSelectText != null)
-            {
-                string strDescription = string.Format(GlobalSettings.CultureInfo,
-                    await LanguageManager.GetStringAsync("String_Improvement_SelectText", token: token).ConfigureAwait(false),
-                    xmlProgram["translate"]?.InnerTextViaPool(token) ?? xmlProgram["name"]?.InnerTextViaPool(token));
-                using (ThreadSafeForm<SelectText> frmPickText = await ThreadSafeForm<SelectText>.GetAsync(() => new SelectText
-                       {
-                           Description = strDescription
-                       }, token).ConfigureAwait(false))
-                {
-                    // Make sure the dialogue window was not canceled.
-                    if (await frmPickText.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                    {
-                        throw new AbortedException();
-                    }
-
-                    strExtra = frmPickText.MyForm.SelectedValue;
-                }
-            }
-
-            AIProgram objProgram = new AIProgram(_objCharacter);
-            await objProgram.CreateAsync(xmlProgram, strExtra, false, token).ConfigureAwait(false);
-            if (objProgram.InternalId.IsEmptyGuid())
-                throw new AbortedException();
-
-            await _objCharacter.AIPrograms.AddAsync(objProgram, token).ConfigureAwait(false);
-
-            SelectedValue = await objProgram.GetCurrentDisplayNameShortAsync(token).ConfigureAwait(false);
-
-            await CreateImprovementAsync(objProgram.InternalId, _objImprovementSource, SourceName,
-                Improvement.ImprovementType.AIProgram,
-                _strUnique, token: token).ConfigureAwait(false);
+            return selectaiprogramCoreAsync(false, bonusNode, token);
         }
 
         // Select an AI program.
-        public async Task selectinherentaiprogramAsync(XmlNode bonusNode, CancellationToken token = default)
+        public Task selectinherentaiprogramAsync(XmlNode bonusNode, CancellationToken token = default)
         {
-            token.ThrowIfCancellationRequested();
-            if (bonusNode == null)
-                throw new ArgumentNullException(nameof(bonusNode));
-
-            XmlNode xmlProgram = null;
-            XmlDocument xmlDocument = await _objCharacter.LoadDataAsync("programs.xml", token: token).ConfigureAwait(false);
-            if (!string.IsNullOrEmpty(ForcedValue))
-            {
-                xmlProgram = xmlDocument.TryGetNodeByNameOrId("/chummer/programs/program", ForcedValue)
-                    ?? throw new AbortedException();
-            }
-
-            if (xmlProgram == null)
-            {
-                // Display the Select Spell window.
-                using (ThreadSafeForm<SelectAIProgram> frmPickProgram = await ThreadSafeForm<SelectAIProgram>.GetAsync(() => new SelectAIProgram(_objCharacter, false, true), token).ConfigureAwait(false))
-                {
-                    // Make sure the dialogue window was not canceled.
-                    if (await frmPickProgram.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                    {
-                        throw new AbortedException();
-                    }
-
-                    xmlProgram = xmlDocument.TryGetNodeByNameOrId("/chummer/programs/program", frmPickProgram.MyForm.SelectedProgram)
-                                 ?? throw new AbortedException();
-                }
-            }
-
-            // Check for SelectText.
-            string strExtra = string.Empty;
-            XPathNavigator xmlSelectText = xmlProgram.SelectSingleNodeAndCacheExpressionAsNavigator("bonus/selecttext", token);
-            if (xmlSelectText != null)
-            {
-                string strDescription = string.Format(GlobalSettings.CultureInfo,
-                    await LanguageManager.GetStringAsync("String_Improvement_SelectText", token: token).ConfigureAwait(false),
-                    xmlProgram["translate"]?.InnerTextViaPool(token) ?? xmlProgram["name"]?.InnerTextViaPool(token));
-                using (ThreadSafeForm<SelectText> frmPickText = await ThreadSafeForm<SelectText>.GetAsync(() => new SelectText
-                       {
-                           Description = strDescription
-                       }, token).ConfigureAwait(false))
-                {
-                    // Make sure the dialogue window was not canceled.
-                    if (await frmPickText.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                    {
-                        throw new AbortedException();
-                    }
-
-                    strExtra = frmPickText.MyForm.SelectedValue;
-                }
-            }
-
-            AIProgram objProgram = new AIProgram(_objCharacter);
-            await objProgram.CreateAsync(xmlProgram, strExtra, false, token).ConfigureAwait(false);
-            if (objProgram.InternalId.IsEmptyGuid())
-                throw new AbortedException();
-
-            SelectedValue = await objProgram.GetCurrentDisplayNameShortAsync(token).ConfigureAwait(false);
-
-            await _objCharacter.AIPrograms.AddAsync(objProgram, token).ConfigureAwait(false);
-
-            await CreateImprovementAsync(objProgram.InternalId, _objImprovementSource, SourceName,
-                Improvement.ImprovementType.AIProgram,
-                _strUnique, token: token).ConfigureAwait(false);
+            return selectinherentaiprogramCoreAsync(false, bonusNode, token);
         }
 
         // Select a Contact
@@ -11464,81 +11460,9 @@ public async Task qualitylevelAsync(XmlNode bonusNode, CancellationToken token =
             }
         }
 
-        public async Task selectartAsync(XmlNode bonusNode, CancellationToken token = default)
+        public Task selectartAsync(XmlNode bonusNode, CancellationToken token = default)
         {
-            token.ThrowIfCancellationRequested();
-            if (bonusNode == null)
-                throw new ArgumentNullException(nameof(bonusNode));
-            XmlDocument objXmlDocument = await _objCharacter.LoadDataAsync("metamagic.xml", token: token).ConfigureAwait(false);
-            XmlNode objXmlSelectedArt;
-            using (XmlNodeList xmlArtList = bonusNode.SelectNodes("art"))
-            {
-                if (xmlArtList?.Count > 0)
-                {
-                    using (new FetchSafelyFromSafeObjectPool<List<ListItem>>(Utils.ListItemListPool,
-                                                                   out List<ListItem> lstArts))
-                    {
-                        foreach (XmlNode objXmlAddArt in xmlArtList)
-                        {
-                            string strLoopName = objXmlAddArt.InnerTextViaPool(token);
-                            XmlNode objXmlArt = objXmlDocument.TryGetNodeByNameOrId("/chummer/arts/art", strLoopName);
-                            // Makes sure we aren't over our limits for this particular metamagic from this overall source
-                            if (objXmlArt != null && await objXmlAddArt.CreateNavigator().RequirementsMetAsync(_objCharacter, token: token).ConfigureAwait(false))
-                            {
-                                lstArts.Add(new ListItem(objXmlArt["id"]?.InnerTextViaPool(token),
-                                    objXmlArt["translate"]?.InnerTextViaPool(token) ?? strLoopName));
-                            }
-                        }
-
-                        if (lstArts.Count == 0)
-                        {
-                            await UserInteraction.ShowScrollableMessageAsync(string.Format(GlobalSettings.CultureInfo,
-                                await LanguageManager.GetStringAsync(
-                                    "Message_Improvement_EmptySelectionListNamed", token: token).ConfigureAwait(false),
-                                SourceName), token: token).ConfigureAwait(false);
-                            throw new AbortedException();
-                        }
-
-                        using (ThreadSafeForm<SelectItem> frmPickItem = await ThreadSafeForm<SelectItem>.GetAsync(() => new SelectItem(), token).ConfigureAwait(false))
-                        {
-                            frmPickItem.MyForm.SetGeneralItemsMode(lstArts);
-                            // Don't do anything else if the form was canceled.
-                            if (await frmPickItem.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                                throw new AbortedException();
-
-                            objXmlSelectedArt = objXmlDocument.TryGetNodeByNameOrId("/chummer/powers/power", await frmPickItem.MyForm.DoThreadSafeFuncAsync(x => x.SelectedItem, token).ConfigureAwait(false))
-                                                ?? throw new AbortedException();
-                        }
-                    }
-
-                    string strSelectedName = objXmlSelectedArt["name"]?.InnerTextViaPool(token);
-                    if (string.IsNullOrEmpty(strSelectedName))
-                        throw new AbortedException();
-                }
-                else
-                {
-                    using (ThreadSafeForm<SelectArt> frmPickArt = await ThreadSafeForm<SelectArt>.GetAsync(() => new SelectArt(_objCharacter, SelectArt.Mode.Art), token).ConfigureAwait(false))
-                    {
-                        // Don't do anything else if the form was canceled.
-                        if (await frmPickArt.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                            throw new AbortedException();
-
-                        objXmlSelectedArt = objXmlDocument.TryGetNodeByNameOrId("/chummer/powers/power", frmPickArt.MyForm.SelectedItem)
-                                            ?? throw new AbortedException();
-                    }
-                }
-            }
-
-            Art objAddArt = new Art(_objCharacter);
-            await objAddArt.CreateAsync(objXmlSelectedArt, Improvement.ImprovementSource.Metamagic, token).ConfigureAwait(false);
-            objAddArt.Grade = -1;
-            if (objAddArt.InternalId.IsEmptyGuid())
-                throw new AbortedException();
-
-            SelectedValue = await objAddArt.GetCurrentDisplayNameAsync(token).ConfigureAwait(false);
-
-            await (await _objCharacter.GetArtsAsync(token).ConfigureAwait(false)).AddAsync(objAddArt, token).ConfigureAwait(false);
-            await CreateImprovementAsync(objAddArt.InternalId, _objImprovementSource, SourceName, Improvement.ImprovementType.Art, _strUnique, token: token).ConfigureAwait(false);
+            return selectartCoreAsync(false, bonusNode, token);
         }
 
         public async Task addmetamagicAsync(XmlNode bonusNode, CancellationToken token = default)
@@ -11568,93 +11492,9 @@ public async Task qualitylevelAsync(XmlNode bonusNode, CancellationToken token =
             }
         }
 
-        public async Task selectmetamagicAsync(XmlNode bonusNode, CancellationToken token = default)
+        public Task selectmetamagicAsync(XmlNode bonusNode, CancellationToken token = default)
         {
-            token.ThrowIfCancellationRequested();
-            if (bonusNode == null)
-                throw new ArgumentNullException(nameof(bonusNode));
-            XmlDocument objXmlDocument = await _objCharacter.LoadDataAsync("metamagic.xml", token: token).ConfigureAwait(false);
-            string strForceValue = string.Empty;
-            XmlNode objXmlSelectedMetamagic;
-            using (XmlNodeList xmlMetamagicList = bonusNode.SelectNodes("metamagic"))
-            {
-                if (xmlMetamagicList?.Count > 0)
-                {
-                    using (new FetchSafelyFromSafeObjectPool<List<ListItem>>(Utils.ListItemListPool,
-                                                                   out List<ListItem> lstMetamagics))
-                    {
-                        foreach (XmlNode objXmlAddMetamagic in xmlMetamagicList)
-                        {
-                            string strLoopName = objXmlAddMetamagic.InnerTextViaPool(token);
-                            XmlNode objXmlMetamagic
-                                = objXmlDocument.TryGetNodeByNameOrId("/chummer/metamagics/metamagic", strLoopName);
-                            // Makes sure we aren't over our limits for this particular metamagic from this overall source
-                            if (objXmlMetamagic != null && await objXmlAddMetamagic.CreateNavigator().RequirementsMetAsync(_objCharacter, token: token).ConfigureAwait(false))
-                            {
-                                lstMetamagics.Add(new ListItem(objXmlMetamagic["id"]?.InnerTextViaPool(token),
-                                    objXmlMetamagic["translate"]?.InnerTextViaPool(token)
-                                    ?? strLoopName));
-                            }
-                        }
-
-                        if (lstMetamagics.Count == 0)
-                        {
-                            await UserInteraction.ShowScrollableMessageAsync(string.Format(GlobalSettings.CultureInfo,
-                                await LanguageManager.GetStringAsync(
-                                    "Message_Improvement_EmptySelectionListNamed", token: token).ConfigureAwait(false),
-                                SourceName), token: token).ConfigureAwait(false);
-                            throw new AbortedException();
-                        }
-
-                        using (ThreadSafeForm<SelectItem> frmPickItem = await ThreadSafeForm<SelectItem>.GetAsync(() => new SelectItem(), token).ConfigureAwait(false))
-                        {
-                            frmPickItem.MyForm.SetGeneralItemsMode(lstMetamagics);
-                            // Don't do anything else if the form was canceled.
-                            if (await frmPickItem.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                                throw new AbortedException();
-
-                            objXmlSelectedMetamagic = objXmlDocument.TryGetNodeByNameOrId("/chummer/metamagics/metamagic", await frmPickItem.MyForm.DoThreadSafeFuncAsync(x => x.SelectedItem, token).ConfigureAwait(false))
-                                                      ?? throw new AbortedException();
-                        }
-                    }
-
-                    string strSelectedName = objXmlSelectedMetamagic["name"]?.InnerTextViaPool(token);
-                    if (string.IsNullOrEmpty(strSelectedName))
-                        throw new AbortedException();
-                    foreach (XmlNode objXmlAddMetamagic in xmlMetamagicList)
-                    {
-                        if (strSelectedName == objXmlAddMetamagic.InnerTextViaPool(token))
-                        {
-                            strForceValue = objXmlAddMetamagic.Attributes?["select"]?.InnerTextViaPool(token) ?? string.Empty;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    InitiationGrade objGrade = new InitiationGrade(_objCharacter) { Grade = -1 };
-                    using (ThreadSafeForm<SelectMetamagic> frmPickMetamagic = await ThreadSafeForm<SelectMetamagic>.GetAsync(() => new SelectMetamagic(_objCharacter, objGrade), token).ConfigureAwait(false))
-                    {
-                        // Don't do anything else if the form was canceled.
-                        if (await frmPickMetamagic.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                            throw new AbortedException();
-
-                        objXmlSelectedMetamagic = objXmlDocument.TryGetNodeByNameOrId("/chummer/metamagics/metamagic", frmPickMetamagic.MyForm.SelectedMetamagic)
-                                                  ?? throw new AbortedException();
-                    }
-                }
-            }
-
-            Metamagic objAddMetamagic = new Metamagic(_objCharacter);
-            await objAddMetamagic.CreateAsync(objXmlSelectedMetamagic, Improvement.ImprovementSource.Metamagic, strForceValue, token).ConfigureAwait(false);
-            objAddMetamagic.Grade = -1;
-            if (objAddMetamagic.InternalId.IsEmptyGuid())
-                throw new AbortedException();
-
-            SelectedValue = await objAddMetamagic.GetCurrentDisplayNameAsync(token).ConfigureAwait(false);
-
-            await (await _objCharacter.GetMetamagicsAsync(token).ConfigureAwait(false)).AddAsync(objAddMetamagic, token).ConfigureAwait(false);
-            await CreateImprovementAsync(objAddMetamagic.InternalId, _objImprovementSource, SourceName, Improvement.ImprovementType.Metamagic, _strUnique, token: token).ConfigureAwait(false);
+            return selectmetamagicCoreAsync(false, bonusNode, token);
         }
 
         public async Task addechoAsync(XmlNode bonusNode, CancellationToken token = default)
@@ -11685,92 +11525,9 @@ public async Task qualitylevelAsync(XmlNode bonusNode, CancellationToken token =
             }
         }
 
-        public async Task selectechoAsync(XmlNode bonusNode, CancellationToken token = default)
+        public Task selectechoAsync(XmlNode bonusNode, CancellationToken token = default)
         {
-            token.ThrowIfCancellationRequested();
-            if (bonusNode == null)
-                throw new ArgumentNullException(nameof(bonusNode));
-            XmlDocument objXmlDocument = await _objCharacter.LoadDataAsync("echoes.xml", token: token).ConfigureAwait(false);
-            string strForceValue = string.Empty;
-            XmlNode xmlSelectedEcho;
-            using (XmlNodeList xmlEchoList = bonusNode.SelectNodes("echo"))
-            {
-                if (xmlEchoList?.Count > 0)
-                {
-                    using (new FetchSafelyFromSafeObjectPool<List<ListItem>>(Utils.ListItemListPool,
-                                                                   out List<ListItem> lstEchoes))
-                    {
-                        foreach (XmlNode objXmlAddEcho in xmlEchoList)
-                        {
-                            string strLoopName = objXmlAddEcho.InnerTextViaPool(token);
-                            XmlNode objXmlEcho = objXmlDocument.TryGetNodeByNameOrId(
-                                "/chummer/metamagics/metamagic", strLoopName);
-                            // Makes sure we aren't over our limits for this particular metamagic from this overall source
-                            if (objXmlEcho != null && await objXmlAddEcho.CreateNavigator().RequirementsMetAsync(_objCharacter, token: token).ConfigureAwait(false))
-                            {
-                                lstEchoes.Add(new ListItem(objXmlEcho["id"]?.InnerTextViaPool(token),
-                                    objXmlEcho["translate"]?.InnerTextViaPool(token) ?? strLoopName));
-                            }
-                        }
-
-                        if (lstEchoes.Count == 0)
-                        {
-                            await UserInteraction.ShowScrollableMessageAsync(string.Format(GlobalSettings.CultureInfo,
-                                await LanguageManager.GetStringAsync(
-                                    "Message_Improvement_EmptySelectionListNamed", token: token).ConfigureAwait(false),
-                                SourceName), token: token).ConfigureAwait(false);
-                            throw new AbortedException();
-                        }
-
-                        using (ThreadSafeForm<SelectItem> frmPickItem = await ThreadSafeForm<SelectItem>.GetAsync(() => new SelectItem(), token).ConfigureAwait(false))
-                        {
-                            frmPickItem.MyForm.SetGeneralItemsMode(lstEchoes);
-                            // Don't do anything else if the form was canceled.
-                            if (await frmPickItem.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                                throw new AbortedException();
-
-                            xmlSelectedEcho = objXmlDocument.TryGetNodeByNameOrId("/chummer/echoes/echo", await frmPickItem.MyForm.DoThreadSafeFuncAsync(x => x.SelectedItem, token).ConfigureAwait(false))
-                                              ?? throw new AbortedException();
-                        }
-                    }
-
-                    string strSelectedName = xmlSelectedEcho["name"]?.InnerTextViaPool(token);
-                    if (string.IsNullOrEmpty(strSelectedName))
-                        throw new AbortedException();
-                    foreach (XmlNode objXmlAddEcho in xmlEchoList)
-                    {
-                        if (strSelectedName == objXmlAddEcho.InnerTextViaPool(token))
-                        {
-                            strForceValue = objXmlAddEcho.Attributes?["select"]?.InnerTextViaPool(token) ?? string.Empty;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    InitiationGrade objGrade = new InitiationGrade(_objCharacter) { Grade = -1, Technomancer = true };
-                    using (ThreadSafeForm<SelectMetamagic> frmPickMetamagic = await ThreadSafeForm<SelectMetamagic>.GetAsync(() => new SelectMetamagic(_objCharacter, objGrade), token).ConfigureAwait(false))
-                    {
-                        // Don't do anything else if the form was canceled.
-                        if (await frmPickMetamagic.ShowDialogSafeAsync(_objCharacter, token).ConfigureAwait(false) == DialogResult.Cancel)
-                            throw new AbortedException();
-
-                        xmlSelectedEcho = objXmlDocument.TryGetNodeByNameOrId("/chummer/echoes/echo", frmPickMetamagic.MyForm.SelectedMetamagic)
-                                          ?? throw new AbortedException();
-                    }
-                }
-            }
-
-            Metamagic objAddEcho = new Metamagic(_objCharacter);
-            await objAddEcho.CreateAsync(xmlSelectedEcho, Improvement.ImprovementSource.Echo, strForceValue, token).ConfigureAwait(false);
-            objAddEcho.Grade = -1;
-            if (objAddEcho.InternalId.IsEmptyGuid())
-                throw new AbortedException();
-
-            SelectedValue = await objAddEcho.GetCurrentDisplayNameAsync(token).ConfigureAwait(false);
-
-            await _objCharacter.Metamagics.AddAsync(objAddEcho, token).ConfigureAwait(false);
-            await CreateImprovementAsync(objAddEcho.InternalId, _objImprovementSource, SourceName, Improvement.ImprovementType.Echo, _strUnique, token: token).ConfigureAwait(false);
+            return selectechoCoreAsync(false, bonusNode, token);
         }
 
         // Check for Skillwires.
