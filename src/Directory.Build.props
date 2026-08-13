@@ -28,6 +28,16 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!--
+      Versão única do Avalonia para os três projetos de UI. Fixada na linha 11.3 e não na
+      12.x deliberadamente (DEC-038): a 11.3 é a linha madura, com muito mais quilometragem
+      em Android, e esta etapa existe para medir o risco da PLATAFORMA — não para descobrir
+      o risco de uma versão nova do próprio toolkit.
+    -->
+    <AvaloniaVersion>11.3.20</AvaloniaVersion>
+  </PropertyGroup>
+
   <!--
     InvariantGlobalization fica explicitamente em false: o Chummer ordena e compara
     strings traduzidas em seis idiomas. Sem ICU, a ordenação muda silenciosamente e o

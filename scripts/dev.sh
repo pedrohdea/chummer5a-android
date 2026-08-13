@@ -10,7 +10,9 @@
 #   ./scripts/dev.sh censo      mede o acoplamento restante (relatório)
 #   ./scripts/dev.sh erros      os primeiros erros do censo, ~1 s (laço interno)
 #   ./scripts/dev.sh erros Gear    idem, filtrado por arquivo
-#   ./scripts/dev.sh apk        gera o APK (exige Android SDK; ver docs/DESENVOLVIMENTO.md)
+#   ./scripts/dev.sh apk        gera o APK e informa o tamanho
+#   ./scripts/dev.sh spikes     roda as medições de plataforma no desktop (controle)
+#   ./scripts/dev.sh tela [png] renderiza a UI para PNG (prova que desenha, sem tela)
 #   ./scripts/dev.sh status     onde o porte está, em números
 #   ./scripts/dev.sh progresso  mede, registra no histórico e diagnostica se parou
 #
@@ -26,6 +28,13 @@ export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1
 
 titulo() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
 erro()   { printf '\n\033[1;31m%s\033[0m\n' "$*" >&2; }
+
+# A Chummer.Port.sln agora contém o Chummer.Android, então até `build` precisa do SDK do
+# Google. O setup instala em ~/android-sdk; adota-se automaticamente se estiver lá, para
+# que ninguém precise lembrar de exportar a variável antes de compilar a solução.
+if [ -z "${ANDROID_HOME:-}" ] && [ -d "$HOME/android-sdk/platforms" ]; then
+    export ANDROID_HOME="$HOME/android-sdk" ANDROID_SDK_ROOT="$HOME/android-sdk"
+fi
 
 cmd="${1:-check}"; shift || true
 
@@ -73,33 +82,53 @@ case "$cmd" in
     ;;
 
   apk)
-    # O setup instala em ~/android-sdk; adota automaticamente se estiver lá.
-    if [ -z "${ANDROID_HOME:-}" ] && [ -d "$HOME/android-sdk/platforms" ]; then
-        export ANDROID_HOME="$HOME/android-sdk" ANDROID_SDK_ROOT="$HOME/android-sdk"
-    fi
     if [ -z "${ANDROID_HOME:-}${ANDROID_SDK_ROOT:-}" ]; then
       erro "Android SDK não encontrado (ANDROID_HOME/ANDROID_SDK_ROOT vazios)."
       cat >&2 <<'FIM'
 
-O workload .NET de Android instala normalmente aqui:
+Empacotar um APK exige o SDK do Google (platform + build-tools) além do workload
+.NET de Android. Rode:
 
-    dotnet workload install android
+    ./scripts/setup-dev.sh --android
 
-Mas ele traz só o compilador e os runtimes. Empacotar um APK exige também o SDK do
-Google (platform + build-tools), que este contêiner não tem e não conseguiu baixar.
-
-Rode:  ./scripts/setup-dev.sh --android
-
-Ele baixa o SDK do Google descobrindo a URL no índice do repositório. Medido: o APK
-sai deste contêiner em ~50 s, sem CI.
+Ele instala em ~/android-sdk, que o dev.sh adota sozinho. Medido: o APK sai deste
+contêiner em 1 min 38 s do zero, ~50 s incremental — sem CI.
 
 Ver docs/DESENVOLVIMENTO.md, seção "APK".
 FIM
       exit 1
     fi
     titulo "Gerando APK"
-    cd "$RAIZ/src" && dotnet publish Chummer.Android/Chummer.Android.csproj \
-        -c Release -f net9.0-android --nologo "$@"
+    cd "$RAIZ/src"
+    dotnet publish Chummer.Android/Chummer.Android.csproj -c Release --nologo "$@"
+    # Anunciar o caminho e o TAMANHO: o tamanho do APK é uma das medições da Etapa 2.5, e
+    # deixá-lo visível a cada build é o que impede que ele cresça sem ninguém notar.
+    find Chummer.Android/bin/Release -name '*-Signed.apk' -printf '%s\t%p\n' 2>/dev/null |
+      sort -rn | head -1 |
+      while IFS=$'\t' read -r bytes caminho; do
+        printf '\nAPK: %s\n     %s bytes (%.2f MiB)\n' "$caminho" "$bytes" "$(echo "$bytes/1048576" | bc -l)"
+      done
+    ;;
+
+  tela)
+    # Prova que a UI DESENHA, e não só que compila. O contêiner não tem tela nem ferramenta
+    # de captura, então o próprio app rasteriza a janela para PNG; o Xvfb entra porque o
+    # Avalonia exige uma plataforma de runtime, e usar a de verdade faz esta execução provar
+    # também que o backend X11 sobe.
+    destino="${1:-/tmp/chummer-tela.png}"; shift || true
+    titulo "Renderizando a UI para $destino"
+    cd "$RAIZ/src" && CHUMMER_ASSETS="$RAIZ/Chummer" \
+      xvfb-run -a dotnet run --project Chummer.Desktop/Chummer.Desktop.csproj --nologo \
+        -- --screenshot "$destino" "$@"
+    ;;
+
+  spikes)
+    # Medição de CONTROLE: as mesmas medições que o APK faz no aparelho, rodadas aqui.
+    # Sem esta comparação, um número ruim no celular não distingue "o Android é lento" de
+    # "o código é lento".
+    titulo "Spikes de plataforma (controle, no desktop)"
+    cd "$RAIZ/src" && CHUMMER_ASSETS="$RAIZ/Chummer" \
+      dotnet run --project Chummer.Desktop/Chummer.Desktop.csproj -c Release --nologo -- --spikes "$@"
     ;;
 
   progresso)

@@ -1174,3 +1174,208 @@ arquivo, que é justamente o caminho que se quer manter no domínio.
 
 Os 7 `CS1069` e os 39 erros que `CharacterCache.cs` contribui ao censo de corpo de método
 estão registrados em `docs/codebase/15-acoplamento-de-corpo.md`.
+## DEC-041 — `XslCompiledTransform` depende de código dinâmico, e isso restringe o Android · VIGENTE
+**2026-08-12** · responde o item mais arriscado da Etapa 1.4
+
+A pergunta que esta etapa existia para responder: as fichas impressas do Chummer saem de 20+
+folhas XSLT processadas por `XslCompiledTransform`. Se essa classe não funcionar no Android,
+**a Etapa 7 muda inteira**.
+
+**O que foi medido, e é conclusivo na parte que importa:**
+
+`XslCompiledTransform` compila a folha para IL, via `System.Reflection.Emit.DynamicMethod`.
+Não existe caminho alternativo. Rodando o mesmo binário com o interruptor
+`System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported=false` — que é como
+um runtime sem JIT se apresenta:
+
+```
+IsDynamicCodeSupported                 False
+folha mínima — exceção   System.TypeInitializationException:
+    The type initializer for 'System.Xml.Xsl.IlGen.XmlILModule' threw an exception.
+```
+
+Falha no inicializador de tipo, antes de qualquer folha ser lida. **Não há degradação
+graciosa, não há fallback interpretado.** Com código dinâmico disponível, a mesma execução
+compila e transforma sem reclamar.
+
+**As três consequências, em ordem de importância:**
+
+1. **NativeAOT está fora do Chummer.Android** enquanto a impressão for por XSLT. Não é
+   preferência de desempenho: é incompatibilidade dura.
+2. O modo padrão do .NET para Android **deve** funcionar — mas isso é **inferência, não
+   medição**, e a medição no aparelho é justamente o que o APK esqueleto vai trazer
+   (QA-009). A inferência está apoiada em quatro fatos verificados no SDK e no APK gerado,
+   e é forte o bastante para se seguir construindo sobre ela:
+
+   | Evidência | Onde foi verificada |
+   |---|---|
+   | `RunAOTCompilation` é **true** por padrão em Release | `Microsoft.Android.Sdk.DefaultProperties.targets:105` |
+   | `AndroidAotMode` fica **vazio** — modo "Normal", que preserva o JIT, e não full-AOT | `Microsoft.Android.Sdk.Aot.targets:81` |
+   | `libmono-component-marshal-ilgen.so` **está dentro do APK** — é o componente do Mono que gera IL em tempo de execução | listagem do APK gerado |
+   | `System.Private.Xml` **sobreviveu ao trimmer** e foi AOT-compilada | `libaot-System.Private.Xml.dll.so` no APK |
+
+   O que a inferência **não** cobre: se o Mono responde `IsDynamicCodeSupported = true` com
+   AOT normal ativo. Só o aparelho responde isso, e o cartão de XSLT do APK responde na
+   primeira execução.
+3. Se o item 2 falhar no aparelho, a alternativa não é reescrever as folhas: é trocar o motor
+   por um processador XSLT 1.0 gerenciado que interprete em vez de emitir IL. Trabalho
+   grande, mas as folhas sobrevivem.
+
+**Dois achados que reduzem o risco da Etapa 7 independentemente disso**, obtidos varrendo as
+folhas de `Chummer/sheets/`:
+
+| O que se procurou | Ocorrências | Por que importa |
+|---|---|---|
+| `msxsl:script` | **0** | é o recurso que o .NET moderno NÃO suporta em XSLT; se houvesse, a migração já estaria quebrada no desktop |
+| `document()` | **0** | dispensa resolução de fontes externas em tempo de transformação |
+
+**E a cadeia de `xsl:import` foi provada resolúvel sem sistema de arquivos.** As folhas se
+importam por nome relativo com espaços ("Shadowrun 5 set.xslt"), o que no Windows resolve
+contra o disco — e dentro de um APK não há disco. `AssetXmlResolver` mapeia esses nomes para
+assets sob um esquema `asset:` sintético, e a folha real `Shadowrun 5.xsl`, com seus três
+níveis de import, compilou e transformou por esse caminho. Medido no desktop: 177 ms para
+compilar com os imports, 604 ms para transformar, 32,6 KiB de saída.
+
+Ou seja: o único risco remanescente da Etapa 7 é o do item 2, e ele tem uma resposta binária
+que o PO traz do aparelho.
+
+---
+
+## DEC-042 — Avalonia 11.3, não 12.x · VIGENTE
+**2026-08-12**
+
+A linha 12 do Avalonia é a mais nova disponível (12.1.1). O porte fica na **11.3.20**.
+
+**Por quê:** esta etapa existe para medir o risco da **plataforma Android**. Adotar a linha
+mais nova do próprio toolkit adiciona uma segunda variável desconhecida a cada medição — e
+quando um número vier ruim do aparelho, não haverá como saber qual das duas causou.
+
+**O custo desta escolha, que é real e está medido:** a 11.3 traz SkiaSharp 2.88.9, e o SDK
+do Android avisa:
+
+```
+warning XA0141: Android 16 will require 16 KB page sizes, shared library
+'libSkiaSharp.so' does not have a 16 KB page size.
+```
+
+Não afeta o alvo imediato — o Samsung A56 do PO roda Android 15 — mas **é dívida com data
+de vencimento**. A linha 12 do Avalonia usa SkiaSharp 3.x, que já está alinhada. A migração
+para a 12 deixa de ser opcional quando o Android 16 chegar ao aparelho do PO, e o momento
+certo de fazê-la é depois de as medições de plataforma estarem no papel, não antes.
+
+Registrado como PEND-016 para não se perder.
+
+---
+
+## DEC-043 — Só arm64: a ABI extra custa mais que todos os dados de jogo · VIGENTE
+**2026-08-12**
+
+O `Chummer.Android` fixa `RuntimeIdentifiers=android-arm64`.
+
+**A medição que decidiu**, três APKs gerados e comparados:
+
+| Configuração | APK |
+|---|---|
+| arm64 + x86_64, com os dados | 31,10 MiB |
+| arm64 + x86_64, sem os dados | 28,18 MiB |
+| **arm64 apenas, com os dados** | **17,86 MiB** |
+
+E a composição do APK que se distribui:
+
+| Grupo | Cru | Dentro do APK |
+|---|---|---|
+| `lib/arm64-v8a` (runtime .NET + Skia) | 24,98 MiB | **12,32 MiB** |
+| dex, res, manifest | 6,75 MiB | 2,57 MiB |
+| `assets/lang` | 9,52 MiB | 1,79 MiB |
+| `assets/data` | 6,52 MiB | 0,63 MiB |
+| `assets/customdata` | 1,41 MiB | 0,24 MiB |
+| `assets/sheets` | 0,97 MiB | 0,14 MiB |
+| **total** | 50,15 MiB | **17,69 MiB** |
+
+**Isto inverte a premissa da etapa.** O plano tratava os "21 MB de dados" como o risco de
+tamanho. Os dados de jogo somam 18,4 MiB crus e custam **2,80 MiB** dentro do APK: XML
+comprime cerca de 6,6:1, e o zip do APK já faz isso de graça. Os dados não são o problema.
+
+O problema é a ABI que ninguém usa: `android-x64` acrescenta 13,2 MiB, **quatro vezes e meia
+o custo de todos os dados juntos**, e só existe para emulador. O alvo do projeto é um
+aparelho real.
+
+Para trabalhar com emulador:
+`dotnet publish -p:RuntimeIdentifiers="android-arm64;android-x64"`.
+
+---
+
+## DEC-044 — "Abre" é medição, não afirmação · VIGENTE
+**2026-08-12**
+
+O contêiner de build não tem tela, e não tem `import`, `scrot` nem `ffmpeg`. Dizer que a UI
+funciona seria, portanto, exatamente o tipo de afirmação que o `CLAUDE.md` proíbe.
+
+**Solução:** o próprio head de desktop rasteriza a janela para PNG (`--screenshot`), rodando
+sob Xvfb. Isso exercita o caminho real inteiro — carga do XAML, estilos, layout, shaping de
+texto, rasterização por Skia — e ainda prova que o backend X11 sobe.
+
+**Duas coisas foram aprendidas ao construir isso, e a segunda é a lição:**
+
+1. `UseSkia()` sozinho não basta: o Avalonia recusa com *"No runtime platform services
+   configured"*. `UsePlatformDetect()` resolve, ao custo de precisar de um display.
+
+2. **Renderizar o `UserControl` solto produz um PNG válido e completamente branco** — 1.561
+   bytes de nada. O Avalonia resolve estilos e recursos de tema subindo a árvore visual até
+   um `TopLevel`, e um controle desanexado não tem um. Dentro de uma `Window` de verdade, e
+   com o dispatcher bombeado até o layout assentar, o mesmo código produz 22.307 bytes com
+   conteúdo.
+
+A versão 1 da ferramenta, portanto, **"passava" sobre uma tela em branco**. É o padrão de
+DEC-019 pela sexta vez: o primeiro número que uma ferramenta de medição produz está errado.
+O que pegou não foi revisar o código — foi **olhar o PNG**.
+
+Fica como regra: verificador de renderização precisa que alguém olhe a saída pelo menos uma
+vez, ou ele só verifica a si mesmo.
+
+---
+
+## DEC-045 — Uma fonte da verdade também para os dados de jogo · VIGENTE
+**2026-08-12**
+
+O `Chummer.Android` referencia `Chummer/data`, `lang`, `sheets` e `customdata` **por link**,
+não por cópia:
+
+```xml
+<AndroidAsset Include="$(ChummerAssetsRoot)data\**\*.xml"
+              Link="Assets\data\%(RecursiveDir)%(Filename)%(Extension)" />
+```
+
+Mesma disciplina de DEC-013 para o código: uma fonte, várias compilações. Duas cópias de
+20 MB de XML divergiriam em silêncio, e a divergência apareceria lá adiante como uma
+regressão de regra no teste diferencial — o pior modo de falha possível, porque manda
+procurar no lugar errado.
+
+**Assets e não recursos embarcados na assembly**, e a razão é a memória: recurso embarcado é
+descomprimido para o heap gerenciado no primeiro acesso e fica lá; asset é entrada de um zip,
+aberta sob demanda e fechada depois. Com ~20 MB de XML num aparelho, isso é a diferença entre
+carregar o que se usa e carregar tudo.
+
+O acesso é mediado por `IAssetSource`, com implementação de `AssetManager` no Android e de
+sistema de arquivos no desktop. É a primeira peça da camada de plataforma da Etapa 4, e
+nasceu aqui porque os spikes precisavam dela.
+
+---
+
+## DEC-046 — Sem framework de MVVM · VIGENTE
+**2026-08-12**
+
+`ViewModelBase` é 25 linhas de `INotifyPropertyChanged` escritas à mão. Nem
+CommunityToolkit.Mvvm, nem ReactiveUI.
+
+**Por quê:** o domínio do Chummer **já** implementa `INotifyPropertyChanged` com rigor, com
+propagação declarativa por grafo de dependências (é metade do motivo de DEC-002). Os
+ViewModels do MVP são, em sua maior parte, projeções finas sobre objetos que já notificam.
+Um framework de MVVM existe para gerar o que já existe aqui.
+
+E há o custo: esta etapa mede o tamanho do APK. Cada dependência entra na conta que se está
+tentando medir.
+
+**Quando reconsiderar:** se a Etapa 8 (criação de personagem, 45 diálogos de seleção)
+mostrar que os comandos e a validação estão sendo escritos à mão repetidamente. Aí o
+framework paga o próprio peso — hoje não paga.

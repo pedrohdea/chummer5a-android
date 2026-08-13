@@ -272,5 +272,23 @@ Você sente falta de conseguir encolher as fotos de um personagem antigo?
 
 **Por que não bloqueia:** o comportamento novo é o mais conservador dos dois. Ele nunca
 degrada uma foto sem que você peça; o antigo degradava a cada salvamento.
+## PEND-016 — Migrar para Avalonia 12 quando o Android 16 chegar · ABERTA (técnica, registrada para não se perder)
+**Criada:** 2026-08-12 · **Decisão:** DEC-042 · **Reversão:** 🟢 baixo
+
+Esta não é pergunta ao PO: é **dívida com data de vencimento** que precisa estar visível.
+
+O porte usa Avalonia 11.3.20, que traz SkiaSharp 2.88.9. O SDK do Android avisa a cada
+build:
+
+```
+warning XA0141: Android 16 will require 16 KB page sizes, shared library
+'libSkiaSharp.so' does not have a 16 KB page size.
+```
+
+O Samsung A56 roda Android 15, então **não afeta o alvo de hoje**. Quando o aparelho do PO
+receber o Android 16, o app para de carregar até subirmos para o Avalonia 12, que já usa
+SkiaSharp 3.x.
+
+**O que o PO pode responder, se quiser:** avisar quando o A56 receber a atualização.
 
 **Resposta:**

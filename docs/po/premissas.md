@@ -84,6 +84,28 @@ acesso sob demanda com índice volta à mesa — o mesmo risco de antes, com out
 
 DEC-021 (retratos como bytes, sem decodificar) já ajuda nessa conta.
 
+**Primeira metade medida em 2026-08-12** (Etapa 2.5, no desktop — o aparelho ainda deve o
+resto, em QA-009). A primeira das três perguntas acima tem número:
+
+| | |
+|---|---|
+| `data/` cru | 6,52 MiB, 343.678 nós |
+| retido em heap gerenciado como `XmlDocument` | **25,11 MiB** |
+| **amplificação** | **3,8×** |
+
+A amplificação de 3,8× é a resposta, e ela é ruim o bastante para mudar um plano: só
+`data/` pede 25 MiB **retidos para sempre**, porque o cache do `XmlManager` nunca solta. Com
+`lang/` — que é maior que `data/` — e com o documento mesclado por combinação de idioma ×
+custom data, a conta da segunda pergunta multiplica isso.
+
+**Consequência já visível para a Etapa 4:** trocar `XmlDocument` por `XPathDocument` no
+caminho de leitura. O `XPathDocument` é imutável e representa a mesma árvore em uma fração
+da memória, e o Chummer **lê** os dados de jogo — não os edita. A troca não é otimização
+especulativa: é a resposta direta ao 3,8×.
+
+A premissa continua 🟡 até os números do aparelho chegarem, mas o que falta agora é
+confirmação, não descoberta.
+
 ---
 
 ## PREM-004 — Empacotar `pt-br` e `en-us`; demais idiomas sob demanda · CONFIRMADA 🟢

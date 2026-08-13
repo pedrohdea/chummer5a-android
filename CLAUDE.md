@@ -130,6 +130,9 @@ todo commit. Guia completo em `docs/DESENVOLVIMENTO.md`.
 ./scripts/dev.sh check              # ANTES DE TODO COMMIT: auditoria + ui + legado
 ./scripts/dev.sh status             # onde o porte está, em números
 ./scripts/dev.sh erros Weapon       # os primeiros erros nesse arquivo, ~1 s
+./scripts/dev.sh apk                # gera o APK e informa o tamanho (~1 min 38 s do zero)
+./scripts/dev.sh tela /tmp/x.png    # renderiza a UI para PNG — prova que desenha, sem tela
+./scripts/dev.sh spikes             # medições de plataforma no desktop (controle do APK)
 ./scripts/setup-dev.sh              # SDK .NET + verificação
 ./scripts/setup-dev.sh --android    # + workload Android (para gerar APK)
 ./scripts/censo-erros.sh            # mede: relatório completo (barra de progresso da Etapa 2)
