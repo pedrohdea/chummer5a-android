@@ -304,7 +304,12 @@ namespace Chummer
         /// <param name="strLanguage">Language from which the string should be retrieved.</param>
         /// <param name="blnReturnError">Should an error string be returned if the key isn't found?</param>
         /// <param name="token">CancellationToken to listen to.</param>
-        private static async Task<string> GetStringCoreAsync(bool blnSync, string strKey, string strLanguage,
+        /// <remarks>
+        /// Público porque quem chama também é escrito uma vez só para os dois caminhos —
+        /// os métodos de bônus de AddImprovementCollection, por exemplo. Antes disso ele
+        /// era privado e só a própria classe o usava.
+        /// </remarks>
+        public static async Task<string> GetStringCoreAsync(bool blnSync, string strKey, string strLanguage,
                                                              bool blnReturnError, CancellationToken token = default)
         {
             if (Utils.IsDesignerMode || Utils.IsRunningInVisualStudio)

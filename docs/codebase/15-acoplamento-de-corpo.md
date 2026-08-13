@@ -145,3 +145,34 @@ de imagem de verdade, não de armazenamento.
 Convertê-lo para bytes é possível pelo mesmo desenho, mas exige decidir onde a compressão
 passa a acontecer sem que a lista de personagens carregue retratos em tamanho cheio na
 memória. Fica registrado como pendência da frente de retratos, não como esquecimento.
+
+---
+
+## Adendo de 2026-08-13 — a consolidação começou a comer o número
+
+`AddImprovementAsyncCollection.cs` **não existe mais**: os dois arquivos são uma classe só
+(DEC-047). A tabela "por arquivo" acima descreve o estado anterior e fica como registro.
+
+| | erros |
+|---|---|
+| medição original (12/08) | **1.584** |
+| depois de unir as classes | 1.584 — mesmo código, um arquivo |
+| depois de fundir 11 dos 42 pares com diálogo | **1.489** |
+
+Dentro do arquivo: **524 -> 429**. Linhas: **14.882 -> 14.412**.
+
+**Onde estão os 429 que restam**, e é a mesma forma de antes: 3 pares valem 20 erros
+(`swapskillattribute`, `swapskillspecattribute`, `selectquality`) e 28 pares valem 10.
+Cada par fundido derruba o próprio pela metade, porque `using (ThreadSafeForm<X> …)` e
+`new SelectX(…)` passam a ser citados uma vez em vez de duas.
+
+**Extrapolação, com a régua medida:** fundir os 31 pares de diálogo restantes leva o arquivo
+de 429 para perto de 215, e o projeto para perto de **1.275**. Os outros ~281 pares (sem
+diálogo) quase não movem o censo — o que eles movem é linha duplicada, e são as ~6 mil
+linhas que sobram para colher.
+
+**A receita, para quem continuar** — está em DEC-047 e no cabeçalho de
+`scripts/fundir-par.py`. Em uma linha: escreva o núcleo tomando o corpo **assíncrono** como
+esqueleto e devolvendo o caminho síncrono em cada ponto de divergência, nunca o contrário —
+o assíncrono é o mais geral, e é ele que já traz as içadas de variável que o síncrono faz
+em linha.

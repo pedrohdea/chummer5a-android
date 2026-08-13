@@ -210,3 +210,32 @@ navegação do sistema.
 mas ele só é um substituto honesto se o que eu vejo lá corresponder ao que aparece no
 aparelho. Esta é a primeira calibração dessa correspondência — e tudo que eu desenhar daqui
 para frente parte dela.
+
+---
+
+## QA-011 — O motor de regras continua produzindo os mesmos personagens · AGUARDANDO
+**Etapa:** 2 · **Decisão:** DEC-047 · **Prioridade: alta**
+
+A consolidação de `AddImprovementCollection` reescreveu o interior do motor de regras — o
+subsistema que aplica todo bônus de qualidade, cyberware, magia, arma e metamágica. É a peça
+mais central do Chummer.
+
+**Aqui dentro não há como verificar comportamento.** O que foi verificado é que o aplicativo
+legado inteiro compila (`dev.sh legado`), o que pega tipo errado, argumento inexistente e
+membro sumido — e nada além disso. `Chummer.Tests` é net48 e só roda no CI Windows; não há
+Windows neste contêiner e não há artefato dourado ainda (DEC-004 continua por construir).
+
+**O que precisa acontecer antes de confiar nisto:**
+
+1. **CI Windows verde** — a suíte existente já carrega os 34 personagens de
+   `Chummer.Tests/TestFiles/`, faz round-trip de save com diff XMLUnit e imprime em todos os
+   idiomas. Ela exercita `CreateImprovements` a fundo. É o teste mais forte disponível hoje.
+2. **Abrir um personagem com qualidades que pedem escolha** (`selectattribute`,
+   `selectskill`, `selectspell`, `selectquality`) e conferir que o diálogo aparece, que
+   cancelar aborta, e que o valor escolhido é gravado.
+3. **Recarregar arma** — é o caminho de escolha que o MVP já previu exercitar.
+
+**O que eu suspeitaria primeiro, se algo quebrar:** um par em que o lado síncrono e o
+assíncrono divergiam de verdade e a fusão escolheu um só. Os três casos encontrados estão
+registrados em DEC-047; se houver um quarto, ele está num dos pares fundidos e o diff do
+commit mostra qual.

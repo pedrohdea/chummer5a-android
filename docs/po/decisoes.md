@@ -1379,3 +1379,96 @@ tentando medir.
 **Quando reconsiderar:** se a Etapa 8 (criação de personagem, 45 diálogos de seleção)
 mostrar que os comandos e a validação estão sendo escritos à mão repetidamente. Aí o
 framework paga o próprio peso — hoje não paga.
+
+---
+
+## DEC-047 — Uma classe só, com núcleos `blnSync` · VIGENTE
+**2026-08-13**
+
+`AddImprovementCollection` e `AddImprovementAsyncCollection` eram a mesma lógica escrita
+duas vezes. A medição fecha a questão: **348 membros cada, na mesma ordem, com
+correspondência 1:1 de nome** — a única exceção era o construtor — e **262 erros de corpo
+em cada arquivo, número idêntico**.
+
+**A decisão:** uma classe só. A metade assíncrona ganha o sufixo `Async` e, par a par, os
+dois corpos viram um `NOMECoreAsync(bool blnSync, …)`, com os dois pontos de entrada
+delegando:
+
+```csharp
+public void foo(XmlNode bonusNode)
+{
+    Utils.SafelyRunSynchronously(() => fooCoreAsync(true, bonusNode));
+}
+
+public Task fooAsync(XmlNode bonusNode, CancellationToken token = default)
+{
+    return fooCoreAsync(false, bonusNode, token);
+}
+
+private async Task fooCoreAsync(bool blnSync, XmlNode bonusNode, CancellationToken token = default)
+```
+
+**Não é copiar um lado por cima do outro.** Onde os dois divergem, o núcleo carrega os dois
+caminhos — `blnSync ? sincrono : await assincrono` para expressão, `if (blnSync) … else …`
+para statement. Com `blnSync`, nenhuma `Task` do caminho síncrono cede o fio: todas voltam
+completas, e o `await` é um custo de alocação, não de troca de contexto.
+
+**O padrão não é invenção desta tarefa.** `LanguageManager.GetStringCoreAsync` e
+`ImprovementManager.DoSelectSkillCoreAsync` já eram assim no upstream. O que mudou foi a
+escala.
+
+**Auxiliares que ganharam núcleo** para que as 635 chamadas mais frequentes não virassem
+`if`/`else` de quatro linhas: `CreateImprovement` (310 chamadas, 3 sobrecargas),
+`ImprovementManager.ValueToDec` (214) e `ValueToInt` (85), `Character.LoadData` (26),
+`ThreadSafeForm<T>.Get` e `ShowDialogSafe` (42 pares de diálogo).
+`LanguageManager.GetStringCoreAsync` (56) já existia e só passou a público.
+
+**Ordem de ataque, e por quê:** os **42 pares que abrem diálogo concentram 520 dos 524
+erros**. Eles vieram primeiro. Os outros ~281 pares quase não pesam no censo — o que eles
+pesam é em linha duplicada, e essa frente é mecânica.
+
+**Ferramentas, ambas com conservação verificada (DEC-033):**
+`scripts/unir-addimprovement.py` (une as classes) e `scripts/fundir-par.py` (troca um par
+pelo núcleo). A segunda recusa a troca se qualquer membro que não seja o par mudar.
+`scripts/testar-unir-addimprovement.sh` injeta defeitos conhecidos e exige recusa.
+
+**Alternativa descartada — fundir por ferramenta automática.** Medido: dos 348 pares, só 15
+são idênticos linha a linha; 2.280 linhas diferem entre os pares. E a diferença **não** é
+mecânica: o lado assíncrono reestrutura (iça `strDescription` para fora do inicializador,
+lê `SelectedItem` por `DoThreadSafeFuncAsync`), então nenhuma regra de reescrita reproduz um
+lado a partir do outro. Uma ferramenta que fundisse "quase certo" produziria regressão
+silenciosa no motor de regras — o pior lugar possível para uma.
+
+---
+
+## DEC-048 — `ImprovementManager.DoSelectSkill` roda o caminho assíncrono · DEFEITO DO UPSTREAM, PRESERVADO
+**2026-08-13**
+
+Achado ao levantar o padrão `blnSync` para DEC-047. Em
+`Chummer/Backend/Static/Managers/ImprovementManager.cs`:
+
+```csharp
+public static ValueTuple<string, bool> DoSelectSkill(…)
+{
+    return Utils.SafelyRunSynchronously(() => DoSelectSkillCoreAsync(false, …), token);
+}                                                                    // ^^^^^ blnSync
+```
+
+O ponto de entrada **síncrono** passa `blnSync: false`. Resultado: todo ramo
+`blnSync ? sincrono : await assincrono` dentro do núcleo toma o lado assíncrono, e
+`DoSelectSkill` bloqueia esperando por ele. O `DoSelectSkillAsync` logo abaixo passa `false`
+também — correto lá.
+
+Compare com `LanguageManager.GetString`, que passa `true` e é o comportamento pretendido.
+
+**Veio do upstream** (commit `04a47194`, "Added support for the skilllevel improvement
+type…", fev/2026), não desta branch.
+
+**Não foi corrigido**, e é deliberado: PREM-002 manda o porte preservar até os defeitos
+atuais, e o teste diferencial contra o build legado (DEC-004) trata divergência como
+regressão até prova em contrário. Trocar `false` por `true` muda o comportamento de quem
+usa `DoSelectSkill` hoje — inclusive o travamento de fio que ele possa estar causando — e
+essa mudança precisa ser medida contra artefato dourado, não decidida de passagem.
+
+**Quando reabrir:** quando os artefatos dourados existirem. Aí a correção é de uma letra e
+o teste diz se ela muda alguma saída.
