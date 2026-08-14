@@ -1472,3 +1472,78 @@ essa mudança precisa ser medida contra artefato dourado, não decidida de passa
 
 **Quando reabrir:** quando os artefatos dourados existirem. Aí a correção é de uma letra e
 o teste diz se ela muda alguma saída.
+
+---
+
+## DEC-049 — Sondagem executável: a hipótese de DEC-037 se sustenta, com ressalva · VIGENTE
+**2026-08-14**
+
+DEC-037 mediu distância de **compilação** e deixou a pergunta em aberto: carregar um
+`.chum5` toca algum diálogo de seleção? `scripts/testar-carga.sh` responde por execução —
+monta um console `net9.0` **sem WinForms** com o domínio real e carrega os 34 personagens de
+`Chummer.Tests/TestFiles/`.
+
+**A resposta é: depende de um parâmetro, e o parâmetro é `showWarnings`.**
+
+| modo | carregam | diálogo tocado |
+|---|---|---|
+| `Load(showWarnings: true)` | **0 de 34** | `SelectBuildMethod`, nos 34 |
+| `Load(showWarnings: false)` | ver `estado-atual.md` | **nenhum** |
+
+Com `showWarnings: true` o domínio não pergunta nada sobre *regra de jogo* — ele pergunta
+sobre **configuração**: as 34 fichas foram salvas apontando para `default.xml`, um arquivo de
+configurações que o repositório não contém (o aplicativo o cria na primeira execução). Sem
+ele, o domínio avisa "não achei a configuração", e daí abre `SelectBuildMethod` para o
+usuário escolher o método de criação.
+
+Com `showWarnings: false` esse ramo inteiro é pulado: o domínio escolhe sozinho a
+configuração mais parecida e carrega. **Nenhum diálogo de seleção é atingido.** A hipótese
+de DEC-037 vale — carregar é parser XML e construção de objetos.
+
+**A consequência de projeto:** o leitor do MVP carrega com `showWarnings: false`. O que
+`showWarnings: true` acrescenta não é regra, é conversa sobre configuração divergente, e essa
+conversa é da abstração de interação (DEC-003/DEC-026), não da abstração de seleção.
+
+**Por que a suíte legada não enxergava nada disso:** `Chummer.Tests` liga `Utils.IsUnitTest`,
+e os ramos que abrem esses diálogos estão todos atrás de `if (!Utils.IsUnitTest && showWarnings)`.
+A suíte carrega os 34 porque desvia do caminho, não porque o caminho funciona. A sondagem
+**não** liga `IsUnitTest` — de propósito.
+
+---
+
+## DEC-050 — O que a execução mostrou e a compilação não mostrava · VIGENTE
+**2026-08-14**
+
+Cinco achados que só apareceram por rodar, com o custo de cada um.
+
+**1. `Character.Load` mora em `Chummer/Controls/Dominio/Character.UI.cs`.** A extração
+classificou a rotina de carga inteira — 1.900 a 7.100 — como UI. Não é: é o coração do
+domínio. O mesmo vale para `MatrixAttributesControlExtensions.cs`, que está em
+`Controls/Extensions/` e contém `GetTotalMatrixAttribute` e companhia, chamadas de
+`Character.cs`. A régua "arquivo `.UI.cs` é descartável" está errada; o extrator move por
+`using System.Windows.Forms`, e uma assinatura com `TreeNode` arrasta o método junto.
+
+**2. `Utils.CreateSynchronizationContext` exige thread STA.** Apartamento COM é conceito do
+Windows: fora dele `Thread.GetApartmentState()` devolve `Unknown` e
+`SetApartmentState(STA)` lança. O **primeiro `new Character()`** morre ali, antes de tocar em
+qualquer XML. A sondagem contorna instalando o `JoinableTaskContext` por reflexão — o domínio
+segue intocado, e a correção de verdade é do porte.
+
+**3. `GlobalSettings.Load*FromRegistry` estourava `NullReferenceException`.** O construtor
+estático **já prevê** registro ausente (`if (s_ObjBaseChummerKey == null) return;`), mas os
+quatro auxiliares faziam `s_ObjBaseChummerKey.OpenSubKey(strSubKey)` sem proteção. Corrigido
+para `?.` — proteção que faltava, não mudança de regra: no Windows o valor nunca é nulo.
+Sozinho, esse `?.` levou 13 personagens de "falha" a "carrega".
+
+**4. Carregar personagem lê PDF de livro.** `GlobalSettings.InsertPdfNotesIfAvailable`
+nasce `true`, e `Gear.Load`, `Quality.Load` e mais dezoito chamam `CommonFunctions.GetBookNotes`
+→ `GetTextFromPdf` para cada item **sem anotação**. Num aparelho não há PDF nenhum, e o
+caminho ainda assim custa E/S e trava fio. Precisa nascer `false` no Android.
+
+**5. `Utils.CanWriteToPath` usava `Directory.GetAccessControl(string)`**, que só existe no
+.NET Framework. Trocado pela forma via `DirectoryInfo` — mesma chamada, compila nas duas
+plataformas. Continua sendo ACL do Windows e continua sendo acoplamento a remover.
+
+**O que a sondagem NÃO prova:** ela roda em `net9.0` de desktop Linux, não em Android. O que
+ela mede é o domínio sem WinForms; ARM64, AOT, `AssetManager` e memória do aparelho ficam
+para QA-009.

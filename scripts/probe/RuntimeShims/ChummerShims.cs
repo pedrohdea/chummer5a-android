@@ -109,7 +109,10 @@ namespace Chummer
 
         public static Process MyProcess => Process.GetCurrentProcess();
 
-        public static PluginControl PluginLoader => null;
+        // Instância vazia, não null: o domínio faz `Program.PluginLoader?.MyActivePlugins`
+        // ao SALVAR mas `Program.PluginLoader.MyActivePlugins` ao CARREGAR — sem proteção.
+        // Um aplicativo real tem PluginControl sem plugin ativo, e é isso que a sombra é.
+        public static PluginControl PluginLoader { get; } = new PluginControl();
 
         public static Lazy<TelemetryClient> ChummerTelemetryClient { get; }
             = new Lazy<TelemetryClient>(() => new TelemetryClient());

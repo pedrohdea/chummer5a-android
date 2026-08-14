@@ -323,3 +323,27 @@ refazer toda a UI. A pergunta 1 é 🟢 e deve ser respondida primeiro — pode 
 real seja hot reload, e isso o .NET talvez já entregue.
 
 **Resposta:**
+
+---
+
+## PEND-018 — De onde vem o arquivo de configurações no aparelho?
+**Criada:** 2026-08-14 · **Premissa:** PREM-021 · **Decisão:** DEC-049
+
+**A pergunta:** as 34 fichas de teste apontam para `default.xml`, um arquivo de
+configurações que o repositório **não contém** — o Chummer de desktop o cria na primeira
+execução. No Android, o que acontece com uma ficha que aponta para uma configuração que o
+aparelho não tem?
+
+Três respostas possíveis, e são decisão de produto:
+
+1. **O APK embarca um `default.xml`** igual ao que o desktop cria. Ficha antiga abre com a
+   configuração de origem, silenciosamente.
+2. **O aplicativo escolhe sozinho** a configuração embutida mais parecida (é o que o domínio
+   já faz com `showWarnings: false`) e avisa depois, sem bloquear.
+3. **O aplicativo pergunta** — o que reabre `SelectBuildMethod` e antecipa a abstração de
+   seleção para dentro do MVP.
+
+**Premissa em vigor (PREM-021):** a resposta 2. É a que o domínio já implementa e a única
+que não arrasta diálogo de seleção para dentro do leitor.
+
+**Resposta:**

@@ -132,7 +132,7 @@ internal static class CarregarChum5Entry
             Console.WriteLine();
             Console.WriteLine("Falhas agrupadas por causa:");
             foreach (IGrouping<string, string> objGrupo in lstFalhas
-                         .GroupBy(x => PrimeiraLinha(x.Substring(x.IndexOf('\t') + 1)))
+                         .GroupBy(x => Causa(x.Substring(x.IndexOf('\t') + 1)))
                          .OrderByDescending(x => x.Count()))
             {
                 Console.WriteLine();
@@ -212,6 +212,20 @@ internal static class CarregarChum5Entry
     }
 
     /// <summary>
+    /// Agrupar só pela mensagem juntaria NullReferenceException de origens diferentes, que
+    /// é justamente o que o relatório precisa separar. A chave é mensagem + primeiro quadro.
+    /// </summary>
+    private static string Causa(string strErro)
+    {
+        string[] astrLinhas = strErro.Split('\n');
+        string strQuadro = astrLinhas.Length > 1 ? astrLinhas[1].Trim() : string.Empty;
+        int intEm = strQuadro.IndexOf(" in ", StringComparison.Ordinal);
+        if (intEm > 0)
+            strQuadro = strQuadro.Substring(0, intEm);
+        return astrLinhas[0] + "  <<  " + strQuadro;
+    }
+
+    /// <summary>
     /// Devolve null se carregou, ou a descrição da exceção. O resumo prova que a carga
     /// aconteceu de verdade: sem ler nome, metatipo e atributos, "OK" não significa nada.
     /// </summary>
@@ -279,6 +293,6 @@ internal static class CarregarChum5Entry
     {
         string strPilha = e.StackTrace ?? string.Empty;
         string[] astrLinhas = strPilha.Split('\n');
-        return string.Join("\n", astrLinhas.Take(6).Select(x => x.TrimEnd()));
+        return string.Join("\n", astrLinhas.Take(14).Select(x => x.TrimEnd()));
     }
 }
