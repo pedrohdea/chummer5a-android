@@ -419,7 +419,11 @@ namespace Chummer
             try
             {
                 WindowsPrincipal principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-                DirectorySecurity security = Directory.GetAccessControl(Path.GetDirectoryName(strPath) ?? throw new ArgumentOutOfRangeException(nameof(strPath)));
+                // Directory.GetAccessControl(string) só existe no .NET Framework. A forma
+                // via DirectoryInfo é a mesma chamada e existe nas duas plataformas — sem
+                // ela este arquivo não compila fora do net48/net*-windows. Continua sendo
+                // ACL do Windows, e continua sendo acoplamento a remover para o Android.
+                DirectorySecurity security = new DirectoryInfo(Path.GetDirectoryName(strPath) ?? throw new ArgumentOutOfRangeException(nameof(strPath))).GetAccessControl();
                 foreach (FileSystemAccessRule accessRule in security.GetAccessRules(true, true, typeof(SecurityIdentifier)))
                 {
                     if (!(accessRule.IdentityReference is SecurityIdentifier objIdentifier) || !principal.IsInRole(objIdentifier))

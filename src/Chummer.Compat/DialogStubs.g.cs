@@ -11,6 +11,10 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Xml;
+using Chummer.Backend.Equipment;
 
 namespace Chummer
 {
@@ -22,10 +26,86 @@ namespace Chummer
     }
 
     /// <summary>
+    /// Superfície que os diálogos herdam de Form/Control e que o domínio usa.
+    /// Não é reimplementação: só o suficiente para vincular, lançando se chamado.
+    /// </summary>
+    public abstract class DialogStubBase : IDisposable
+    {
+        public double Opacity
+        {
+            get => throw new NotSupportedException("Diálogo não abstraído: " + GetType().Name);
+            set => throw new NotSupportedException("Diálogo não abstraído: " + GetType().Name);
+        }
+
+        public string Text
+        {
+            get => throw new NotSupportedException("Diálogo não abstraído: " + GetType().Name);
+            set => throw new NotSupportedException("Diálogo não abstraído: " + GetType().Name);
+        }
+
+        public object Tag
+        {
+            get => throw new NotSupportedException("Diálogo não abstraído: " + GetType().Name);
+            set => throw new NotSupportedException("Diálogo não abstraído: " + GetType().Name);
+        }
+
+        public virtual void Dispose() { }
+    }
+
+    /// <summary>
+    /// Espelha as extensões DoThreadSafe* de WinFormsExtensions, que o domínio chama
+    /// sobre o formulário. Sem afinidade de thread não há o que proteger; lançam porque
+    /// chegar aqui significa que um diálogo real foi tocado.
+    /// </summary>
+    public static class DialogStubExtensions
+    {
+        public static void DoThreadSafe<T>(this T objForm, Action<T> funcToRun,
+            CancellationToken token = default) where T : DialogStubBase
+            => throw new NotSupportedException(
+                "Diálogo de seleção ainda não abstraído: " + typeof(T).Name);
+
+        public static void DoThreadSafe<T>(this T objForm, Action<T, CancellationToken> funcToRun,
+            CancellationToken token = default) where T : DialogStubBase
+            => throw new NotSupportedException(
+                "Diálogo de seleção ainda não abstraído: " + typeof(T).Name);
+
+        public static Task DoThreadSafeAsync<T>(this T objForm, Action<T> funcToRun,
+            CancellationToken token = default) where T : DialogStubBase
+            => throw new NotSupportedException(
+                "Diálogo de seleção ainda não abstraído: " + typeof(T).Name);
+
+        public static Task DoThreadSafeAsync<T>(this T objForm, Action<T, CancellationToken> funcToRun,
+            CancellationToken token = default) where T : DialogStubBase
+            => throw new NotSupportedException(
+                "Diálogo de seleção ainda não abstraído: " + typeof(T).Name);
+
+        public static TResult DoThreadSafeFunc<T, TResult>(this T objForm, Func<T, TResult> funcToRun,
+            CancellationToken token = default) where T : DialogStubBase
+            => throw new NotSupportedException(
+                "Diálogo de seleção ainda não abstraído: " + typeof(T).Name);
+
+        public static TResult DoThreadSafeFunc<T, TResult>(this T objForm, Func<T, CancellationToken, TResult> funcToRun,
+            CancellationToken token = default) where T : DialogStubBase
+            => throw new NotSupportedException(
+                "Diálogo de seleção ainda não abstraído: " + typeof(T).Name);
+
+        public static Task<TResult> DoThreadSafeFuncAsync<T, TResult>(this T objForm, Func<T, TResult> funcToRun,
+            CancellationToken token = default) where T : DialogStubBase
+            => throw new NotSupportedException(
+                "Diálogo de seleção ainda não abstraído: " + typeof(T).Name);
+
+        public static Task<TResult> DoThreadSafeFuncAsync<T, TResult>(this T objForm, Func<T, CancellationToken, TResult> funcToRun,
+            CancellationToken token = default) where T : DialogStubBase
+            => throw new NotSupportedException(
+                "Diálogo de seleção ainda não abstraído: " + typeof(T).Name);
+
+    }
+
+    /// <summary>
     /// Substituto de ThreadSafeForm&lt;T&gt;. A afinidade de thread do WinForms não
     /// existe no destino, então não há nada a proteger — sobra a forma da API.
     /// </summary>
-    public sealed class ThreadSafeForm<T> : IDisposable where T : class, new()
+    public sealed class ThreadSafeForm<T> : IDisposable where T : DialogStubBase, new()
     {
         public T MyForm { get; private set; }
 
@@ -37,6 +117,19 @@ namespace Chummer
         public static Task<ThreadSafeForm<T>> GetAsync(Func<T> funcCreator,
             CancellationToken token = default)
             => Task.FromResult(new ThreadSafeForm<T>(funcCreator()));
+
+        public static Task<ThreadSafeForm<T>> GetAsync(Func<CancellationToken, T> funcCreator,
+            CancellationToken token = default)
+            => Task.FromResult(new ThreadSafeForm<T>(funcCreator(token)));
+
+        public static Task<ThreadSafeForm<T>> GetCoreAsync(bool blnSync, Func<T> funcCreator,
+            CancellationToken token = default)
+            => Task.FromResult(new ThreadSafeForm<T>(funcCreator()));
+
+        public Task<DialogResult> ShowDialogSafeCoreAsync(bool blnSync, object objParent = null,
+            CancellationToken token = default)
+            => throw new NotSupportedException(
+                "Diálogo de seleção ainda não abstraído: " + typeof(T).Name);
 
         public DialogResult ShowDialogSafe(object objParent = null,
             CancellationToken token = default)
@@ -51,21 +144,85 @@ namespace Chummer
         public void Dispose() { }
     }
 
-    /// <summary>Stub de EditGlobalSettings. Membros usados pelo domínio: 2.</summary>
-    public sealed class EditGlobalSettings
+    /// <summary>Stub de LoadingBar. Barra de progresso: no-op, nunca lança.</summary>
+    public sealed class LoadingBar : DialogStubBase
     {
+        public enum ProgressBarTextPatterns
+        {
+            Saving = 0, Loading = 1, Initializing = 2, Scanning = 3, Printing = 4
+        }
+
+        public string CharacterFile { get; set; } = string.Empty;
+
+        public Task SetCharacterFileAsync(string value, CancellationToken token = default)
+        {
+            CharacterFile = value;
+            return Task.CompletedTask;
+        }
+
+        public void Reset(int intMaxProgressBarValue = 100) { }
+
+        public Task ResetAsync(int intMaxProgressBarValue = 100,
+            CancellationToken token = default) => Task.CompletedTask;
+
+        public void PerformStep(string strStepName = "",
+            ProgressBarTextPatterns eUseTextPattern = ProgressBarTextPatterns.Loading) { }
+
+        public Task PerformStepAsync(string strStepName = "",
+            ProgressBarTextPatterns eUseTextPattern = ProgressBarTextPatterns.Loading,
+            CancellationToken token = default) => Task.CompletedTask;
+    }
+
+    /// <summary>Stub de EditGlobalSettings. Membros usados pelo domínio: 2.</summary>
+    public sealed class EditGlobalSettings : DialogStubBase
+    {
+        public EditGlobalSettings() { }
+        public EditGlobalSettings(params object[] args) { }
         public async Task DoLinkPdf(params object[] args) => throw new NotSupportedException("EditGlobalSettings.DoLinkPdf não abstraído");
         public Task DoLinkPdfReader(params object[] args) => throw new NotSupportedException("EditGlobalSettings.DoLinkPdfReader não abstraído");
     }
 
-    /// <summary>Stub de LoadingBar. Membros usados pelo domínio: 0.</summary>
-    public sealed class LoadingBar
+    /// <summary>Stub de EditNotes. Membros usados pelo domínio: 2.</summary>
+    public sealed class EditNotes : DialogStubBase
     {
+        public EditNotes() { }
+        public EditNotes(params object[] args) { }
+        public string Notes
+        {
+            get => throw new NotSupportedException("EditNotes.Notes não abstraído");
+            set => throw new NotSupportedException("EditNotes.Notes não abstraído");
+        }
+        public Color NotesColor
+        {
+            get => throw new NotSupportedException("EditNotes.NotesColor não abstraído");
+            set => throw new NotSupportedException("EditNotes.NotesColor não abstraído");
+        }
+    }
+
+    /// <summary>Stub de ReloadWeapon. Membros usados pelo domínio: 4.</summary>
+    public sealed class ReloadWeapon : DialogStubBase
+    {
+        public ReloadWeapon() { }
+        public ReloadWeapon(params object[] args) { }
+        public IEnumerable<Gear> Ammo
+        {
+            get => throw new NotSupportedException("ReloadWeapon.Ammo não abstraído");
+            set => throw new NotSupportedException("ReloadWeapon.Ammo não abstraído");
+        }
+        public IEnumerable<string> Count
+        {
+            get => throw new NotSupportedException("ReloadWeapon.Count não abstraído");
+            set => throw new NotSupportedException("ReloadWeapon.Count não abstraído");
+        }
+        public async Task<string> GetSelectedAmmoAsync(params object[] args) => throw new NotSupportedException("ReloadWeapon.GetSelectedAmmoAsync não abstraído");
+        public async Task<decimal> GetSelectedCountAsync(params object[] args) => throw new NotSupportedException("ReloadWeapon.GetSelectedCountAsync não abstraído");
     }
 
     /// <summary>Stub de SelectAIProgram. Membros usados pelo domínio: 2.</summary>
-    public sealed class SelectAIProgram
+    public sealed class SelectAIProgram : DialogStubBase
     {
+        public SelectAIProgram() { }
+        public SelectAIProgram(params object[] args) { }
         public bool AddAgain
         {
             get => throw new NotSupportedException("SelectAIProgram.AddAgain não abstraído");
@@ -78,13 +235,25 @@ namespace Chummer
         }
     }
 
-    /// <summary>Stub de SelectArmorMod. Membros usados pelo domínio: 2.</summary>
-    public sealed class SelectArmorMod
+    /// <summary>Stub de SelectArmorMod. Membros usados pelo domínio: 4.</summary>
+    public sealed class SelectArmorMod : DialogStubBase
     {
+        public SelectArmorMod() { }
+        public SelectArmorMod(params object[] args) { }
         public bool AddAgain
         {
             get => throw new NotSupportedException("SelectArmorMod.AddAgain não abstraído");
             set => throw new NotSupportedException("SelectArmorMod.AddAgain não abstraído");
+        }
+        public string AllowedCategories
+        {
+            get => throw new NotSupportedException("SelectArmorMod.AllowedCategories não abstraído");
+            set => throw new NotSupportedException("SelectArmorMod.AllowedCategories não abstraído");
+        }
+        public bool ExcludeGeneralCategory
+        {
+            get => throw new NotSupportedException("SelectArmorMod.ExcludeGeneralCategory não abstraído");
+            set => throw new NotSupportedException("SelectArmorMod.ExcludeGeneralCategory não abstraído");
         }
         public string SelectedArmorMod
         {
@@ -94,8 +263,11 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectArt. Membros usados pelo domínio: 1.</summary>
-    public sealed class SelectArt
+    public sealed class SelectArt : DialogStubBase
     {
+        public SelectArt() { }
+        public enum Mode { Art, Enhancement, Enchantment, Ritual }
+        public SelectArt(params object[] args) { }
         public string SelectedItem
         {
             get => throw new NotSupportedException("SelectArt.SelectedItem não abstraído");
@@ -104,8 +276,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectAttribute. Membros usados pelo domínio: 2.</summary>
-    public sealed class SelectAttribute
+    public sealed class SelectAttribute : DialogStubBase
     {
+        public SelectAttribute() { }
+        public SelectAttribute(params object[] args) { }
         public string Description
         {
             get => throw new NotSupportedException("SelectAttribute.Description não abstraído");
@@ -119,13 +293,17 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectBuildMethod. Membros usados pelo domínio: 0.</summary>
-    public sealed class SelectBuildMethod
+    public sealed class SelectBuildMethod : DialogStubBase
     {
+        public SelectBuildMethod() { }
+        public SelectBuildMethod(params object[] args) { }
     }
 
     /// <summary>Stub de SelectComplexForm. Membros usados pelo domínio: 2.</summary>
-    public sealed class SelectComplexForm
+    public sealed class SelectComplexForm : DialogStubBase
     {
+        public SelectComplexForm() { }
+        public SelectComplexForm(params object[] args) { }
         public bool AddAgain
         {
             get => throw new NotSupportedException("SelectComplexForm.AddAgain não abstraído");
@@ -139,8 +317,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectDiceHits. Membros usados pelo domínio: 3.</summary>
-    public sealed class SelectDiceHits
+    public sealed class SelectDiceHits : DialogStubBase
     {
+        public SelectDiceHits() { }
+        public SelectDiceHits(params object[] args) { }
         public string Description
         {
             get => throw new NotSupportedException("SelectDiceHits.Description não abstraído");
@@ -155,8 +335,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectItem. Membros usados pelo domínio: 8.</summary>
-    public sealed class SelectItem
+    public sealed class SelectItem : DialogStubBase
     {
+        public SelectItem() { }
+        public SelectItem(params object[] args) { }
         public bool AllowAutoSelect
         {
             get => throw new NotSupportedException("SelectItem.AllowAutoSelect não abstraído");
@@ -184,8 +366,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectLimit. Membros usados pelo domínio: 3.</summary>
-    public sealed class SelectLimit
+    public sealed class SelectLimit : DialogStubBase
     {
+        public SelectLimit() { }
+        public SelectLimit(params object[] args) { }
         public string Description
         {
             get => throw new NotSupportedException("SelectLimit.Description não abstraído");
@@ -204,8 +388,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectMartialArt. Membros usados pelo domínio: 2.</summary>
-    public sealed class SelectMartialArt
+    public sealed class SelectMartialArt : DialogStubBase
     {
+        public SelectMartialArt() { }
+        public SelectMartialArt(params object[] args) { }
         public bool AddAgain
         {
             get => throw new NotSupportedException("SelectMartialArt.AddAgain não abstraído");
@@ -218,9 +404,11 @@ namespace Chummer
         }
     }
 
-    /// <summary>Stub de SelectMentorSpirit. Membros usados pelo domínio: 3.</summary>
-    public sealed class SelectMentorSpirit
+    /// <summary>Stub de SelectMentorSpirit. Membros usados pelo domínio: 4.</summary>
+    public sealed class SelectMentorSpirit : DialogStubBase
     {
+        public SelectMentorSpirit() { }
+        public SelectMentorSpirit(params object[] args) { }
         public string Choice1
         {
             get => throw new NotSupportedException("SelectMentorSpirit.Choice1 não abstraído");
@@ -231,6 +419,11 @@ namespace Chummer
             get => throw new NotSupportedException("SelectMentorSpirit.Choice2 não abstraído");
             set => throw new NotSupportedException("SelectMentorSpirit.Choice2 não abstraído");
         }
+        public string ForcedMentor
+        {
+            get => throw new NotSupportedException("SelectMentorSpirit.ForcedMentor não abstraído");
+            set => throw new NotSupportedException("SelectMentorSpirit.ForcedMentor não abstraído");
+        }
         public string SelectedMentor
         {
             get => throw new NotSupportedException("SelectMentorSpirit.SelectedMentor não abstraído");
@@ -239,8 +432,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectMetamagic. Membros usados pelo domínio: 1.</summary>
-    public sealed class SelectMetamagic
+    public sealed class SelectMetamagic : DialogStubBase
     {
+        public SelectMetamagic() { }
+        public SelectMetamagic(params object[] args) { }
         public string SelectedMetamagic
         {
             get => throw new NotSupportedException("SelectMetamagic.SelectedMetamagic não abstraído");
@@ -249,22 +444,43 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectMetatypeKarma. Membros usados pelo domínio: 0.</summary>
-    public sealed class SelectMetatypeKarma
+    public sealed class SelectMetatypeKarma : DialogStubBase
     {
+        public SelectMetatypeKarma() { }
+        public SelectMetatypeKarma(params object[] args) { }
     }
 
     /// <summary>Stub de SelectMetatypePriority. Membros usados pelo domínio: 0.</summary>
-    public sealed class SelectMetatypePriority
+    public sealed class SelectMetatypePriority : DialogStubBase
     {
+        public SelectMetatypePriority() { }
+        public SelectMetatypePriority(params object[] args) { }
     }
 
-    /// <summary>Stub de SelectNumber. Membros usados pelo domínio: 2.</summary>
-    public sealed class SelectNumber
+    /// <summary>Stub de SelectNumber. Membros usados pelo domínio: 5.</summary>
+    public sealed class SelectNumber : DialogStubBase
     {
+        public SelectNumber() { }
+        public SelectNumber(params object[] args) { }
+        public bool AllowCancel
+        {
+            get => throw new NotSupportedException("SelectNumber.AllowCancel não abstraído");
+            set => throw new NotSupportedException("SelectNumber.AllowCancel não abstraído");
+        }
         public string Description
         {
             get => throw new NotSupportedException("SelectNumber.Description não abstraído");
             set => throw new NotSupportedException("SelectNumber.Description não abstraído");
+        }
+        public decimal Maximum
+        {
+            get => throw new NotSupportedException("SelectNumber.Maximum não abstraído");
+            set => throw new NotSupportedException("SelectNumber.Maximum não abstraído");
+        }
+        public decimal Minimum
+        {
+            get => throw new NotSupportedException("SelectNumber.Minimum não abstraído");
+            set => throw new NotSupportedException("SelectNumber.Minimum não abstraído");
         }
         public decimal SelectedValue
         {
@@ -274,8 +490,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectOptionalPower. Membros usados pelo domínio: 3.</summary>
-    public sealed class SelectOptionalPower
+    public sealed class SelectOptionalPower : DialogStubBase
     {
+        public SelectOptionalPower() { }
+        public SelectOptionalPower(params object[] args) { }
         public string Description
         {
             get => throw new NotSupportedException("SelectOptionalPower.Description não abstraído");
@@ -294,8 +512,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectPower. Membros usados pelo domínio: 7.</summary>
-    public sealed class SelectPower
+    public sealed class SelectPower : DialogStubBase
     {
+        public SelectPower() { }
+        public SelectPower(params object[] args) { }
         public bool AddAgain
         {
             get => throw new NotSupportedException("SelectPower.AddAgain não abstraído");
@@ -334,8 +554,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectSide. Membros usados pelo domínio: 3.</summary>
-    public sealed class SelectSide
+    public sealed class SelectSide : DialogStubBase
     {
+        public SelectSide() { }
+        public SelectSide(params object[] args) { }
         public string Description
         {
             get => throw new NotSupportedException("SelectSide.Description não abstraído");
@@ -350,8 +572,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectSkill. Membros usados pelo domínio: 12.</summary>
-    public sealed class SelectSkill
+    public sealed class SelectSkill : DialogStubBase
     {
+        public SelectSkill() { }
+        public SelectSkill(params object[] args) { }
         public string Description
         {
             get => throw new NotSupportedException("SelectSkill.Description não abstraído");
@@ -415,8 +639,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectSkillGroup. Membros usados pelo domínio: 4.</summary>
-    public sealed class SelectSkillGroup
+    public sealed class SelectSkillGroup : DialogStubBase
     {
+        public SelectSkillGroup() { }
+        public SelectSkillGroup(params object[] args) { }
         public string Description
         {
             get => throw new NotSupportedException("SelectSkillGroup.Description não abstraído");
@@ -440,8 +666,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectSpell. Membros usados pelo domínio: 5.</summary>
-    public sealed class SelectSpell
+    public sealed class SelectSpell : DialogStubBase
     {
+        public SelectSpell() { }
+        public SelectSpell(params object[] args) { }
         public bool AddAgain
         {
             get => throw new NotSupportedException("SelectSpell.AddAgain não abstraído");
@@ -470,8 +698,10 @@ namespace Chummer
     }
 
     /// <summary>Stub de SelectSpellCategory. Membros usados pelo domínio: 4.</summary>
-    public sealed class SelectSpellCategory
+    public sealed class SelectSpellCategory : DialogStubBase
     {
+        public SelectSpellCategory() { }
+        public SelectSpellCategory(params object[] args) { }
         public string Description
         {
             get => throw new NotSupportedException("SelectSpellCategory.Description não abstraído");
@@ -490,13 +720,20 @@ namespace Chummer
         public void SetExcludeCategories(params object[] args) => throw new NotSupportedException("SelectSpellCategory.SetExcludeCategories não abstraído");
     }
 
-    /// <summary>Stub de SelectText. Membros usados pelo domínio: 2.</summary>
-    public sealed class SelectText
+    /// <summary>Stub de SelectText. Membros usados pelo domínio: 3.</summary>
+    public sealed class SelectText : DialogStubBase
     {
+        public SelectText() { }
+        public SelectText(params object[] args) { }
         public string Description
         {
             get => throw new NotSupportedException("SelectText.Description não abstraído");
             set => throw new NotSupportedException("SelectText.Description não abstraído");
+        }
+        public bool PreventXPathErrors
+        {
+            get => throw new NotSupportedException("SelectText.PreventXPathErrors não abstraído");
+            set => throw new NotSupportedException("SelectText.PreventXPathErrors não abstraído");
         }
         public string SelectedValue
         {
@@ -505,9 +742,11 @@ namespace Chummer
         }
     }
 
-    /// <summary>Stub de SelectWeaponCategory. Membros usados pelo domínio: 3.</summary>
-    public sealed class SelectWeaponCategory
+    /// <summary>Stub de SelectWeaponCategory. Membros usados pelo domínio: 4.</summary>
+    public sealed class SelectWeaponCategory : DialogStubBase
     {
+        public SelectWeaponCategory() { }
+        public SelectWeaponCategory(params object[] args) { }
         public string Description
         {
             get => throw new NotSupportedException("SelectWeaponCategory.Description não abstraído");
@@ -522,6 +761,11 @@ namespace Chummer
         {
             get => throw new NotSupportedException("SelectWeaponCategory.SelectedCategory não abstraído");
             set => throw new NotSupportedException("SelectWeaponCategory.SelectedCategory não abstraído");
+        }
+        public string WeaponType
+        {
+            get => throw new NotSupportedException("SelectWeaponCategory.WeaponType não abstraído");
+            set => throw new NotSupportedException("SelectWeaponCategory.WeaponType não abstraído");
         }
     }
 
