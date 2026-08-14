@@ -6,7 +6,7 @@ mexer — tanto faz. Leia este arquivo e o `prompt-agente.md` e continue.
 
 Atualize-o ao fim de toda sessão. Se ele estiver velho, ele é pior que inútil.
 
-**Última atualização:** 2026-08-13 (segunda sessão do dia)
+**Última atualização:** 2026-08-14 (sondagem executável de DEC-037)
 
 ---
 
@@ -30,7 +30,8 @@ Depois leia, nesta ordem: `CLAUDE.md` → `docs/DESENVOLVIMENTO.md` → este arq
 | Linhas ainda em `Chummer/Backend/` | 321.655 |
 | Linhas já em `src/Chummer.Core/` | 747 |
 | Erros de **declaração** | **zero** |
-| Distância do domínio até o Android, com stubs | **5** |
+| Distância do domínio até o Android, com stubs | **zero** |
+| **Personagens de teste que CARREGAM fora do Windows** | **34 de 34** |
 | **Acoplamento de CORPO de método** | **1.489** (era 1.584) |
 | `ThreadSafeForm` no Backend | 327 |
 | APK esqueleto | **17,86 MiB, gera em ~1 min 38 s** |
@@ -62,6 +63,25 @@ Se você está lendo isto depois de uma interrupção, confira mesmo assim:
 git fetch origin && git branch -r | grep claude/
 git log --oneline -1
 ```
+
+---
+
+## O que mudou em 14/08: o domínio EXECUTA fora do Windows
+
+Até 13/08 sabíamos que o domínio estava a 5 erros de **compilar** para Android. Compilar não
+é executar. `./scripts/testar-carga.sh` fecha a lacuna: monta um console `net9.0` **sem
+WinForms** com o domínio real e abre os 34 personagens de `Chummer.Tests/TestFiles/`.
+
+**A hipótese de DEC-037 se sustenta, e o número é 34 de 34.** Com `Load(showWarnings: false)`
+os 34 personagens carregam inteiros — nome, metatipo, atributos, perícias, equipamento — e
+**nenhum diálogo de seleção é atingido**. Carregar é parser XML e construção de objetos, como
+se supunha. Com
+`showWarnings: true` os 34 abrem `SelectBuildMethod`, e não por regra de jogo: as fichas
+apontam para `settings/default.xml`, que o repositório não tem. Detalhes em DEC-049; PREM-021
+fixa `showWarnings: false` para o leitor.
+
+O que barrava a execução era **plataforma, não escolha do usuário** — thread STA, registro do
+Windows, ACL de diretório, leitura de PDF dentro da carga. Os cinco achados estão em DEC-050.
 
 ---
 
@@ -104,8 +124,11 @@ lógica escrita duas vezes — **a maior alavanca isolada do resto da Etapa 2.**
    prontas; é trabalho de repetição, não de decisão.
 3. **Metade de seleção** da abstração de interação — 337 erros, 24 diálogos `Select*`
    distintos. O inventário exato já está em `15-acoplamento-de-corpo.md`.
-4. **Testar o spike de stubs de verdade** (DEC-037): carregar um `.chum5` no Android e ver se
-   algum diálogo é atingido. Hoje só medimos distância de **compilação**, não execução.
+4. ~~**Testar o spike de stubs de verdade** (DEC-037)~~ — **FEITO em 14/08.** Ver DEC-049 e
+   DEC-050, e rode `./scripts/testar-carga.sh` para repetir a medição. Resultado curto: com
+   `Load(showWarnings: false)` **nenhum diálogo de seleção é atingido**, e o que sobrava era
+   acoplamento de plataforma, não escolha do usuário. O que ficou aberto é o aparelho
+   (QA-012).
 5. **Mover o `Backend/` inteiro** para `Chummer.Core`, quando o acoplamento de corpo zerar.
 
 ## O que já é resiliente, e o que não é

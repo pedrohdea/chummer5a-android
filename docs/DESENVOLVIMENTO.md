@@ -36,6 +36,7 @@ Elas medem coisas diferentes, e usar a errada dá falsa segurança.
 | `dev.sh ui` | `Backend` + `Core` + `Controls` sob **net9.0 sem WinForms** | defeitos de extração, na fase de declaração | depois de rodar o extrator |
 | `dev.sh legado` | **tudo**, sob **net9.0-windows com WinForms** | **corpos de método** — tipo errado, argumento nomeado inexistente, membro sumido | antes de todo commit no legado |
 | `dev.sh censo` | `Backend` + `Core` sob net9.0 sem WinForms | **mede** acoplamento de declaração restante | para saber onde o porte está |
+| `testar-carga.sh` | domínio + sombras, sob **net9.0 sem WinForms**, e **EXECUTA** | o que só a execução mostra: diálogo atingido, API do Windows chamada | ao mexer em carga de personagem |
 
 ### A pegadinha que custou caro
 
@@ -135,6 +136,33 @@ artefato dourado dá detecção de regressão de regra por propriedade, quase de
 
 Enquanto os artefatos não existem, o que temos de verificação real é `dev.sh check` mais o
 CI Windows.
+
+### `testar-carga.sh` — a única ferramenta que EXECUTA o domínio
+
+As quatro ferramentas acima compilam. Esta roda:
+
+```bash
+./scripts/testar-carga.sh                 # os 34 personagens, com avisos
+./scripts/testar-carga.sh --sem-avisos    # como o leitor do MVP vai carregar
+./scripts/testar-carga.sh Skink           # só as fichas cujo nome casa
+./scripts/testar-carga.sh --erros         # só compila, e agrupa os erros
+```
+
+Ela monta um console `net9.0` **sem WinForms** com `Chummer/Backend/`,
+`Chummer/Controls/Dominio/`, `Chummer/Controls/Extensions/`, `src/Chummer.Core/`,
+`src/Chummer.Compat/` e as sombras de `scripts/probe/RuntimeShims/`, abre cada `.chum5` e
+imprime nome, metatipo, atributos e contagens — **imprimir os dados é o ponto**: sem eles,
+"OK" não distingue carga de silêncio.
+
+Tudo em `RuntimeShims/` **lança** ao ser usado, e é assim de propósito: uma sombra que
+funciona esconde o acoplamento que a sondagem existe para medir. `LoadingBar` é a única
+exceção (barra de progresso; lançar mataria toda carga), e `ColorManager` devolve cor porque
+é apresentação pura.
+
+Não é rápido — dezenas de segundos por ficha grande, e a rodada completa passa de vinte
+minutos. Rode filtrado enquanto estiver iterando.
+
+Ver DEC-049 e DEC-050 para o que ela já mediu.
 
 ---
 

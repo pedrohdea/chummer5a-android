@@ -1488,7 +1488,7 @@ monta um console `net9.0` **sem WinForms** com o domínio real e carrega os 34 p
 | modo | carregam | diálogo tocado |
 |---|---|---|
 | `Load(showWarnings: true)` | **0 de 34** | `SelectBuildMethod`, nos 34 |
-| `Load(showWarnings: false)` | ver `estado-atual.md` | **nenhum** |
+| `Load(showWarnings: false)` | **34 de 34** | **nenhum** |
 
 Com `showWarnings: true` o domínio não pergunta nada sobre *regra de jogo* — ele pergunta
 sobre **configuração**: as 34 fichas foram salvas apontando para `default.xml`, um arquivo de
@@ -1500,6 +1500,15 @@ Com `showWarnings: false` esse ramo inteiro é pulado: o domínio escolhe sozinh
 configuração mais parecida e carrega. **Nenhum diálogo de seleção é atingido.** A hipótese
 de DEC-037 vale — carregar é parser XML e construção de objetos.
 
+**Os 34 carregam de verdade, e a sondagem prova isso imprimindo dado** — nome, metatipo,
+atributos totais, contagem de qualidades, perícias, magias, armas, cyberware e equipamento.
+"OK" sem dado impresso não distinguiria carga de silêncio, e neste projeto o primeiro número
+de uma medição já esteve errado cinco vezes.
+
+**Custo de tempo, medido neste contêiner:** de 4 s (ficha de 100 KiB) a 93 s (ficha de
+5,6 MiB), num total de ~25 min para os 34. É desktop x64; no aparelho é por medir (QA-012).
+Boa parte disso é `InsertPdfNotesIfAvailable` (DEC-050, achado 4).
+
 **A consequência de projeto:** o leitor do MVP carrega com `showWarnings: false`. O que
 `showWarnings: true` acrescenta não é regra, é conversa sobre configuração divergente, e essa
 conversa é da abstração de interação (DEC-003/DEC-026), não da abstração de seleção.
@@ -1508,6 +1517,12 @@ conversa é da abstração de interação (DEC-003/DEC-026), não da abstração
 e os ramos que abrem esses diálogos estão todos atrás de `if (!Utils.IsUnitTest && showWarnings)`.
 A suíte carrega os 34 porque desvia do caminho, não porque o caminho funciona. A sondagem
 **não** liga `IsUnitTest` — de propósito.
+
+Medido: `IsUnitTest` muda comportamento em **31 pontos** fora de `Utils.cs`, e **7 deles
+estão dentro da rotina de carga**. Isso é um recado para DEC-004: artefato dourado gerado
+pela suíte legada descreve o caminho *de teste*, não o caminho do usuário. Ou os dois lados
+do teste diferencial ligam `IsUnitTest`, ou nenhum liga — misturar compara coisas
+diferentes.
 
 ---
 
