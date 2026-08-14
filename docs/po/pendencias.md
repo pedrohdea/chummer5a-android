@@ -292,3 +292,34 @@ SkiaSharp 3.x.
 **O que o PO pode responder, se quiser:** avisar quando o A56 receber a atualização.
 
 **Resposta:**
+
+---
+
+## PEND-017 — Pesquisar Expo Go · ABERTA
+**Criada:** 2026-08-13 · **Premissa:** — · **Reversão:** 🟢 baixo (pesquisar) · 🔴 alto (adotar)
+
+O PO pediu para pesquisar **Expo Go**. Anotado para investigar com calma numa sessão
+dedicada, não no fim de uma.
+
+**O que precisa ser dito antes de a pesquisa começar, para ela não partir do lugar errado:**
+Expo Go é ferramenta do ecossistema **React Native / JavaScript**. Ela não executa .NET.
+Adotá-la como camada de UI significaria **reescrever as regras de Shadowrun em JavaScript** —
+ou seja, jogar fora as ~322 mil linhas de C# cujo reaproveitamento é a premissa inteira deste
+porte (DEC-001, DEC-002, e o achado da Etapa 0 de que não existe fatia fina do domínio).
+
+Isso **não** encerra o assunto — encerra apenas a leitura de "trocar Avalonia por Expo".
+Há pelo menos três perguntas legítimas que a pesquisa deve responder:
+
+1. **O que o Expo Go resolve que hoje nos dói?** O ciclo de "instalar APK no aparelho para
+   ver se mudou" é lento e foi o que travou o diagnóstico do primeiro bug. Expo Go é
+   conhecido justamente por recarga instantânea no aparelho. **Existe equivalente no
+   Avalonia/.NET?** (hot reload, `dotnet watch`) — essa é a pergunta de maior retorno.
+2. **Vale como camada fina de apresentação** sobre um serviço .NET local, com o domínio
+   intacto? Custo: dois runtimes no mesmo APK.
+3. **Vale para prototipar telas** antes de construí-las em Avalonia?
+
+**Por que a reversão é 🔴 se adotado:** trocar a stack de UI depois da Etapa 6 significaria
+refazer toda a UI. A pergunta 1 é 🟢 e deve ser respondida primeiro — pode ser que o ganho
+real seja hot reload, e isso o .NET talvez já entregue.
+
+**Resposta:**
