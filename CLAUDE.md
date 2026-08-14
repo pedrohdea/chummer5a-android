@@ -133,6 +133,8 @@ todo commit. Guia completo em `docs/DESENVOLVIMENTO.md`.
 ./scripts/dev.sh apk                # gera o APK e informa o tamanho (~1 min 38 s do zero)
 ./scripts/dev.sh tela /tmp/x.png    # renderiza a UI para PNG — prova que desenha, sem tela
 ./scripts/dev.sh spikes             # medições de plataforma no desktop (controle do APK)
+./scripts/dev.sh carga              # EXECUTA o domínio: abre os 34 .chum5 (~25 min)
+./scripts/dev.sh carga Skink        # idem, uma ficha só (~4 s + build)
 ./scripts/setup-dev.sh              # SDK .NET + verificação
 ./scripts/setup-dev.sh --android    # + workload Android (para gerar APK)
 ./scripts/censo-erros.sh            # mede: relatório completo (barra de progresso da Etapa 2)
@@ -213,6 +215,8 @@ artefato dourado dá detecção de regressão de regra por propriedade, quase de
 - **69 dos 245** arquivos de `Backend/` usam `System.Windows.Forms`; o domínio instancia diálogos e chama `MessageBox` 329 vezes.
 - `GlobalSettings.*` tem **6.448** acessos. Preserve a fachada; troque só o backing store.
 - 146 `Application.DoEvents()` e 279 execuções síncronas de código async — no Android isso é ANR.
+- **`Character.Load` NÃO está em `Backend/`** — a extração o levou para `Chummer/Controls/Dominio/Character.UI.cs`, junto com `ClearMagic`, `ClearInitiations` e companhia. `GetTotalMatrixAttribute` foi parar em `Controls/Extensions/`. Arquivo `.UI.cs` **não** é sinônimo de descartável (DEC-050).
+- `Utils.IsUnitTest` muda comportamento em **31 pontos**, **7 deles dentro da carga**. A suíte legada carrega os 34 personagens desviando do caminho do usuário, não percorrendo-o (DEC-049).
 - `AddImprovementCollection.cs` e `AddImprovementAsyncCollection.cs` **eram** a mesma lógica escrita duas vezes (~15k linhas). Desde 13/08 são **uma classe só**, e a fusão par a par em núcleos `blnSync` está em andamento (DEC-047). Ao mexer ali, leia DEC-047 e use `scripts/fundir-par.py` — não funda à mão.
 
 ## Ambiente
