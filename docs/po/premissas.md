@@ -372,3 +372,47 @@ domínio, que já guarda bytes e aceita receber outros.
 
 **Custo de reverter:** 🟢 baixo. Nada foi construído por cima dessa premissa; ela só
 descreve o que **não** foi construído.
+
+---
+
+## PREM-021 — Teste de desempenho fica para o fim do projeto · CONFIRMADA 🟢
+**Criada:** 2026-08-13 · **Decisão do PO**
+
+Medir desempenho sob volume — tempo de resposta, consumo sob estresse, muitos personagens
+abertos ao mesmo tempo — **não acontece nas etapas iniciais**. Fica para o fim.
+
+**O que isso NÃO abrange, e a distinção importa:** verificar se o programa **abre** um
+`.chum5` é validação de arquitetura, não teste de desempenho, e continua sendo trabalho de
+etapa inicial (DEC-037, DEC-049).
+
+As medições de plataforma já feitas na Etapa 2.5 — tempo de carga do XML, pico de memória,
+tamanho do APK — **não são teste de desempenho**: são spikes de risco, feitos para saber se
+uma decisão de arquitetura se sustenta no aparelho. Foram baratas e responderam perguntas que
+mudariam o plano. Essa é a diferença: spike responde "a arquitetura aguenta?"; teste de
+desempenho responde "está rápido o suficiente?", e esse segundo só faz sentido quando existe
+o que otimizar.
+
+**Se estiver errada:** descobrir tarde que o app é lento demais no A56 custaria retrabalho de
+UI. Mitigado pelos spikes da Etapa 2.5, que já mediram carga e memória com folga, e por
+QA-009, que traz os números do aparelho antes do MVP.
+
+---
+
+## PREM-022 — Um personagem basta para o artefato dourado mínimo · ATIVA 🟡
+**Criada:** 2026-08-13 · **Decisão:** DEC-049
+
+Assumido que **um** personagem pequeno já detecta a maior parte das regressões de regra, e
+que os 34 podem esperar a Etapa 3.
+
+**Por quê:** a projeção do `PrintToXmlTextWriter` traz todos os valores calculados de um
+personagem — atributos, perícias, limites, iniciativa, essência. Uma regressão no motor de
+Improvements dificilmente atinge só personagens que o primeiro não cobre.
+
+**Se estiver errada:** regressões em caminhos que o personagem escolhido não exercita —
+magia, tecnomancia, veículos, cyberware pesado — passariam despercebidas até a Etapa 3.
+Custo de reverter 🟡: acrescentar personagens ao conjunto é barato; o caro seria ter confiado
+no verde durante semanas.
+
+**Mitigação barata, e vale fazer desde o começo:** escolher o personagem **mais denso** entre
+os pequenos, não o mais simples. Um que tenha magia, cyberware e perícias com especialização
+cobre muito mais caminho de regra pelo mesmo custo de execução.
