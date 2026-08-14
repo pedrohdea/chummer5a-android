@@ -162,7 +162,7 @@ exceção (barra de progresso; lançar mataria toda carga), e `ColorManager` dev
 Não é rápido — dezenas de segundos por ficha grande, e a rodada completa passa de vinte
 minutos. Rode filtrado enquanto estiver iterando.
 
-Ver DEC-049 e DEC-050 para o que ela já mediu.
+Ver DEC-050 e DEC-051 para o que ela já mediu.
 
 ---
 

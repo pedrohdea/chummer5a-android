@@ -77,11 +77,11 @@ os 34 personagens carregam inteiros — nome, metatipo, atributos, perícias, eq
 **nenhum diálogo de seleção é atingido**. Carregar é parser XML e construção de objetos, como
 se supunha. Com
 `showWarnings: true` os 34 abrem `SelectBuildMethod`, e não por regra de jogo: as fichas
-apontam para `settings/default.xml`, que o repositório não tem. Detalhes em DEC-049; PREM-021
+apontam para `settings/default.xml`, que o repositório não tem. Detalhes em DEC-050; PREM-023
 fixa `showWarnings: false` para o leitor.
 
 O que barrava a execução era **plataforma, não escolha do usuário** — thread STA, registro do
-Windows, ACL de diretório, leitura de PDF dentro da carga. Os cinco achados estão em DEC-050.
+Windows, ACL de diretório, leitura de PDF dentro da carga. Os cinco achados estão em DEC-051.
 
 ---
 
@@ -124,8 +124,8 @@ lógica escrita duas vezes — **a maior alavanca isolada do resto da Etapa 2.**
    prontas; é trabalho de repetição, não de decisão.
 3. **Metade de seleção** da abstração de interação — 337 erros, 24 diálogos `Select*`
    distintos. O inventário exato já está em `15-acoplamento-de-corpo.md`.
-4. ~~**Testar o spike de stubs de verdade** (DEC-037)~~ — **FEITO em 14/08.** Ver DEC-049 e
-   DEC-050, e rode `./scripts/testar-carga.sh` para repetir a medição. Resultado curto: com
+4. ~~**Testar o spike de stubs de verdade** (DEC-037)~~ — **FEITO em 14/08.** Ver DEC-050 e
+   DEC-051, e rode `./scripts/testar-carga.sh` para repetir a medição. Resultado curto: com
    `Load(showWarnings: false)` **nenhum diálogo de seleção é atingido**, e o que sobrava era
    acoplamento de plataforma, não escolha do usuário. O que ficou aberto é o aparelho
    (QA-012).

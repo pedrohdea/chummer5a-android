@@ -66,7 +66,7 @@ case "$cmd" in
     ;;
 
   # A única que EXECUTA em vez de só compilar. Fora do `check` de propósito: leva ~25 min
-  # na rodada completa. Rode filtrado ao iterar. Ver DEC-049.
+  # na rodada completa. Rode filtrado ao iterar. Ver DEC-050.
   carga)
     exec "$RAIZ/scripts/testar-carga.sh" "$@"
     ;;

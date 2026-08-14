@@ -327,7 +327,7 @@ real seja hot reload, e isso o .NET talvez já entregue.
 ---
 
 ## PEND-018 — De onde vem o arquivo de configurações no aparelho?
-**Criada:** 2026-08-14 · **Premissa:** PREM-021 · **Decisão:** DEC-049
+**Criada:** 2026-08-14 · **Premissa:** PREM-023 · **Decisão:** DEC-050
 
 **A pergunta:** as 34 fichas de teste apontam para `default.xml`, um arquivo de
 configurações que o repositório **não contém** — o Chummer de desktop o cria na primeira
@@ -343,7 +343,7 @@ Três respostas possíveis, e são decisão de produto:
 3. **O aplicativo pergunta** — o que reabre `SelectBuildMethod` e antecipa a abstração de
    seleção para dentro do MVP.
 
-**Premissa em vigor (PREM-021):** a resposta 2. É a que o domínio já implementa e a única
+**Premissa em vigor (PREM-023):** a resposta 2. É a que o domínio já implementa e a única
 que não arrasta diálogo de seleção para dentro do leitor.
 
 **Resposta:**

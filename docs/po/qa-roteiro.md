@@ -243,7 +243,7 @@ commit mostra qual.
 ---
 
 ## QA-012 — Abrir uma ficha real no APK, com `showWarnings: false`
-**Criado:** 2026-08-14 · **Depende de:** DEC-049 · **Bloqueado por:** QA-009
+**Criado:** 2026-08-14 · **Depende de:** DEC-050 · **Bloqueado por:** QA-009
 
 A sondagem `./scripts/testar-carga.sh` prova que o domínio carrega `.chum5` **em Linux
 `net9.0` sem WinForms**. Ela **não** prova nada sobre o aparelho: ARM64, leitura por
@@ -253,7 +253,7 @@ A sondagem `./scripts/testar-carga.sh` prova que o domínio carrega `.chum5` **e
 
 1. **Abre?** Nome, metatipo e atributos aparecem com os valores certos.
 2. **Quanto demora?** No contêiner, uma ficha de 2 MiB levou dezenas de segundos — em
-   grande parte por `InsertPdfNotesIfAvailable` (DEC-050, achado 4). Se no aparelho passar de
+   grande parte por `InsertPdfNotesIfAvailable` (DEC-051, achado 4). Se no aparelho passar de
    poucos segundos, é ANR.
 3. **Alguma caixa de diálogo aparece?** Não deveria. Se aparecer, anote o texto: é a lista
    de trabalho da abstração de seleção.

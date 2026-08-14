@@ -1475,7 +1475,63 @@ o teste diz se ela muda alguma saída.
 
 ---
 
-## DEC-049 — Sondagem executável: a hipótese de DEC-037 se sustenta, com ressalva · VIGENTE
+## DEC-049 — Fail-fast por comportamento: artefato dourado mínimo · VIGENTE
+**2026-08-13** · pedido do PO
+
+O ferramental de verificação prova que o porte **compila**. Nada prova que ele **calcula
+certo** — e a consolidação dos `AddImprovement*` reescreveu o interior do motor de regras com
+`dev.sh check` verde e **zero evidência** de que os números continuam iguais.
+
+### O que já é fail-fast, e o que essa camada não alcança
+
+| Ferramenta | Tempo | O que derruba |
+|---|---|---|
+| auditoria de parciais | instantânea | membro emitido em tipo errado |
+| `verificar-ui.sh` | ~10 s | defeito de extração |
+| `verificar-legado.sh` | ~30 s | erro de corpo de método |
+
+As três são rápidas e todas respondem à mesma pergunta: *compila?* A pergunta que falta é
+*calcula o mesmo?*, e nenhuma delas chega perto.
+
+### O corte mínimo, e por que ele cabe numa etapa inicial
+
+A Etapa 3 inteira — 34 personagens, job Windows, comparador com triagem de ruído — é grande
+demais para agora. Mas o **corte mínimo** dela é barato e entrega quase toda a detecção:
+
+1. **Um** personagem pequeno, não os 34.
+2. `PrintToXmlTextWriter` gera a projeção com **todos os valores de regra já calculados**.
+   Ela já existe: o `Test05` a produz e **joga fora**.
+3. Congelar essa projeção como arquivo versionado.
+4. Toda mudança regenera e compara. **Primeira diferença, falha, e diz qual propriedade.**
+
+Falha em segundos e aponta a propriedade exata. É detecção de regressão de regra por
+propriedade, quase de graça, sem esperar a Etapa 3.
+
+### O princípio, que vale além deste teste
+
+**Um teste fail-fast útil precisa de três coisas: falhar rápido, falhar cedo na cadeia, e
+dizer O QUE quebrou.** As três ferramentas atuais têm as duas primeiras. O artefato dourado
+mínimo é a primeira que tem as três — porque a saída não é "falhou", é o nome da propriedade
+cujo valor mudou.
+
+**Ordem correta na cadeia**, do mais barato ao mais caro, e é a ordem em que devem rodar:
+estrutura → compilação de declaração → compilação de corpo → **comportamento** → aparelho.
+Cada degrau só é pago se o anterior passou.
+
+### Dependência honesta
+
+Isto exige que o `Chummer.Core` consiga instanciar um `Character`, que é exatamente a
+pergunta aberta do spike de DEC-037. **Os dois assuntos são o mesmo assunto por caminhos
+diferentes** — e é por isso que o spike não é opcional.
+
+### Uma distinção de vocabulário, registrada porque já causou confusão
+
+**"Teste de carga" tem dois sentidos, e neste projeto só um está em pauta agora.** Verificar
+se o programa **abre** um `.chum5` é validação de arquitetura e é trabalho de etapa inicial.
+Medir **desempenho sob volume** é teste de carga no sentido usual, e esse **fica para o fim
+do projeto** — decisão do PO em 13/08. Ao escrever, prefira "carregar uma ficha" a "teste de
+carga" para o primeiro.
+## DEC-050 — Sondagem executável: a hipótese de DEC-037 se sustenta, com ressalva · VIGENTE
 **2026-08-14**
 
 DEC-037 mediu distância de **compilação** e deixou a pergunta em aberto: carregar um
@@ -1507,7 +1563,7 @@ de uma medição já esteve errado cinco vezes.
 
 **Custo de tempo, medido neste contêiner:** de 4 s (ficha de 100 KiB) a 93 s (ficha de
 5,6 MiB), num total de ~25 min para os 34. É desktop x64; no aparelho é por medir (QA-012).
-Boa parte disso é `InsertPdfNotesIfAvailable` (DEC-050, achado 4).
+Boa parte disso é `InsertPdfNotesIfAvailable` (DEC-051, achado 4).
 
 **A consequência de projeto:** o leitor do MVP carrega com `showWarnings: false`. O que
 `showWarnings: true` acrescenta não é regra, é conversa sobre configuração divergente, e essa
@@ -1526,7 +1582,7 @@ diferentes.
 
 ---
 
-## DEC-050 — O que a execução mostrou e a compilação não mostrava · VIGENTE
+## DEC-051 — O que a execução mostrou e a compilação não mostrava · VIGENTE
 **2026-08-14**
 
 Cinco achados que só apareceram por rodar, com o custo de cada um.
