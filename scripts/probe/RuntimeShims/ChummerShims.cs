@@ -25,8 +25,10 @@
 //                 domínio são lidas em caminhos que nada têm a ver com escolha do usuário.
 //                 Lançar aqui produziria falso positivo no resultado do spike.
 //   Program       LANÇA no que é janela (MainForm) e devolve no que é estado de processo.
-//                 PluginLoader é null de propósito: MEF está fora do escopo (PREM-005) e o
-//                 domínio já trata null.
+//                 PluginLoader devolve um PluginControl VAZIO. A sondagem provou que o
+//                 domínio NÃO trata null: Character.Load itera Program.PluginLoader
+//                 .MyActivePlugins sem guarda e estoura. MEF está fora do escopo (PREM-005),
+//                 e "nenhum plugin ativo" é o comportamento final do porte — não é máscara.
 //   CursorWait    no-op. É cursor de ampulheta; não há cursor.
 
 using System;
@@ -109,7 +111,9 @@ namespace Chummer
 
         public static Process MyProcess => Process.GetCurrentProcess();
 
-        public static PluginControl PluginLoader => null;
+        private static readonly PluginControl s_objPluginLoader = new PluginControl();
+
+        public static PluginControl PluginLoader => s_objPluginLoader;
 
         public static Lazy<TelemetryClient> ChummerTelemetryClient { get; }
             = new Lazy<TelemetryClient>(() => new TelemetryClient());
