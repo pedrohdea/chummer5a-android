@@ -183,7 +183,9 @@ grosso do trabalho — mas estão **em espera** por ordem do PO até o esqueleto
 
 ### Uma armadilha nova, que custou tempo nesta sessão
 
-`./scripts/dev.sh carga` **sem argumento** roda com `showWarnings=true` e imprime **0 de 34**.
+**`./scripts/dev.sh carga` sem argumento imprime `0 de 34`. Com `--sem-avisos`, `34 de 34`.**
+Os dois números foram medidos nesta árvore em 15/08, e ambos estão certos — medem coisas
+diferentes.
 Isso não contradiz DEC-050: nesse modo o domínio pergunta qual configuração usar, porque as
 fichas apontam para `settings/default.xml`, que o repositório não tem. O número que vale para
 um leitor headless sai com `--sem-avisos`. **O padrão da ferramenta é o modo pessimista** —
