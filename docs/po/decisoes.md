@@ -1618,3 +1618,64 @@ plataformas. Continua sendo ACL do Windows e continua sendo acoplamento a remove
 **O que a sondagem NÃO prova:** ela roda em `net9.0` de desktop Linux, não em Android. O que
 ela mede é o domínio sem WinForms; ARM64, AOT, `AssetManager` e memória do aparelho ficam
 para QA-009.
+
+---
+
+## DEC-052 — O CI exige que o APK ABRA, num emulador com KVM · VIGENTE
+**2026-08-15** · mudança de rumo do PO
+
+O projeto tinha quatro ferramentas de verificação e todas respondiam à mesma pergunta:
+**compila?** `dev.sh tela` chegou mais perto — prova que a UI **desenha** — mas desenha no
+desktop, sob X11. Nenhuma delas toca o runtime do Android: empacotamento, ABI, carregamento
+das `.so` nativas, ciclo de vida da `Activity`. É exatamente onde um app que compila sem um
+arranhão morre na inicialização.
+
+Enquanto isso, o APK existia desde 12/08 e **ninguém nunca o tinha aberto**. A única resposta
+possível era o PO instalar no aparelho (QA-009), o que fazia de cada verificação uma espera de
+horas ou dias — e nenhuma delas aconteceu.
+
+### O que destravou
+
+O contêiner de desenvolvimento não consegue: não há `/dev/kvm`, e o emulador por software sobe
+mas não aguenta o `adb install` (medido em 13/08). **O runner Linux do GitHub tem KVM.** Essa
+é a diferença, e ela estava disponível o tempo todo.
+
+A receita veio de `home-assistant/android`, que o PO apontou: `reactivecircus/android-emulator-runner`
+sobre `ubuntu-latest`, com a regra de udev que abre o `/dev/kvm` e o `free-disk-space` antes.
+O detalhe do disco não é higiene — disco cheio ali **não** se manifesta como "disco cheio", e
+sim como `adb install` falhando com *Failed to commit install*.
+
+### Três provas, porque cada uma sozinha mente
+
+`scripts/verificar-apk.sh` só passa se as três valerem:
+
+| Prova | O que ela sozinha deixaria passar |
+|---|---|
+| processo vivo após 10 s | app que abre e trava |
+| `logcat` sem `FATAL EXCEPTION` | crash silencioso |
+| activity na pilha | processo vivo sem nada na tela |
+
+A captura de tela sai **sempre**, inclusive na falha: numa falha ela *é* o diagnóstico. Tela
+branca aponta a armadilha do `TopLevel` do Avalonia; tela preta aponta outra coisa.
+
+### Duas armadilhas que o job precisou contornar
+
+**A ABI.** O APK padrão é `android-arm64` apenas (DEC-039), e **nenhum emulador x86_64 o
+executa**. A segunda ABI entra por `-p:EmulatorAbi=true`, um interruptor lido só pelo
+`Chummer.Android.csproj`: passar `RuntimeIdentifiers` pela linha de comando vaza a propriedade
+global para o `Chummer.UI`, que é `net9.0` puro, e dá `NETSDK1083`.
+
+**O nome da activity.** O SDK gera `crc64<hash>.MainActivity`, que muda quando o namespace
+muda. Um teste que lança a activity pelo nome viraria falha intermitente por motivo alheio ao
+app, então o nome está fixo em `Name = "com.chummer5a.android.MainActivity"`.
+
+### O que isto NÃO substitui
+
+Emulador x86_64 não é o A56: não pega defeito de ARM64, de densidade de tela, de fabricante
+nem de consumo de memória real. QA-009 continua existindo. O que muda é que ele deixa de ser
+o **primeiro** filtro e passa a ser o **último** — o CI pega o que é grosso, em minutos, a
+cada push.
+
+**Ordem completa da cadeia**, cada degrau só pago se o anterior passou (a de DEC-049, agora
+com o degrau que faltava): estrutura → declaração → corpo de método → comportamento →
+**o app abre** → aparelho.

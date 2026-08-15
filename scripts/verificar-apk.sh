@@ -10,7 +10,7 @@
 # ciclo de vida da Activity. É onde um app que compila perfeitamente morre na inicialização.
 #
 # NÃO roda no contêiner de desenvolvimento: não há /dev/kvm aqui e o emulador por software
-# não aguenta o `adb install`. Roda no CI, onde o runner Linux do GitHub tem KVM. Ver DEC-050.
+# não aguenta o `adb install`. Roda no CI, onde o runner Linux do GitHub tem KVM. Ver DEC-052.
 #
 # O critério é deliberadamente severo — três provas independentes, porque cada uma sozinha
 # mente:

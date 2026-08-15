@@ -6,7 +6,7 @@ mexer — tanto faz. Leia este arquivo e o `prompt-agente.md` e continue.
 
 Atualize-o ao fim de toda sessão. Se ele estiver velho, ele é pior que inútil.
 
-**Última atualização:** 2026-08-14 (sondagem executável de DEC-037)
+**Última atualização:** 2026-08-15 (mudança de rumo do PO: esqueleto antes de domínio)
 
 ---
 
@@ -34,11 +34,55 @@ Depois leia, nesta ordem: `CLAUDE.md` → `docs/DESENVOLVIMENTO.md` → este arq
 | **Personagens de teste que CARREGAM fora do Windows** | **34 de 34** |
 | **Acoplamento de CORPO de método** | **1.489** (era 1.584) |
 | `ThreadSafeForm` no Backend | 327 |
-| APK esqueleto | **17,86 MiB, gera em ~1 min 38 s** |
+| APK esqueleto | **14,94 MiB** (sem dados de jogo, arm64) |
+| O APK **abre** num aparelho? | **NÃO SABEMOS** — job de CI criado em 15/08, nunca executado |
 | Linhas de UI Avalonia | 756 |
 
 **0,2% do domínio migrado.** O que existe até aqui é terreno preparado: metades de UI
 separadas, abstração de interação (metade de mensagem), e o ferramental de verificação.
+
+---
+
+## A MUDANÇA DE RUMO DE 15/08 — leia isto antes de qualquer coisa
+
+**O PO parou a portabilidade de domínio.** A ordem é: acertar o esqueleto primeiro. Um APK
+simples, tela de apresentação, menus desativados, e o app **provado de pé** — antes de portar
+mais uma linha de regra.
+
+E ele está certo sobre a sequência. Havia um APK que **compila** desde 12/08 e **ninguém
+nunca o tinha aberto**. Portar domínio por cima disso é construir sobre fundação não
+verificada.
+
+O que isso muda na prática:
+
+- A tela do app **não faz nada**, e isso é o projeto, não uma limitação.
+- Os dados de jogo **saíram do APK** (`EmbedGameData=false`). Religue com
+  `-p:EmbedGameData=true` quando houver o que ler. APK: 17,86 → **14,94 MiB**.
+- Frentes **em espera**, não canceladas: artefato dourado (DEC-049), consolidação de
+  `AddImprovementCollection` (DEC-047, faltam 31 pares), metade de seleção da abstração.
+- "Sem testes de carga" — ordem do PO, e ela vale para a sondagem de `.chum5` também.
+
+---
+
+## O que agora responde "o app ABRE?" (DEC-052)
+
+A lacuna maior do projeto era: quatro ferramentas de verificação, todas respondendo
+**compila?**. Nenhuma tocava o runtime do Android.
+
+**O runner Linux do GitHub tem `/dev/kvm`; este contêiner não.** Essa diferença estava
+disponível o tempo todo. O job `emulador` do `port-build.yml` instala o APK num emulador de
+verdade, lança e exige três provas — processo vivo após 10 s, `logcat` sem `FATAL EXCEPTION`,
+activity na pilha. A captura de tela sai sempre, inclusive na falha, porque numa falha ela
+**é** o diagnóstico.
+
+Receita conferida em `home-assistant/android`, que o PO apontou.
+
+```bash
+./scripts/verificar-apk.sh <apk> <png>   # só roda onde há emulador: no CI, não aqui
+```
+
+**ATENÇÃO:** esse job **nunca rodou** até o fechamento desta sessão. A primeira execução no
+CI é que dirá se ele presta, e é bem possível que precise de ajuste.
 
 ---
 
@@ -115,21 +159,35 @@ lógica escrita duas vezes — **a maior alavanca isolada do resto da Etapa 2.**
 
 ## Próximo passo, em ordem de valor
 
-1. **QA-009 — o PO instala o APK no A56.** É a única coisa que ninguém aqui dentro pode
-   fazer: não há emulador nem `/dev/kvm`. Também responde se o Android suporta código
-   dinâmico, que é a pergunta aberta de DEC-041.
-2. **Terminar a consolidação de `AddImprovementCollection`** (DEC-047, em voo). Faltam 31
-   dos 42 pares com diálogo — vale ~215 erros de censo — e depois os ~281 pares sem diálogo,
-   que quase não movem o censo mas são ~6 mil linhas duplicadas. Receita e ferramenta
-   prontas; é trabalho de repetição, não de decisão.
-3. **Metade de seleção** da abstração de interação — 337 erros, 24 diálogos `Select*`
-   distintos. O inventário exato já está em `15-acoplamento-de-corpo.md`.
-4. ~~**Testar o spike de stubs de verdade** (DEC-037)~~ — **FEITO em 14/08.** Ver DEC-050 e
-   DEC-051, e rode `./scripts/testar-carga.sh` para repetir a medição. Resultado curto: com
-   `Load(showWarnings: false)` **nenhum diálogo de seleção é atingido**, e o que sobrava era
-   acoplamento de plataforma, não escolha do usuário. O que ficou aberto é o aparelho
-   (QA-012).
-5. **Mover o `Backend/` inteiro** para `Chummer.Core`, quando o acoplamento de corpo zerar.
+**O rumo mudou em 15/08.** Os itens 2, 3 e 5 abaixo continuam válidos e continuam sendo o
+grosso do trabalho — mas estão **em espera** por ordem do PO até o esqueleto estar de pé.
+
+1. **Ver o job `emulador` rodar no CI, e consertá-lo.** Ele foi escrito em 15/08 e **nunca
+   executou**. Enquanto não passar, o projeto continua sem saber se o APK abre. Se falhar, a
+   captura publicada como artefato `tela-emulador` é o primeiro lugar a olhar: branca aponta
+   a armadilha do `TopLevel` do Avalonia, preta aponta outra coisa.
+2. **QA-009 — o PO instala o APK no A56.** O emulador x86_64 do CI **não** é o A56: não pega
+   defeito de ARM64, de densidade, de fabricante nem de memória real. O CI vira o primeiro
+   filtro; o aparelho continua sendo o último.
+3. **Crescer o esqueleto uma tela por vez**, cada uma passando pelo job do emulador antes da
+   seguinte. É o que "esqueleto sustentável" quer dizer na prática.
+
+### Em espera, não canceladas
+
+- **Artefato dourado mínimo** (DEC-049) — a dependência dele já caiu: o domínio carrega ficha
+  fora do Windows (DEC-050/051).
+- **Consolidação de `AddImprovementCollection`** (DEC-047) — faltam 31 dos 42 pares com
+  diálogo. Ferramenta pronta em `scripts/fundir-par.py`; repetição, não decisão.
+- **Metade de seleção** da abstração de interação — 337 erros, 24 diálogos `Select*`.
+- **Mover o `Backend/` inteiro** para `Chummer.Core`, quando o acoplamento de corpo zerar.
+
+### Uma armadilha nova, que custou tempo nesta sessão
+
+`./scripts/dev.sh carga` **sem argumento** roda com `showWarnings=true` e imprime **0 de 34**.
+Isso não contradiz DEC-050: nesse modo o domínio pergunta qual configuração usar, porque as
+fichas apontam para `settings/default.xml`, que o repositório não tem. O número que vale para
+um leitor headless sai com `--sem-avisos`. **O padrão da ferramenta é o modo pessimista** —
+quem rodar e ler "0 de 34" vai concluir a coisa errada.
 
 ## O que já é resiliente, e o que não é
 

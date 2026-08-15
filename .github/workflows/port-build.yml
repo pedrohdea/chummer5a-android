@@ -150,7 +150,7 @@ jobs:
   #
   # O contêiner de desenvolvimento não consegue: não tem /dev/kvm, e o emulador por software
   # sobe mas não aguenta o `adb install` (medido). O runner Linux do GitHub TEM KVM, e é essa
-  # a diferença que destrava tudo. Receita conferida em home-assistant/android. Ver DEC-050.
+  # a diferença que destrava tudo. Receita conferida em home-assistant/android. Ver DEC-052.
   emulador:
     runs-on: ubuntu-latest
     timeout-minutes: 60
