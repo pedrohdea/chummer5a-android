@@ -212,9 +212,10 @@ jobs:
           disk-size: 2G
           heap-size: 1G
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: |
-            APK=$(find src/Chummer.Android/bin/Release -name '*-Signed.apk' | head -1)
-            ./scripts/verificar-apk.sh "$APK" "${RUNNER_TEMP}/aparelho.png"
+          # UMA linha, e isso não é estilo: o android-emulator-runner executa cada linha de
+          # `script` num `sh -c` SEPARADO. Uma variável atribuída numa linha não existe na
+          # seguinte — foi assim que a primeira execução falhou, com o caminho do APK vazio.
+          script: ./scripts/verificar-apk.sh "$(find src/Chummer.Android/bin/Release -name '*-Signed.apk' | head -1)" "${RUNNER_TEMP}/aparelho.png"
 
       # Sai mesmo quando o job falha: numa falha a captura É o diagnóstico. Tela branca
       # aponta a armadilha do TopLevel do Avalonia; tela preta aponta outra coisa.
