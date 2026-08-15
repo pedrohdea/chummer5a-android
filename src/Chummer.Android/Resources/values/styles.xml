@@ -4,10 +4,22 @@
   <!--
     Sem ActionBar: o Avalonia desenha a tela inteira e a barra nativa só rouba altura útil,
     que num celular é o recurso mais escasso.
+
+    O pai TEM de descender de Theme.AppCompat, e isso não é preferência: AvaloniaMainActivity
+    herda de AppCompatActivity, e o AppCompatDelegate verifica o tema em setContentView. Com
+    um tema do framework (@android:style/Theme.Material...) ele lança
+
+        IllegalStateException: You need to use a Theme.AppCompat theme (or descendant)
+
+    dentro de onCreate — o app morre antes de desenhar o primeiro quadro. Era esse o defeito
+    que derrubava o esqueleto, e ele valia para qualquer aparelho.
+
+    Os atributos aqui NÃO levam o prefixo android:. São atributos da biblioteca AppCompat;
+    com o prefixo eles viram os do framework, que este tema não consome.
   -->
-  <style name="MyTheme.NoActionBar" parent="@android:style/Theme.Material.Light.NoActionBar">
-    <item name="android:windowNoTitle">true</item>
-    <item name="android:windowActionBar">false</item>
+  <style name="MyTheme.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+    <item name="windowNoTitle">true</item>
+    <item name="windowActionBar">false</item>
   </style>
 
 </resources>
