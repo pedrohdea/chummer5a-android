@@ -73,7 +73,7 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
           xvfb-run -a dotnet run --project Chummer.Desktop/Chummer.Desktop.csproj \
-            --configuration Release -- --screenshot "$RUNNER_TEMP/tela.png" --with-spikes
+            --configuration Release -- --screenshot "$RUNNER_TEMP/tela.png"
 
       - name: Publicar a captura
         uses: actions/upload-artifact@v4
@@ -139,3 +139,89 @@ jobs:
           name: chummer-android-apk
           path: src/Chummer.Android/bin/Release/**/publish/*-Signed.apk
           if-no-files-found: error
+
+  # A pergunta que nenhum outro job responde: o app ABRE?
+  #
+  # Os jobs acima provam que o código compila, que a UI desenha NO DESKTOP e que o APK
+  # empacota. Nada disso toca o runtime do Android — ABI, carregamento das .so nativas,
+  # ciclo de vida da Activity — que é justamente onde um app que compila sem um arranhão
+  # morre na inicialização. Até 15/08 a única resposta possível era o PO instalar no
+  # aparelho, o que fazia de cada verificação uma espera de horas ou dias.
+  #
+  # O contêiner de desenvolvimento não consegue: não tem /dev/kvm, e o emulador por software
+  # sobe mas não aguenta o `adb install` (medido). O runner Linux do GitHub TEM KVM, e é essa
+  # a diferença que destrava tudo. Receita conferida em home-assistant/android. Ver DEC-050.
+  emulador:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # O publish de Android mais a imagem do emulador enchem o disco do runner, e o sintoma
+      # não é "disco cheio": é `adb install` falhando com "Failed to commit install".
+      - name: Liberar espaço em disco
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          android: false
+          tool-cache: true
+          docker-images: false
+          large-packages: false
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-apk-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: ${{ runner.os }}-nuget-apk-
+
+      - name: Instalar o workload de Android
+        # De dentro de src/ — mesma razão do job acima (DEC-012).
+        working-directory: src
+        run: dotnet workload install android
+
+      # EmulatorAbi=true acrescenta android-x64. É obrigatório: o APK padrão é arm64 apenas,
+      # e NENHUM emulador x86_64 o executa. O interruptor existe porque passar
+      # RuntimeIdentifiers direto vaza para o Chummer.UI e dá NETSDK1083.
+      - name: Gerar o APK com a ABI do emulador
+        working-directory: src
+        run: dotnet publish Chummer.Android/Chummer.Android.csproj --configuration Release -p:EmulatorAbi=true
+
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm
+
+      - name: Instalar, abrir e exigir que fique de pé
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          force-avd-creation: false
+          disable-animations: true
+          disk-size: 2G
+          heap-size: 1G
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: |
+            APK=$(find src/Chummer.Android/bin/Release -name '*-Signed.apk' | head -1)
+            ./scripts/verificar-apk.sh "$APK" "${RUNNER_TEMP}/aparelho.png"
+
+      # Sai mesmo quando o job falha: numa falha a captura É o diagnóstico. Tela branca
+      # aponta a armadilha do TopLevel do Avalonia; tela preta aponta outra coisa.
+      - name: Publicar a captura do aparelho
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tela-emulador
+          path: ${{ runner.temp }}/aparelho.png
+          if-no-files-found: warn

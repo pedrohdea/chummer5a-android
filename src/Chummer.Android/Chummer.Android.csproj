@@ -23,7 +23,15 @@
       existe em emulador, e o alvo do projeto é um aparelho real.
       Para trabalhar com emulador: -p:RuntimeIdentifiers="android-arm64;android-x64".
     -->
-    <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
+    <!--
+      Passar RuntimeIdentifiers pela linha de comando NÃO funciona: a propriedade global vaza
+      para o Chummer.UI, que é net9.0 puro, e o build morre com NETSDK1083. Por isso a
+      segunda ABI entra por um interruptor próprio, que só este arquivo lê.
+      -p:EmulatorAbi=true é o que o job de emulador do CI usa.
+    -->
+    <EmulatorAbi Condition="'$(EmulatorAbi)' == ''">false</EmulatorAbi>
+    <RuntimeIdentifiers Condition="'$(EmulatorAbi)' != 'true'">android-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers Condition="'$(EmulatorAbi)' == 'true'">android-arm64;android-x64</RuntimeIdentifiers>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!--
       O SDK Android emite XA4218/XA4301 e avisos de binding de terceiros que nada têm a ver

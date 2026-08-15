@@ -19,6 +19,10 @@ namespace Chummer.Android;
 /// rotation, which on a data-heavy app means re-paying the whole start-up cost.
 /// </remarks>
 [Activity(
+    // Fixa o nome da classe Java. Sem isso o SDK gera algo como `crc64abc123.MainActivity`,
+    // que muda quando o namespace muda — e um teste que lança a activity pelo nome vira
+    // falha intermitente por motivo alheio ao app.
+    Name = "com.chummer5a.android.MainActivity",
     Label = "Chummer 5",
     Theme = "@style/MyTheme.NoActionBar",
     Icon = "@android:drawable/sym_def_app_icon",
