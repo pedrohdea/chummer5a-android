@@ -416,3 +416,35 @@ no verde durante semanas.
 **Mitigação barata, e vale fazer desde o começo:** escolher o personagem **mais denso** entre
 os pequenos, não o mais simples. Um que tenha magia, cyberware e perícias com especialização
 cobre muito mais caminho de regra pelo mesmo custo de execução.
+## PREM-023 — O leitor carrega com `showWarnings: false` · ATIVA 🟢
+**Criada:** 2026-08-14 · **Decisão:** DEC-050
+
+Assumido que abrir uma ficha no aplicativo **não** deve conversar com o usuário sobre
+divergência de configuração. Medido: com `showWarnings: true`, os 34 personagens de teste
+abrem `SelectBuildMethod` e nenhum carrega; com `false`, o domínio resolve sozinho e
+carrega.
+
+O que `showWarnings: true` acrescenta é: "a configuração que essa ficha usava sumiu — quer
+escolher outra?" e "os livros ativados mudaram desde que você salvou". São perguntas
+legítimas, e num aplicativo de mesa elas cabem depois, como aviso não bloqueante.
+
+**O que muda se estiver errada:** o leitor passa a exibir esses avisos. É trabalho da
+abstração de interação (DEC-003/DEC-026), que já existe pela metade — não mexe no domínio.
+
+**Custo de reverter:** 🟢 baixo. É um parâmetro booleano na chamada de `Load`.
+
+---
+
+## PREM-024 — `InsertPdfNotesIfAvailable` nasce desligado no Android · ATIVA 🟢
+**Criada:** 2026-08-14 · **Decisão:** DEC-051
+
+`GlobalSettings.InsertPdfNotesIfAvailable` nasce `true` no upstream, e com ele cada item sem
+anotação faz o domínio abrir o PDF do livro para copiar o texto da regra. Assumido que num
+aparelho isso não faz sentido: não há livro em PDF instalado, e o caminho ainda custa E/S
+síncrona dentro da carga.
+
+**O que muda se estiver errada:** se o PO quiser ler a regra dentro do aplicativo, isso vira
+funcionalidade explícita — escolher os PDFs, guardar o caminho, ler sob demanda ao tocar na
+fonte. Nunca dentro da carga.
+
+**Custo de reverter:** 🟢 baixo. É um valor padrão.

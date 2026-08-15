@@ -316,13 +316,13 @@ namespace Chummer
         /// </summary>
         public static bool LoadBoolFromRegistry(ref bool blnStorage, string strBoolName, string strSubKey = "", bool blnDeleteAfterFetch = false)
         {
-            // No registry at all (non-Windows, or the key could not be created) means no
-            // stored preference, so the caller keeps the default it passed in.
-            if (s_ObjBaseChummerKey == null)
-                return false;
+            // s_ObjBaseChummerKey é nulo quando não há registro do Windows — o próprio
+            // construtor estático já prevê isso e desiste cedo. Faltava a proteção aqui:
+            // com sub-chave, o acesso ao registro estourava NullReferenceException em vez
+            // de devolver "não achei". No Windows o valor nunca é nulo, então nada muda lá.
             RegistryKey objKey = string.IsNullOrWhiteSpace(strSubKey)
                 ? s_ObjBaseChummerKey
-                : s_ObjBaseChummerKey.OpenSubKey(strSubKey);
+                : s_ObjBaseChummerKey?.OpenSubKey(strSubKey);
             if (objKey == null)
                 return false;
             try
@@ -352,13 +352,13 @@ namespace Chummer
         public static bool LoadInt32FromRegistry(ref int intStorage, string strIntName, string strSubKey = "",
                                                  bool blnDeleteAfterFetch = false)
         {
-            // No registry at all (non-Windows, or the key could not be created) means no
-            // stored preference, so the caller keeps the default it passed in.
-            if (s_ObjBaseChummerKey == null)
-                return false;
+            // s_ObjBaseChummerKey é nulo quando não há registro do Windows — o próprio
+            // construtor estático já prevê isso e desiste cedo. Faltava a proteção aqui:
+            // com sub-chave, o acesso ao registro estourava NullReferenceException em vez
+            // de devolver "não achei". No Windows o valor nunca é nulo, então nada muda lá.
             RegistryKey objKey = string.IsNullOrWhiteSpace(strSubKey)
                 ? s_ObjBaseChummerKey
-                : s_ObjBaseChummerKey.OpenSubKey(strSubKey);
+                : s_ObjBaseChummerKey?.OpenSubKey(strSubKey);
             if (objKey == null)
                 return false;
             try
@@ -387,13 +387,13 @@ namespace Chummer
         /// </summary>
         public static bool LoadDecFromRegistry(ref decimal decStorage, string strDecName, string strSubKey = "", bool blnDeleteAfterFetch = false)
         {
-            // No registry at all (non-Windows, or the key could not be created) means no
-            // stored preference, so the caller keeps the default it passed in.
-            if (s_ObjBaseChummerKey == null)
-                return false;
+            // s_ObjBaseChummerKey é nulo quando não há registro do Windows — o próprio
+            // construtor estático já prevê isso e desiste cedo. Faltava a proteção aqui:
+            // com sub-chave, o acesso ao registro estourava NullReferenceException em vez
+            // de devolver "não achei". No Windows o valor nunca é nulo, então nada muda lá.
             RegistryKey objKey = string.IsNullOrWhiteSpace(strSubKey)
                 ? s_ObjBaseChummerKey
-                : s_ObjBaseChummerKey.OpenSubKey(strSubKey);
+                : s_ObjBaseChummerKey?.OpenSubKey(strSubKey);
             if (objKey == null)
                 return false;
             try
@@ -422,13 +422,13 @@ namespace Chummer
         /// </summary>
         public static bool LoadStringFromRegistry(ref string strStorage, string strStringName, string strSubKey = "", bool blnDeleteAfterFetch = false)
         {
-            // No registry at all (non-Windows, or the key could not be created) means no
-            // stored preference, so the caller keeps the default it passed in.
-            if (s_ObjBaseChummerKey == null)
-                return false;
+            // s_ObjBaseChummerKey é nulo quando não há registro do Windows — o próprio
+            // construtor estático já prevê isso e desiste cedo. Faltava a proteção aqui:
+            // com sub-chave, o acesso ao registro estourava NullReferenceException em vez
+            // de devolver "não achei". No Windows o valor nunca é nulo, então nada muda lá.
             RegistryKey objKey = string.IsNullOrWhiteSpace(strSubKey)
                 ? s_ObjBaseChummerKey
-                : s_ObjBaseChummerKey.OpenSubKey(strSubKey);
+                : s_ObjBaseChummerKey?.OpenSubKey(strSubKey);
             if (objKey == null)
                 return false;
             try

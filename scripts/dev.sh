@@ -8,6 +8,8 @@
 #   ./scripts/dev.sh legado     compila o app legado INTEIRO em Linux (~30 s)
 #   ./scripts/dev.sh ui         valida o código extraído para Controls/
 #   ./scripts/dev.sh censo      mede o acoplamento restante (relatório)
+#   ./scripts/dev.sh carga      EXECUTA o domínio: abre os .chum5 de teste (~25 min)
+#   ./scripts/dev.sh carga Skink   idem, filtrado por nome de ficha
 #   ./scripts/dev.sh erros      os primeiros erros do censo, ~1 s (laço interno)
 #   ./scripts/dev.sh erros Gear    idem, filtrado por arquivo
 #   ./scripts/dev.sh apk        gera o APK e informa o tamanho
@@ -61,6 +63,12 @@ case "$cmd" in
 
   censo)
     exec "$RAIZ/scripts/censo-erros.sh" "$@"
+    ;;
+
+  # A única que EXECUTA em vez de só compilar. Fora do `check` de propósito: leva ~25 min
+  # na rodada completa. Rode filtrado ao iterar. Ver DEC-050.
+  carga)
+    exec "$RAIZ/scripts/testar-carga.sh" "$@"
     ;;
 
   erros)

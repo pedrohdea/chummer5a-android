@@ -1531,3 +1531,90 @@ se o programa **abre** um `.chum5` é validação de arquitetura e é trabalho d
 Medir **desempenho sob volume** é teste de carga no sentido usual, e esse **fica para o fim
 do projeto** — decisão do PO em 13/08. Ao escrever, prefira "carregar uma ficha" a "teste de
 carga" para o primeiro.
+## DEC-050 — Sondagem executável: a hipótese de DEC-037 se sustenta, com ressalva · VIGENTE
+**2026-08-14**
+
+DEC-037 mediu distância de **compilação** e deixou a pergunta em aberto: carregar um
+`.chum5` toca algum diálogo de seleção? `scripts/testar-carga.sh` responde por execução —
+monta um console `net9.0` **sem WinForms** com o domínio real e carrega os 34 personagens de
+`Chummer.Tests/TestFiles/`.
+
+**A resposta é: depende de um parâmetro, e o parâmetro é `showWarnings`.**
+
+| modo | carregam | diálogo tocado |
+|---|---|---|
+| `Load(showWarnings: true)` | **0 de 34** | `SelectBuildMethod`, nos 34 |
+| `Load(showWarnings: false)` | **34 de 34** | **nenhum** |
+
+Com `showWarnings: true` o domínio não pergunta nada sobre *regra de jogo* — ele pergunta
+sobre **configuração**: as 34 fichas foram salvas apontando para `default.xml`, um arquivo de
+configurações que o repositório não contém (o aplicativo o cria na primeira execução). Sem
+ele, o domínio avisa "não achei a configuração", e daí abre `SelectBuildMethod` para o
+usuário escolher o método de criação.
+
+Com `showWarnings: false` esse ramo inteiro é pulado: o domínio escolhe sozinho a
+configuração mais parecida e carrega. **Nenhum diálogo de seleção é atingido.** A hipótese
+de DEC-037 vale — carregar é parser XML e construção de objetos.
+
+**Os 34 carregam de verdade, e a sondagem prova isso imprimindo dado** — nome, metatipo,
+atributos totais, contagem de qualidades, perícias, magias, armas, cyberware e equipamento.
+"OK" sem dado impresso não distinguiria carga de silêncio, e neste projeto o primeiro número
+de uma medição já esteve errado cinco vezes.
+
+**Custo de tempo, medido neste contêiner:** de 4 s (ficha de 100 KiB) a 93 s (ficha de
+5,6 MiB), num total de ~25 min para os 34. É desktop x64; no aparelho é por medir (QA-012).
+Boa parte disso é `InsertPdfNotesIfAvailable` (DEC-051, achado 4).
+
+**A consequência de projeto:** o leitor do MVP carrega com `showWarnings: false`. O que
+`showWarnings: true` acrescenta não é regra, é conversa sobre configuração divergente, e essa
+conversa é da abstração de interação (DEC-003/DEC-026), não da abstração de seleção.
+
+**Por que a suíte legada não enxergava nada disso:** `Chummer.Tests` liga `Utils.IsUnitTest`,
+e os ramos que abrem esses diálogos estão todos atrás de `if (!Utils.IsUnitTest && showWarnings)`.
+A suíte carrega os 34 porque desvia do caminho, não porque o caminho funciona. A sondagem
+**não** liga `IsUnitTest` — de propósito.
+
+Medido: `IsUnitTest` muda comportamento em **31 pontos** fora de `Utils.cs`, e **7 deles
+estão dentro da rotina de carga**. Isso é um recado para DEC-004: artefato dourado gerado
+pela suíte legada descreve o caminho *de teste*, não o caminho do usuário. Ou os dois lados
+do teste diferencial ligam `IsUnitTest`, ou nenhum liga — misturar compara coisas
+diferentes.
+
+---
+
+## DEC-051 — O que a execução mostrou e a compilação não mostrava · VIGENTE
+**2026-08-14**
+
+Cinco achados que só apareceram por rodar, com o custo de cada um.
+
+**1. `Character.Load` mora em `Chummer/Controls/Dominio/Character.UI.cs`.** A extração
+classificou a rotina de carga inteira — 1.900 a 7.100 — como UI. Não é: é o coração do
+domínio. O mesmo vale para `MatrixAttributesControlExtensions.cs`, que está em
+`Controls/Extensions/` e contém `GetTotalMatrixAttribute` e companhia, chamadas de
+`Character.cs`. A régua "arquivo `.UI.cs` é descartável" está errada; o extrator move por
+`using System.Windows.Forms`, e uma assinatura com `TreeNode` arrasta o método junto.
+
+**2. `Utils.CreateSynchronizationContext` exige thread STA.** Apartamento COM é conceito do
+Windows: fora dele `Thread.GetApartmentState()` devolve `Unknown` e
+`SetApartmentState(STA)` lança. O **primeiro `new Character()`** morre ali, antes de tocar em
+qualquer XML. A sondagem contorna instalando o `JoinableTaskContext` por reflexão — o domínio
+segue intocado, e a correção de verdade é do porte.
+
+**3. `GlobalSettings.Load*FromRegistry` estourava `NullReferenceException`.** O construtor
+estático **já prevê** registro ausente (`if (s_ObjBaseChummerKey == null) return;`), mas os
+quatro auxiliares faziam `s_ObjBaseChummerKey.OpenSubKey(strSubKey)` sem proteção. Corrigido
+para `?.` — proteção que faltava, não mudança de regra: no Windows o valor nunca é nulo.
+Sozinho, esse `?.` levou 13 personagens de "falha" a "carrega".
+
+**4. Carregar personagem lê PDF de livro.** `GlobalSettings.InsertPdfNotesIfAvailable`
+nasce `true`, e `Gear.Load`, `Quality.Load` e mais dezoito chamam `CommonFunctions.GetBookNotes`
+→ `GetTextFromPdf` para cada item **sem anotação**. Num aparelho não há PDF nenhum, e o
+caminho ainda assim custa E/S e trava fio. Precisa nascer `false` no Android.
+
+**5. `Utils.CanWriteToPath` usava `Directory.GetAccessControl(string)`**, que só existe no
+.NET Framework. Trocado pela forma via `DirectoryInfo` — mesma chamada, compila nas duas
+plataformas. Continua sendo ACL do Windows e continua sendo acoplamento a remover.
+
+**O que a sondagem NÃO prova:** ela roda em `net9.0` de desktop Linux, não em Android. O que
+ela mede é o domínio sem WinForms; ARM64, AOT, `AssetManager` e memória do aparelho ficam
+para QA-009.
