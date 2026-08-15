@@ -28,8 +28,7 @@ internal static class Program
             return Screenshot.Capture(
                 args[shot + 1],
                 width: 420,
-                height: 900,
-                withSpikes: args.Contains("--with-spikes", StringComparer.Ordinal));
+                height: 900);
         }
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

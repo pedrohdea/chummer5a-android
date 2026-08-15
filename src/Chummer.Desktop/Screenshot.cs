@@ -20,7 +20,7 @@ namespace Chummer.Desktop;
 /// </remarks>
 internal static class Screenshot
 {
-    public static int Capture(string path, int width, int height, bool withSpikes)
+    public static int Capture(string path, int width, int height)
     {
         // UsePlatformDetect and not UseSkia alone: Avalonia refuses to start without a
         // runtime platform, and using the real one means this run also proves the X11
@@ -41,17 +41,6 @@ internal static class Screenshot
         window.Show();
 
         Pump(40);
-
-        if (withSpikes && (window.Content as MainView)?.DataContext is MainViewModel viewModel)
-        {
-            Task running = viewModel.RunSpikesAsync();
-            while (!running.IsCompleted)
-            {
-                Dispatcher.UIThread.RunJobs();
-                Thread.Sleep(25);
-            }
-            Pump(40);
-        }
 
         using RenderTargetBitmap bitmap = new(
             new PixelSize(width, height),

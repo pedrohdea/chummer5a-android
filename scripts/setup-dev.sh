@@ -55,12 +55,28 @@ export DOTNET_NOLOGO=1
 log "SDKs instalados"
 dotnet --list-sdks
 
+# TUDO daqui para baixo roda DE DENTRO de src/, e isso é essencial: o dotnet resolve o
+# global.json a partir do diretório de trabalho, não do caminho do projeto. src/global.json
+# exige o SDK 9; o global.json da raiz exige o SDK 8 do build legado. Rodar `dotnet workload`
+# da raiz seleciona o SDK errado e o comando morre com "A compatible .NET SDK was not found"
+# — que foi exatamente o que aconteceu, silenciosamente, até 15/08. Ver DEC-012.
+cd "$(dirname "$0")/../src"
+
 # ---------------------------------------------------------------------------
 # Workload Android (opcional — só é necessário para produzir o APK)
 # ---------------------------------------------------------------------------
 if [ "$INSTALL_ANDROID" -eq 1 ]; then
     log "Instalando workload Android"
     dotnet workload install android --skip-sign-check
+
+    # Exigir a evidência em vez de confiar no código de saída: `dotnet workload` já devolveu
+    # 0 depois de falhar em selecionar o SDK. Sem esta guarda o setup "passa" e o defeito só
+    # reaparece lá na frente, como XA5300 na hora de empacotar.
+    if ! dotnet workload list | grep -qi '^android'; then
+        echo "Workload android NÃO ficou instalado — abortando." >&2
+        dotnet workload list >&2
+        exit 1
+    fi
 
     # ------------------------------------------------------------------
     # SDK do Google. O workload acima traz só compilador e runtimes; sem o SDK
@@ -103,12 +119,7 @@ fi
 # ---------------------------------------------------------------------------
 # Verificação
 # ---------------------------------------------------------------------------
-# A compilação roda DE DENTRO de src/, e isso é essencial: o dotnet resolve o global.json
-# a partir do diretório de trabalho, não do caminho do projeto. src/global.json exige o
-# SDK 9; o global.json da raiz exige o SDK 8 usado pelo build legado. Rodar isto da raiz
-# selecionaria o SDK errado.
 log "Restaurando e compilando src/Chummer.Port.sln"
-cd "$(dirname "$0")/../src"
 dotnet build Chummer.Port.sln --nologo
 
 log "Ambiente pronto"

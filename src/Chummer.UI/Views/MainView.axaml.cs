@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Chummer.UI.Spikes;
 using Chummer.UI.ViewModels;
 
@@ -17,12 +16,9 @@ public partial class MainView : UserControl
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
-        AppStartup.MarkFirstFrame();
-    }
 
-    private async void OnRunClicked(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-            await viewModel.RunSpikesAsync();
+        // The one instrument the skeleton keeps: it marks the moment a frame actually reached
+        // the screen, which is precisely what the skeleton is meant to prove on the device.
+        AppStartup.MarkFirstFrame();
     }
 }
