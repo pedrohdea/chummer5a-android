@@ -61,14 +61,20 @@ else
     FALHOU=1
 fi
 
-# 2. Nenhuma exceção fatal no log.
+# 2. Nenhum crash no log — Java OU NATIVO.
+#
+# Procurar só por FATAL EXCEPTION tem ponto cego, e ele nos mordeu na primeira execução de
+# verdade: o app morreu em 3 s SEM exceção Java nenhuma, porque um SIGSEGV no runtime Mono ou
+# no Skia não passa pelo AndroidRuntime. Silêncio no filtro estreito parecia "sem crash".
 LOG="$(adb logcat -d 2>/dev/null || true)"
-if printf '%s' "$LOG" | grep -qE 'FATAL EXCEPTION|AndroidRuntime: .*Exception'; then
-    echo "FALHA  exceção fatal no logcat:" >&2
-    printf '%s' "$LOG" | grep -A 25 -E 'FATAL EXCEPTION' | head -40 >&2
+CRASH="$(adb logcat -b crash -d 2>/dev/null || true)"
+PADRAO='FATAL EXCEPTION|AndroidRuntime: .*Exception|Fatal signal|signal [0-9]+ \(SIG|F DEBUG|tombstone|SIGSEGV|SIGABRT|Process .* has died|Force finishing activity'
+if printf '%s\n%s' "$LOG" "$CRASH" | grep -qE "$PADRAO"; then
+    echo "FALHA  crash no logcat:" >&2
+    printf '%s\n%s' "$LOG" "$CRASH" | grep -E -A 25 "$PADRAO" | head -60 >&2
     FALHOU=1
 else
-    echo "OK   sem exceção fatal no logcat"
+    echo "OK   sem crash (Java ou nativo) no logcat"
 fi
 
 # 3. A activity está em foco. É o que separa "o processo existe" de "há app na tela".
@@ -92,9 +98,24 @@ if [ -n "$PNG" ]; then
 fi
 
 # O que o app registrou por conta própria durante a inicialização.
-printf '%s' "$LOG" | grep -iE 'chummer|mono|avalonia' | tail -20 || true
+echo
+echo "--- linhas do app ---"
+printf '%s' "$LOG" | grep -iE 'chummer|mono|avalonia|dotnet|skia' | tail -30 || true
 
 if [ "$FALHOU" -ne 0 ]; then
+    # Numa falha, o log FILTRADO é justamente o que não basta — se bastasse, a falha já teria
+    # sido diagnosticada acima. Despeja o bruto: um crash nativo aparece aqui e em nenhum
+    # filtro que eu soubesse escrever de antemão.
+    echo
+    echo "--- logcat bruto, últimas 200 linhas ---" >&2
+    printf '%s' "$LOG" | tail -200 >&2
+    echo
+    echo "--- buffer de crash ---" >&2
+    printf '%s' "$CRASH" | tail -60 >&2
+    echo
+    echo "--- o sistema matou o processo? ---" >&2
+    adb shell dumpsys activity exit-info "$PACOTE" 2>/dev/null | head -40 >&2 || true
+
     echo
     echo "O APK NÃO passou." >&2
     exit 1
