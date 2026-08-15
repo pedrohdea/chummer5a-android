@@ -35,7 +35,7 @@ Depois leia, nesta ordem: `CLAUDE.md` → `docs/DESENVOLVIMENTO.md` → este arq
 | **Acoplamento de CORPO de método** | **1.489** (era 1.584) |
 | `ThreadSafeForm` no Backend | 327 |
 | APK esqueleto | **14,94 MiB** (sem dados de jogo, arm64) |
-| O APK **abre** num aparelho? | **NÃO SABEMOS** — job de CI criado em 15/08, nunca executado |
+| O APK **abre**? | **SIM**, verificado em emulador no CI em 15/08 — nunca antes disso |
 | Linhas de UI Avalonia | 756 |
 
 **0,2% do domínio migrado.** O que existe até aqui é terreno preparado: metades de UI
@@ -81,8 +81,32 @@ Receita conferida em `home-assistant/android`, que o PO apontou.
 ./scripts/verificar-apk.sh <apk> <png>   # só roda onde há emulador: no CI, não aqui
 ```
 
-**ATENÇÃO:** esse job **nunca rodou** até o fechamento desta sessão. A primeira execução no
-CI é que dirá se ele presta, e é bem possível que precise de ajuste.
+### E ele achou um defeito na primeira vez que rodou
+
+O esqueleto **nunca tinha aberto**. Existia desde 12/08, o CI o empacotava a cada push, quatro
+ferramentas de verificação verdes — e ele morria dentro de `onCreate`:
+
+```
+java.lang.IllegalStateException: You need to use a Theme.AppCompat theme (or descendant)
+    at androidx.appcompat.app.AppCompatDelegateImpl.createSubDecor
+```
+
+`AvaloniaMainActivity` herda de `AppCompatActivity`, e o tema descendia de
+`@android:style/Theme.Material.Light.NoActionBar` — tema do framework. Corrigido para
+`Theme.AppCompat.Light.NoActionBar`, e os atributos perdem o prefixo `android:` junto.
+
+**Depois da correção o job passa:** *"O APK instala, abre e continua de pé."*
+
+### Duas lições de método desta sessão, que valem mais que o defeito
+
+**1. A ferramenta nova errou na primeira vez que foi usada.** Ela reportou "OK, sem exceção
+fatal no logcat" para um app que tinha acabado de morrer — porque procurava só por
+`FATAL EXCEPTION` no buffer principal, e a exceção estava no buffer `logcat -b crash`. Foi
+corrigir *a ferramenta* que revelou o defeito do app; sem isso a investigação seguiria atrás
+de uma hipótese errada (inicialização de GL sobre swiftshader).
+
+**2. Silêncio num filtro estreito parece ausência de problema.** Vale para qualquer verificação
+deste projeto: ao escrever um filtro, pergunte o que ele deixaria passar, não o que ele pega.
 
 ---
 
@@ -162,15 +186,14 @@ lógica escrita duas vezes — **a maior alavanca isolada do resto da Etapa 2.**
 **O rumo mudou em 15/08.** Os itens 2, 3 e 5 abaixo continuam válidos e continuam sendo o
 grosso do trabalho — mas estão **em espera** por ordem do PO até o esqueleto estar de pé.
 
-1. **Ver o job `emulador` rodar no CI, e consertá-lo.** Ele foi escrito em 15/08 e **nunca
-   executou**. Enquanto não passar, o projeto continua sem saber se o APK abre. Se falhar, a
-   captura publicada como artefato `tela-emulador` é o primeiro lugar a olhar: branca aponta
-   a armadilha do `TopLevel` do Avalonia, preta aponta outra coisa.
-2. **QA-009 — o PO instala o APK no A56.** O emulador x86_64 do CI **não** é o A56: não pega
-   defeito de ARM64, de densidade, de fabricante nem de memória real. O CI vira o primeiro
-   filtro; o aparelho continua sendo o último.
-3. **Crescer o esqueleto uma tela por vez**, cada uma passando pelo job do emulador antes da
+1. **QA-009 — o PO instala o APK no A56.** O emulador do CI é **x86_64**; o A56 é **arm64**.
+   O CI não pega defeito de ARM64, de densidade de tela, de fabricante nem de memória real.
+   Ele virou o primeiro filtro; o aparelho continua sendo o último.
+2. **Crescer o esqueleto uma tela por vez**, cada uma passando pelo job do emulador antes da
    seguinte. É o que "esqueleto sustentável" quer dizer na prática.
+3. **Decidir quando religar os dados de jogo** (`-p:EmbedGameData=true`). Hoje estão fora, e
+   a tela não lê nada. Religar é uma propriedade — mas volta a valer a pena só quando houver
+   tela que leia dado.
 
 ### Em espera, não canceladas
 

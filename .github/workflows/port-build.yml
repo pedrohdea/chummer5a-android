@@ -24,7 +24,11 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: port-build-${{ github.ref }}
+  # head_ref ANTES de ref, e isso economiza metade do CI: num branch com PR aberto, cada push
+  # dispara DOIS eventos — `push` e `pull_request` — e `github.ref` difere entre eles
+  # (refs/heads/x contra refs/pull/N/merge). Grupos distintos, nada é cancelado, e o job de
+  # emulador roda duas vezes por push. Com head_ref os dois caem no mesmo grupo.
+  group: port-build-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 env:
