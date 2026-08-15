@@ -1198,7 +1198,7 @@ namespace Chummer
                             sbdDuplicatesNames.AppendJoin(Environment.NewLine, lstDuplicateNames);
                         }
 
-                        Program.ShowScrollableMessageBox(string.Format(GlobalSettings.CultureInfo,
+                        UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
                                                                        LanguageManager.GetString(
                                                                            "Message_DuplicateGuidWarning",
                                                                            token: token),
@@ -1211,7 +1211,7 @@ namespace Chummer
 
             if (lstItemsWithMalformedIDs.Count > 0)
             {
-                Program.ShowScrollableMessageBox(string.Format(GlobalSettings.CultureInfo,
+                UserInteraction.ShowScrollableMessage(string.Format(GlobalSettings.CultureInfo,
                                                                LanguageManager.GetString(
                                                                    "Message_NonGuidIdWarning", token: token),
                                                                lstItemsWithMalformedIDs.Count,
@@ -1862,9 +1862,9 @@ namespace Chummer
                     if (s_DicCustomFilePathsWithExceptions.TryGetValue(strFile, out Exception ex))
                     {
                         string strFileNoPath = Path.GetFileName(strFile);
-                        Program.ShowMessageBox(
+                        UserInteraction.ShowMessage(
                             string.Format(GlobalSettings.CultureInfo, strMessage, strFile, ex.Message),
-                            string.Format(GlobalSettings.CultureInfo, strTitle, strFileNoPath), icon: System.Windows.Forms.MessageBoxIcon.Error);
+                            string.Format(GlobalSettings.CultureInfo, strTitle, strFileNoPath), icon: PromptIcon.Error);
                     }
                 }
             }
@@ -2176,9 +2176,9 @@ namespace Chummer
                     if (s_DicCustomFilePathsWithExceptions.TryGetValue(strFile, out Exception ex))
                     {
                         string strFileNoPath = Path.GetFileName(strFile);
-                        await Program.ShowMessageBoxAsync(
+                        await UserInteraction.ShowMessageAsync(
                             string.Format(GlobalSettings.CultureInfo, strMessage, strFile, ex.Message),
-                            string.Format(GlobalSettings.CultureInfo, strTitle, strFileNoPath), icon: System.Windows.Forms.MessageBoxIcon.Error, token: token).ConfigureAwait(false);
+                            string.Format(GlobalSettings.CultureInfo, strTitle, strFileNoPath), icon: PromptIcon.Error, token: token).ConfigureAwait(false);
                     }
                 }
             }
@@ -2371,7 +2371,7 @@ namespace Chummer
                         }
                         catch (ArgumentException ex)
                         {
-                            Program.ShowScrollableMessageBox(ex.ToString());
+                            UserInteraction.ShowScrollableMessage(ex.ToString());
                             return false;
                         }
 
@@ -2580,7 +2580,7 @@ namespace Chummer
                                                             }
                                                             catch (ArgumentException ex)
                                                             {
-                                                                Program.ShowScrollableMessageBox(ex.ToString());
+                                                                UserInteraction.ShowScrollableMessage(ex.ToString());
                                                                 // If we get a RegEx parse error for the first node, we'll get it for all nodes being modified by this amend
                                                                 // So just exit out early instead of spamming the user with a bunch of error messages
                                                                 if (!blnReturn)
@@ -2609,7 +2609,7 @@ namespace Chummer
                                                     }
                                                     catch (ArgumentException ex)
                                                     {
-                                                        Program.ShowScrollableMessageBox(ex.ToString());
+                                                        UserInteraction.ShowScrollableMessage(ex.ToString());
                                                         // If we get a RegEx parse error for the first node, we'll get it for all nodes being modified by this amend
                                                         // So just exit out early instead of spamming the user with a bunch of error messages
                                                         if (!blnReturn)
@@ -2947,12 +2947,12 @@ namespace Chummer
             }
             catch (IOException ex)
             {
-                await Program.ShowScrollableMessageBoxAsync(ex.ToString(), token: token).ConfigureAwait(false);
+                await UserInteraction.ShowScrollableMessageAsync(ex.ToString(), token: token).ConfigureAwait(false);
                 return;
             }
             catch (XmlException ex)
             {
-                await Program.ShowScrollableMessageBoxAsync(ex.ToString(), token: token).ConfigureAwait(false);
+                await UserInteraction.ShowScrollableMessageAsync(ex.ToString(), token: token).ConfigureAwait(false);
                 return;
             }
 

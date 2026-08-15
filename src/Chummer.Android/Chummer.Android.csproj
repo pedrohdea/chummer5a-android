@@ -1,0 +1,88 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Head Android. Hospeda a MESMA UI do Chummer.Desktop; nada de domínio entra aqui.
+
+    O projeto tem UMA função: provar que o app instala, abre, desenha um quadro e continua de
+    pé num aparelho real. Enquanto essa resposta não vier, portar domínio é construir sobre
+    fundação não verificada — e é por isso que a tela não faz nada.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-android35.0</TargetFramework>
+    <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ApplicationId>com.chummer5a.android</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>0.1</ApplicationDisplayVersion>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <!--
+      Só arm64. Medido: incluir também android-x64 acrescenta 13,2 MiB ao APK — mais do que
+      TODOS os dados de jogo juntos, que custam 2,9 MiB comprimidos. x86_64 em Android só
+      existe em emulador, e o alvo do projeto é um aparelho real.
+      Para trabalhar com emulador: -p:RuntimeIdentifiers="android-arm64;android-x64".
+    -->
+    <!--
+      Passar RuntimeIdentifiers pela linha de comando NÃO funciona: a propriedade global vaza
+      para o Chummer.UI, que é net9.0 puro, e o build morre com NETSDK1083. Por isso a
+      segunda ABI entra por um interruptor próprio, que só este arquivo lê.
+      -p:EmulatorAbi=true é o que o job de emulador do CI usa.
+    -->
+    <EmulatorAbi Condition="'$(EmulatorAbi)' == ''">false</EmulatorAbi>
+    <RuntimeIdentifiers Condition="'$(EmulatorAbi)' != 'true'">android-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers Condition="'$(EmulatorAbi)' == 'true'">android-arm64;android-x64</RuntimeIdentifiers>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!--
+      O SDK Android emite XA4218/XA4301 e avisos de binding de terceiros que nada têm a ver
+      com o nosso código. TreatWarningsAsErrors vale para o C#; aqui ele transformaria ruído
+      de empacotamento em falha de build.
+    -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+    <!-- Mesma fonte nos dois heads: sem isso, a tela do desktop e a do aparelho medem
+         layouts diferentes e o Chummer.Desktop deixa de ser um substituto honesto. -->
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chummer.UI\Chummer.UI.csproj" />
+  </ItemGroup>
+
+  <!--
+    Os dados de jogo entram no APK como assets, lidos em tempo de execução pelo AssetManager.
+
+    Por que assets e não recursos embarcados na assembly: recurso embarcado é descomprimido
+    para a memória gerenciada no primeiro acesso e fica lá; asset é um arquivo dentro do APK,
+    aberto sob demanda e fechado depois. Com ~20 MB de XML num aparelho, a diferença não é
+    estilo — é o pico de memória que a Etapa 2.5 existe para medir.
+
+    A pasta continua sendo a de Chummer/: uma fonte da verdade, como em DEC-013. Copiar os
+    dados para src/ criaria duas cópias que divergiriam em silêncio.
+  -->
+  <PropertyGroup>
+    <ChummerAssetsRoot>$(MSBuildThisFileDirectory)..\..\Chummer\</ChummerAssetsRoot>
+    <!--
+      DESLIGADO enquanto o esqueleto não estiver provado no aparelho. A tela não lê dado
+      nenhum, então embarcá-los só acrescentaria 2,8 MiB e uma variável a mais entre "o app
+      não abriu" e o motivo. Religue com -p:EmbedGameData=true quando houver o que ler.
+    -->
+    <EmbedGameData Condition="'$(EmbedGameData)' == ''">false</EmbedGameData>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(EmbedGameData)' == 'true'">
+    <AndroidAsset Include="$(ChummerAssetsRoot)data\**\*.xml"
+                  Link="Assets\data\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="$(ChummerAssetsRoot)sheets\**\*.xsl;$(ChummerAssetsRoot)sheets\**\*.xslt"
+                  Link="Assets\sheets\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="$(ChummerAssetsRoot)lang\**\*.xml"
+                  Link="Assets\lang\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="$(ChummerAssetsRoot)customdata\**\*.*"
+                  Link="Assets\customdata\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

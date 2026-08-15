@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -26,17 +25,26 @@ using System.Xml.XPath;
 
 namespace Chummer
 {
+    /// <summary>
+    /// Something that carries portraits ("mugshots").
+    /// </summary>
+    /// <remarks>
+    /// Portraits are held as the raw bytes of the encoded image file (PNG, JPEG, ...) — the very bytes the Base64 in a
+    /// .chum5 decodes to. The domain neither decodes nor re-encodes them: it loads, keeps and hands them back, so saving
+    /// writes out exactly what loading read and no generation loss accumulates. Decoding into a platform image type is
+    /// the presentation layer's job, which is what keeps this interface free of System.Drawing (DEC-034).
+    /// </remarks>
     public interface IHasMugshots : IDisposable, IAsyncDisposable
     {
-        ThreadSafeList<Image> Mugshots { get; }
-        Image MainMugshot { get; set; }
+        ThreadSafeList<byte[]> Mugshots { get; }
+        byte[] MainMugshot { get; set; }
         int MainMugshotIndex { get; set; }
 
-        Task<ThreadSafeList<Image>> GetMugshotsAsync(CancellationToken token = default);
+        Task<ThreadSafeList<byte[]>> GetMugshotsAsync(CancellationToken token = default);
 
-        Task<Image> GetMainMugshotAsync(CancellationToken token = default);
+        Task<byte[]> GetMainMugshotAsync(CancellationToken token = default);
 
-        Task SetMainMugshotAsync(Image value, CancellationToken token = default);
+        Task SetMainMugshotAsync(byte[] value, CancellationToken token = default);
 
         Task<int> GetMainMugshotIndexAsync(CancellationToken token = default);
 

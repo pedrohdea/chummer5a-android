@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using NLog;
@@ -35,7 +34,7 @@ namespace Chummer
     /// </summary>
     [HubClassTag("SourceID", true, "Name", null)]
     [DebuggerDisplay("{DisplayName(\"en-us\")}")]
-    public class Metamagic : IHasInternalId, IHasName, IHasSourceId, IHasXmlDataNode, IHasNotes, ICanRemove, IHasSource, IHasCharacterObject
+    public partial class Metamagic : IHasInternalId, IHasName, IHasSourceId, IHasXmlDataNode, IHasNotes, ICanRemove, IHasSource, IHasCharacterObject
     {
         private static readonly Lazy<Logger> s_ObjLogger = new Lazy<Logger>(LogManager.GetCurrentClassLogger);
         private static Logger Log => s_ObjLogger.Value;
@@ -705,27 +704,6 @@ namespace Chummer
 
         #region UI Methods
 
-        public async Task<TreeNode> CreateTreeNode(ContextMenuStrip cmsEnhancement, bool blnAddCategory = false, CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            if (Grade < 0 && !string.IsNullOrEmpty(Source) && !await (await _objCharacter.GetSettingsAsync(token).ConfigureAwait(false)).BookEnabledAsync(Source, token).ConfigureAwait(false))
-                return null;
-
-            string strText = await GetCurrentDisplayNameAsync(token).ConfigureAwait(false);
-            if (blnAddCategory)
-                strText = await LanguageManager.GetStringAsync(SourceType == Improvement.ImprovementSource.Metamagic ? "Label_Metamagic" : "Label_Echo", token: token).ConfigureAwait(false)
-                    + await LanguageManager.GetStringAsync("String_Space", token: token).ConfigureAwait(false) + strText;
-            TreeNode objNode = new TreeNode
-            {
-                Name = InternalId,
-                Text = strText,
-                Tag = this,
-                ContextMenuStrip = cmsEnhancement,
-                ForeColor = await GetPreferredColorAsync(token).ConfigureAwait(false),
-                ToolTipText = (await GetNotesAsync(token).ConfigureAwait(false)).WordWrap()
-            };
-            return objNode;
-        }
 
         public Color PreferredColor
         {
@@ -805,18 +783,6 @@ namespace Chummer
             return await (await _objCharacter.GetMetamagicsAsync(token).ConfigureAwait(false)).RemoveAsync(this, token).ConfigureAwait(false);
         }
 
-        public void SetSourceDetail(Control sourceControl)
-        {
-            if (_objCachedSourceDetail.Language != GlobalSettings.Language)
-                _objCachedSourceDetail = default;
-            SourceDetail.SetControl(sourceControl);
-        }
 
-        public async Task SetSourceDetailAsync(Control sourceControl, CancellationToken token = default)
-        {
-            if (_objCachedSourceDetail.Language != GlobalSettings.Language)
-                _objCachedSourceDetail = default;
-            await (await GetSourceDetailAsync(token).ConfigureAwait(false)).SetControlAsync(sourceControl, token).ConfigureAwait(false);
-        }
     }
 }

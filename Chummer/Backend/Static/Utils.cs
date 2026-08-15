@@ -49,7 +49,7 @@ using Xoshiro.PRNG64;
 
 namespace Chummer
 {
-    public static class Utils
+    public static partial class Utils
     {
         private static readonly Lazy<Logger> s_ObjLogger = new Lazy<Logger>(LogManager.GetCurrentClassLogger);
         private static Logger Log => s_ObjLogger.Value;
@@ -189,123 +189,11 @@ namespace Chummer
             }
         }
 
-        private static readonly ConcurrentDictionary<Icon, Bitmap> s_dicCachedIconBitmaps = new ConcurrentDictionary<Icon, Bitmap>();
 
-        /// <summary>
-        /// Dictionary assigning icons to singly-initialized instances of their bitmaps.
-        /// Mainly intended for SystemIcons.
-        /// </summary>
-        public static Bitmap GetCachedIconBitmap(Icon objIcon)
-        {
-            return s_dicCachedIconBitmaps.GetOrAdd(objIcon, x => x.ToBitmap());
-        }
 
-        /// <summary>
-        /// Dictionary assigning icons to singly-initialized instances of their bitmaps.
-        /// Mainly intended for SystemIcons.
-        /// </summary>
-        public static Task<Bitmap> GetCachedIconBitmapAsync(Icon objIcon, CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            return s_dicCachedIconBitmaps.GetOrAddAsync(objIcon, x => TaskExtensions.RunWithoutEC(x.ToBitmap, token), token);
-        }
 
-        private static readonly ConcurrentDictionary<Icon, Bitmap> s_dicStockIconBitmapsForSystemIcons = new ConcurrentDictionary<Icon, Bitmap>();
 
-        /// <summary>
-        /// Dictionary assigning Windows stock icons' bitmaps to SystemIcons equivalents.
-        /// Needed where the graphics used in dialog windows in newer versions of windows are different from those in SystemIcons.
-        /// </summary>
-        public static Bitmap GetStockIconBitmapsForSystemIcon(Icon objIcon)
-        {
-            return s_dicStockIconBitmapsForSystemIcons.GetOrAdd(objIcon, x =>
-            {
-                if (x == SystemIcons.Application)
-                {
-                    return NativeMethods.GetStockIcon(NativeMethods.SHSTOCKICONID.SIID_APPLICATION).ToBitmap();
-                }
 
-                if (x == SystemIcons.Asterisk || x == SystemIcons.Information)
-                {
-                    return NativeMethods.GetStockIcon(NativeMethods.SHSTOCKICONID.SIID_INFO).ToBitmap();
-                }
-
-                if (x == SystemIcons.Error || x == SystemIcons.Hand)
-                {
-                    return NativeMethods.GetStockIcon(NativeMethods.SHSTOCKICONID.SIID_ERROR).ToBitmap();
-                }
-
-                if (x == SystemIcons.Exclamation || x == SystemIcons.Warning)
-                {
-                    return NativeMethods.GetStockIcon(NativeMethods.SHSTOCKICONID.SIID_WARNING).ToBitmap();
-                }
-
-                if (x == SystemIcons.Question)
-                {
-                    return NativeMethods.GetStockIcon(NativeMethods.SHSTOCKICONID.SIID_HELP).ToBitmap();
-                }
-
-                if (x == SystemIcons.Shield)
-                {
-                    return NativeMethods.GetStockIcon(NativeMethods.SHSTOCKICONID.SIID_SHIELD).ToBitmap();
-                }
-
-                if (x == SystemIcons.WinLogo)
-                {
-                    return SystemIcons.WinLogo.ToBitmap();
-                }
-
-                throw new ArgumentOutOfRangeException(nameof(objIcon));
-            });
-        }
-
-        /// <summary>
-        /// Dictionary assigning Windows stock icons' bitmaps to SystemIcons equivalents.
-        /// Needed where the graphics used in dialog windows in newer versions of windows are different from those in SystemIcons.
-        /// </summary>
-        public static Task<Bitmap> GetStockIconBitmapsForSystemIconAsync(Icon objIcon, CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            return s_dicStockIconBitmapsForSystemIcons.GetOrAddAsync(objIcon, x => TaskExtensions.RunWithoutEC(() =>
-            {
-                if (x == SystemIcons.Application)
-                {
-                    return NativeMethods.GetStockIcon(NativeMethods.SHSTOCKICONID.SIID_APPLICATION).ToBitmap();
-                }
-
-                if (x == SystemIcons.Asterisk || x == SystemIcons.Information)
-                {
-                    return NativeMethods.GetStockIcon(NativeMethods.SHSTOCKICONID.SIID_INFO).ToBitmap();
-                }
-
-                if (x == SystemIcons.Error || x == SystemIcons.Hand)
-                {
-                    return NativeMethods.GetStockIcon(NativeMethods.SHSTOCKICONID.SIID_ERROR).ToBitmap();
-                }
-
-                if (x == SystemIcons.Exclamation || x == SystemIcons.Warning)
-                {
-                    return NativeMethods.GetStockIcon(NativeMethods.SHSTOCKICONID.SIID_WARNING).ToBitmap();
-                }
-
-                if (x == SystemIcons.Question)
-                {
-                    return NativeMethods.GetStockIcon(NativeMethods.SHSTOCKICONID.SIID_HELP).ToBitmap();
-                }
-
-                if (x == SystemIcons.Shield)
-                {
-                    return NativeMethods.GetStockIcon(NativeMethods.SHSTOCKICONID.SIID_SHIELD).ToBitmap();
-                }
-
-                if (x == SystemIcons.WinLogo)
-                {
-                    return SystemIcons.WinLogo.ToBitmap();
-                }
-
-                throw new ArgumentOutOfRangeException(nameof(objIcon));
-            }, token), token);
-        }
 
         /// <summary>
         /// Maximum size of a stackalloc'ed array for an 8-bit type (byte, sbyte, bool)
@@ -467,7 +355,7 @@ namespace Chummer
                     catch (Exception ex)
                     {
                         if (blnShowErrors)
-                            Program.ShowScrollableMessageBox(ex.ToString(), icon: MessageBoxIcon.Error);
+                            UserInteraction.ShowScrollableMessage(ex.ToString(), icon: PromptIcon.Error);
                         continue;
                     }
                 }
@@ -476,12 +364,12 @@ namespace Chummer
                 if (File.Exists(strDestinationPath))
                 {
                     if (blnShowErrors)
-                        Program.ShowScrollableMessageBox(
+                        UserInteraction.ShowScrollableMessage(
                             string.Format(GlobalSettings.CultureInfo,
                                           LanguageManager.GetString("Message_DuplicateFile", token: token), strFile,
                                           strDestinationFolder),
                             LanguageManager.GetString("MessageTitle_DuplicateFile", token: token),
-                            icon: MessageBoxIcon.Error);
+                            icon: PromptIcon.Error);
                     continue;
                 }
                 token.ThrowIfCancellationRequested();
@@ -492,7 +380,7 @@ namespace Chummer
                 catch (Exception ex)
                 {
                     if (blnShowErrors)
-                        Program.ShowScrollableMessageBox(ex.ToString(), icon: MessageBoxIcon.Error);
+                        UserInteraction.ShowScrollableMessage(ex.ToString(), icon: PromptIcon.Error);
                 }
             }
         }
@@ -531,7 +419,11 @@ namespace Chummer
             try
             {
                 WindowsPrincipal principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-                DirectorySecurity security = Directory.GetAccessControl(Path.GetDirectoryName(strPath) ?? throw new ArgumentOutOfRangeException(nameof(strPath)));
+                // Directory.GetAccessControl(string) só existe no .NET Framework. A forma
+                // via DirectoryInfo é a mesma chamada e existe nas duas plataformas — sem
+                // ela este arquivo não compila fora do net48/net*-windows. Continua sendo
+                // ACL do Windows, e continua sendo acoplamento a remover para o Android.
+                DirectorySecurity security = new DirectoryInfo(Path.GetDirectoryName(strPath) ?? throw new ArgumentOutOfRangeException(nameof(strPath))).GetAccessControl();
                 foreach (FileSystemAccessRule accessRule in security.GetAccessRules(true, true, typeof(SecurityIdentifier)))
                 {
                     if (!(accessRule.IdentityReference is SecurityIdentifier objIdentifier) || !principal.IsInRole(objIdentifier))
@@ -657,23 +549,23 @@ namespace Chummer
                             if (blnSync)
                             {
                                 // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                                if (Program.ShowScrollableMessageBox(
+                                if (UserInteraction.ShowScrollableMessage(
                                         string.Format(GlobalSettings.CultureInfo,
                                             // ReSharper disable once MethodHasAsyncOverload
                                             LanguageManager.GetString("Message_Prompt_Delete_Existing_File",
                                                 token: token), strPath),
-                                        buttons: MessageBoxButtons.YesNo, icon: MessageBoxIcon.Warning) !=
-                                    DialogResult.Yes)
+                                        buttons: PromptButtons.YesNo, icon: PromptIcon.Warning) !=
+                                    PromptResult.Yes)
                                     return false;
                             }
-                            else if (await Program.ShowScrollableMessageBoxAsync(
+                            else if (await UserInteraction.ShowScrollableMessageAsync(
                                          string.Format(GlobalSettings.CultureInfo,
                                              await LanguageManager.GetStringAsync(
                                                      "Message_Prompt_Delete_Existing_File", token: token)
                                                  .ConfigureAwait(false), strPath),
-                                         buttons: MessageBoxButtons.YesNo, icon: MessageBoxIcon.Warning,
+                                         buttons: PromptButtons.YesNo, icon: PromptIcon.Warning,
                                          token: token).ConfigureAwait(false) !=
-                                     DialogResult.Yes)
+                                     PromptResult.Yes)
                                 return false;
                         }
                         else
@@ -705,13 +597,13 @@ namespace Chummer
                         if (blnSync)
                         {
                             // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                            Program.ShowScrollableMessageBox(
+                            UserInteraction.ShowScrollableMessage(
                                 // ReSharper disable once MethodHasAsyncOverload
                                 LanguageManager.GetString("Message_Insufficient_Permissions_Warning", token: token));
                         }
                         else
                         {
-                            await Program.ShowScrollableMessageBoxAsync(
+                            await UserInteraction.ShowScrollableMessageAsync(
                                 await LanguageManager
                                     .GetStringAsync("Message_Insufficient_Permissions_Warning", token: token)
                                     .ConfigureAwait(false), token: token).ConfigureAwait(false);
@@ -811,23 +703,23 @@ namespace Chummer
                     if (blnSync)
                     {
                         // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                        if (Program.ShowScrollableMessageBox(
+                        if (UserInteraction.ShowScrollableMessage(
                                 string.Format(GlobalSettings.CultureInfo,
                                     // ReSharper disable once MethodHasAsyncOverload
                                     LanguageManager.GetString("Message_Prompt_Delete_Existing_File",
                                         token: token), strPath),
-                                buttons: MessageBoxButtons.YesNo, icon: MessageBoxIcon.Warning) !=
-                            DialogResult.Yes)
+                                buttons: PromptButtons.YesNo, icon: PromptIcon.Warning) !=
+                            PromptResult.Yes)
                             return false;
                     }
-                    else if (await Program.ShowScrollableMessageBoxAsync(
+                    else if (await UserInteraction.ShowScrollableMessageAsync(
                                  string.Format(GlobalSettings.CultureInfo,
                                      await LanguageManager.GetStringAsync(
                                              "Message_Prompt_Delete_Existing_File", token: token)
                                          .ConfigureAwait(false), strPath),
-                                 buttons: MessageBoxButtons.YesNo, icon: MessageBoxIcon.Warning,
+                                 buttons: PromptButtons.YesNo, icon: PromptIcon.Warning,
                                  token: token).ConfigureAwait(false) !=
-                             DialogResult.Yes)
+                             PromptResult.Yes)
                         return false;
                 }
                 else
@@ -896,8 +788,8 @@ namespace Chummer
                 string caption
                     = await LanguageManager.GetStringAsync("MessageTitle_Options_CloseForms", strLanguage, token: token).ConfigureAwait(false);
                 token.ThrowIfCancellationRequested();
-                if (await Program.ShowScrollableMessageBoxAsync(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question, token: token).ConfigureAwait(false)
-                    != DialogResult.Yes)
+                if (await UserInteraction.ShowScrollableMessageAsync(text, caption, PromptButtons.YesNo, PromptIcon.Question, token: token).ConfigureAwait(false)
+                    != PromptResult.Yes)
                     return;
             }
 
@@ -930,7 +822,7 @@ namespace Chummer
                         string strCharacterName = await objOpenCharacterForm.CharacterObject
                                                                             .GetCharacterNameAsync(token)
                                                                             .ConfigureAwait(false);
-                        if (await Program.ShowScrollableMessageBoxAsync(
+                        if (await UserInteraction.ShowScrollableMessageAsync(
                                 string.Format(objCulture,
                                     await LanguageManager.GetStringAsync(
                                             "Message_UnsavedChanges", strLanguage,
@@ -939,7 +831,7 @@ namespace Chummer
                                 await LanguageManager
                                     .GetStringAsync("MessageTitle_UnsavedChanges", strLanguage, token: token)
                                     .ConfigureAwait(false),
-                                MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, token: token).ConfigureAwait(false) != DialogResult.Yes)
+                                PromptButtons.YesNoCancel, PromptIcon.Question, token: token).ConfigureAwait(false) != PromptResult.Yes)
                         {
                             return;
                         }

@@ -113,6 +113,20 @@ namespace Chummer
         [STAThread]
         private static void Main()
         {
+            // Instala a fábrica de atividades cronometradas do Timekeeper.
+            //
+            // O Timekeeper vive no domínio e trabalha com System.Diagnostics.Activity, que
+            // está na BCL. É aqui, na aplicação legada, que ele ganha a implementação que
+            // constrói CustomActivity e reporta a Application Insights — o núcleo não pode
+            // depender disso (DEC-025).
+            // Instala a implementação WinForms da interação com o usuário. O domínio emite
+            // solicitações neutras (IUserInteraction) e é aqui que elas viram MessageBox
+            // (DEC-026). A UI Avalonia instalará a própria implementação.
+            UserInteraction.Current = new WinFormsUserInteraction();
+
+            Timekeeper.ActivityFactory = (strTaskName, objParent, eOperationType, strTarget) =>
+                new CustomActivity(strTaskName, objParent as CustomActivity, eOperationType, strTarget);
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
@@ -583,7 +597,7 @@ namespace Chummer
                         {
                             // Attempt to cache all XML files that are used the most.
                             using (Timekeeper.StartSyncron("cache_load", null,
-                                                           CustomActivity.OperationType.DependencyOperation,
+                                                           TelemetryOperationType.DependencyOperation,
                                                            Utils.CurrentChummerVersion.ToString(3)))
                             using (ThreadSafeForm<LoadingBar> frmLoadingBar
                                    = CreateAndShowProgressBar(Application.ProductName, Utils.BasicDataFileNames.Count))

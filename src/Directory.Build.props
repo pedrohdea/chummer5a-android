@@ -1,0 +1,48 @@
+<Project>
+
+  <!--
+    Propriedades comuns aos projetos do porte.
+
+    Este arquivo fica em src/ e NÃO na raiz do repositório, deliberadamente: o MSBuild
+    para a busca no primeiro Directory.Build.props que encontra subindo a árvore. Mantendo
+    o arquivo aqui, ele se aplica a todo projeto novo sob src/ e a nenhum projeto legado
+    (Chummer/, ChummerHub/, Chummer.Tests/, ...), que continuam compilando exatamente como
+    antes. Mover isto para a raiz quebraria o build legado.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <!--
+      ATENÇÃO: enquanto DEC-013 valer (um arquivo, duas compilações), todo código de
+      Chummer.Core é TAMBÉM compilado pelo projeto legado net48, que não fixa LangVersion e
+      portanto usa C# 7.3. Recursos de C# 8 ou superior no núcleo quebram o build legado —
+      que é o gerador dos artefatos dourados. Ver DEC-027.
+    -->
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+      Versão única do Avalonia para os três projetos de UI. Fixada na linha 11.3 e não na
+      12.x deliberadamente (DEC-038): a 11.3 é a linha madura, com muito mais quilometragem
+      em Android, e esta etapa existe para medir o risco da PLATAFORMA — não para descobrir
+      o risco de uma versão nova do próprio toolkit.
+    -->
+    <AvaloniaVersion>11.3.20</AvaloniaVersion>
+  </PropertyGroup>
+
+  <!--
+    InvariantGlobalization fica explicitamente em false: o Chummer ordena e compara
+    strings traduzidas em seis idiomas. Sem ICU, a ordenação muda silenciosamente e o
+    teste diferencial contra o build legado acusa divergências que não são regressões.
+    Ver docs/po/decisoes.md, DEC-004.
+  -->
+
+</Project>

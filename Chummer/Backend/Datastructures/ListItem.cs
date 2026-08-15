@@ -28,7 +28,7 @@ namespace Chummer
     /// ListItem class to make populating a DropDownList from a DataSource easier.
     /// </summary>
     [DebuggerDisplay("{Name} {Value?.ToString() ?? \"\"}")]
-    public readonly struct ListItem : IEquatable<ListItem>, IComparable, IComparable<ListItem>
+    public readonly partial struct ListItem : IEquatable<ListItem>, IComparable, IComparable<ListItem>
     {
         public static readonly ListItem Blank = new ListItem(string.Empty, string.Empty);
 
@@ -133,42 +133,12 @@ namespace Chummer
 
     #region Sorting Classes
 
-    public static class CompareTreeNodes
+    public static partial class CompareTreeNodes
     {
-        /// <summary>
-        /// Sort TreeNodes in alphabetical order, ignoring [].
-        /// </summary>
-        public static int CompareText(TreeNode tx, TreeNode ty)
-        {
-            if (tx == null)
-            {
-                if (ty == null)
-                    return 0;
-                return -1;
-            }
-            return ty == null ? 1 : string.Compare(tx.Text.FastEscape('[', ']'), ty.Text.FastEscape('[', ']'), false, GlobalSettings.CultureInfo);
-        }
     }
 
-    public static class CompareListViewItems
+    public static partial class CompareListViewItems
     {
-        /// <summary>
-        /// Sort ListViewItems in reverse chronological order.
-        /// </summary>
-        public static int CompareTextAsDates(ListViewItem lx, ListViewItem ly)
-        {
-            if (lx == null || !DateTime.TryParse(lx.Text, GlobalSettings.CultureInfo, System.Globalization.DateTimeStyles.None, out DateTime datX))
-            {
-                if (ly == null || !DateTime.TryParse(ly.Text, GlobalSettings.CultureInfo, System.Globalization.DateTimeStyles.None, out _))
-                    return 0;
-                return -1;
-            }
-
-            if (ly == null || !DateTime.TryParse(ly.Text, GlobalSettings.CultureInfo, System.Globalization.DateTimeStyles.None, out DateTime datY))
-                return 1;
-
-            return DateTime.Compare(datY, datX);
-        }
     }
 
     public static class CompareListItems
@@ -185,10 +155,9 @@ namespace Chummer
     /// <summary>
     /// Sort ListViewColumns.
     /// </summary>
-    public class ListViewColumnSorter : IComparer
+    public partial class ListViewColumnSorter : IComparer
     {
         private int _intColumnToSort;
-        private SortOrder _eOrderOfSort;
 
         private readonly char[] _achrCachedNuyenSymbols = LanguageManager.GetString("String_NuyenSymbol").ToCharArray();
 
@@ -262,23 +231,14 @@ namespace Chummer
             set => _intColumnToSort = value;
         }
 
-        /// <summary>
-        /// SortOrder to be used.
-        /// </summary>
-        public SortOrder Order
-        {
-            get => _eOrderOfSort;
-            set => _eOrderOfSort = value;
-        }
     }
 
     /// <summary>
     /// Sort DataGridView Columns.
     /// </summary>
-    public class DataGridViewColumnSorter : IComparer
+    public partial class DataGridViewColumnSorter : IComparer
     {
         private int _intColumnToSort;
-        private SortOrder _objOrderOfSort;
 
         private readonly char[] _achrCachedNuyenSymbols = LanguageManager.GetString("String_NuyenSymbol").ToCharArray();
         private readonly string _strCachedRestrictedSymbol = LanguageManager.GetString("String_AvailRestricted");
@@ -335,14 +295,6 @@ namespace Chummer
             set => _intColumnToSort = value;
         }
 
-        /// <summary>
-        /// SortOrder to be used.
-        /// </summary>
-        public SortOrder Order
-        {
-            get => _objOrderOfSort;
-            set => _objOrderOfSort = value;
-        }
     }
 
     #endregion Sorting Classes

@@ -413,8 +413,8 @@ namespace Chummer
                 await _objLoadContentLocker.WaitAsync(token).ConfigureAwait(false);
                 try
                 {
-                    using (CustomActivity opLoadMasterindex = Timekeeper.StartSyncron(
-                               "op_load_frm_masterindex", null, CustomActivity.OperationType.RequestOperation, null))
+                    using (CustomActivity opLoadMasterindex = (CustomActivity)Timekeeper.StartSyncron(
+                               "op_load_frm_masterindex", null, TelemetryOperationType.RequestOperation, null))
                     {
                         Interlocked.Decrement(ref _intIsFinishedLoading);
                         try

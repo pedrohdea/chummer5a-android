@@ -1,4 +1,4 @@
-/*  This file is part of Chummer5a.
+﻿/*  This file is part of Chummer5a.
  *
  *  Chummer5a is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -300,8 +300,8 @@ namespace Chummer
                     try
                     {
                         Task tskAutosave = Task.CompletedTask; // Separate out the autosave task so that we can work on it while the UI is drawing
-                        using (CustomActivity op_load_frm_create = Timekeeper.StartSyncron(
-                                   "load_frm_create", null, CustomActivity.OperationType.RequestOperation,
+                        using (CustomActivity op_load_frm_create = (CustomActivity)Timekeeper.StartSyncron(
+                                   "load_frm_create", null, TelemetryOperationType.RequestOperation,
                                    CharacterObject != null ? await CharacterObject.GetFileNameAsync(GenericToken).ConfigureAwait(false) : string.Empty))
                         {
                             await this.DoThreadSafeAsync(x => x.SuspendLayout(), GenericToken).ConfigureAwait(false);
@@ -1555,7 +1555,7 @@ namespace Chummer
                                     }
 
                                     using (CustomActivity op_load_frm_create_longloads
-                                           = Timekeeper.StartSyncron("load_frm_create_longloads",
+                                           = (CustomActivity)Timekeeper.StartSyncron("load_frm_create_longloads",
                                                op_load_frm_create))
                                     {
                                         using (Timekeeper.StartSyncron(
@@ -2013,8 +2013,14 @@ namespace Chummer
 
                                 SetupCommonCollectionDatabindings(false);
 
-                                // Clear the mugshot image so that we don't get crashes from disposal ordering (image can get disposed before its picturebox does)
-                                await picMugshot.DoThreadSafeAsync(x => x.Image = null, CancellationToken.None).ConfigureAwait(false);
+                                // Clear the mugshot image so that we don't get crashes from disposal ordering (image can get disposed before its picturebox does).
+                                // The image is decoded by this form and belongs to it alone, so this is also where it gets disposed of (DEC-034).
+                                await picMugshot.DoThreadSafeAsync(x =>
+                                {
+                                    Image imgOld = x.Image;
+                                    x.Image = null;
+                                    imgOld?.Dispose();
+                                }, CancellationToken.None).ConfigureAwait(false);
 
                                 await Task.WhenAll(RefreshAttributesClearBindings(pnlAttributes, CancellationToken.None),
                                     RefreshMartialArtsClearBindings(treMartialArts, CancellationToken.None),

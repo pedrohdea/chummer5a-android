@@ -39,20 +39,29 @@ namespace Chummer
             s_Time.Start();
         }
 
-        [CLSCompliant(false)]
-        public static CustomActivity StartSyncron(string taskname, CustomActivity parentActivity, CustomActivity.OperationType operationType, string target)
+        /// <summary>
+        /// Fábrica da atividade cronometrada.
+        ///
+        /// O domínio precisa cronometrar operações, mas não pode depender de Application
+        /// Insights: Activity vive em Chummer/Telemetry/ e traz Microsoft.ApplicationInsights
+        /// junto (DEC-025). Com a fábrica, o núcleo trabalha com System.Diagnostics.Activity —
+        /// que está na BCL e existe sob net9.0 — e a aplicação legada instala a implementação
+        /// que constrói Activity.
+        ///
+        /// Quando ninguém instala nada, StartSyncron devolve null e os `using` do domínio
+        /// viram no-ops, que é o comportamento desejado com telemetria desligada (PREM-005).
+        /// </summary>
+        public static Func<string, Activity, TelemetryOperationType, string, Activity> ActivityFactory { get; set; }
+
+        public static Activity StartSyncron(string taskname, Activity parentActivity, TelemetryOperationType operationType, string target)
         {
-            CustomActivity dependencyActivity = new CustomActivity(taskname, parentActivity, operationType, target);
             s_DictionaryStarts.TryAdd(taskname, s_Time.Elapsed);
-            return dependencyActivity;
+            return ActivityFactory?.Invoke(taskname, parentActivity, operationType, target);
         }
 
-        [CLSCompliant(false)]
-        public static CustomActivity StartSyncron(string taskname, CustomActivity parentActivity)
+        public static Activity StartSyncron(string taskname, Activity parentActivity)
         {
-            CustomActivity dependencyActivity = new CustomActivity(taskname, parentActivity);
-            s_DictionaryStarts.TryAdd(taskname, s_Time.Elapsed);
-            return dependencyActivity;
+            return StartSyncron(taskname, parentActivity, TelemetryOperationType.DependencyOperation, null);
         }
 
         public static TimeSpan Elapsed(string taskname)

@@ -38,7 +38,7 @@ namespace Chummer
     /// Caches a subset of a full character's properties for loading purposes.
     /// </summary>
     [DebuggerDisplay("{CharacterName} ({FileName})")]
-    public sealed class CharacterCache : IHasLockObject
+    public sealed partial class CharacterCache : IHasLockObject
     {
         private string _strFilePath;
         private string _strFileName;
@@ -56,14 +56,11 @@ namespace Chummer
         private string _strCharacterAlias;
         private string _strBuildMethod;
         private string _strEssence;
-        private Image _imgMugshot;
         private int _intCreated;
         private string _strSettingsFile;
         private readonly ConcurrentDictionary<string, object> _dicMyPluginData = new ConcurrentDictionary<string, object>();
         private SafeAsyncEventHandler _onMyDoubleClick;
         private SafeAsyncEventHandler _onMyContextMenuDeleteClick;
-        private SafeAsyncEventHandler<TreeViewEventArgs> _onMyAfterSelect;
-        private SafeAsyncEventHandler<ValueTuple<KeyEventArgs, TreeNode>> _onMyKeyDown;
 
         public AsyncFriendlyReaderWriterLock LockObject { get; } = new AsyncFriendlyReaderWriterLock();
 
@@ -435,31 +432,7 @@ namespace Chummer
             }
         }
 
-        [JsonIgnore]
-        [XmlIgnore]
-        [IgnoreDataMember]
-        public Image Mugshot
-        {
-            get
-            {
-                using (LockObject.EnterReadLock())
-                    return _imgMugshot;
-            }
-        }
 
-        public async Task<Image> GetMugshotAsync(CancellationToken token = default)
-        {
-            IAsyncDisposable objLocker = await LockObject.EnterReadLockAsync(token).ConfigureAwait(false);
-            try
-            {
-                token.ThrowIfCancellationRequested();
-                return _imgMugshot;
-            }
-            finally
-            {
-                await objLocker.DisposeAsync().ConfigureAwait(false);
-            }
-        }
 
         public bool Created
         {
@@ -675,29 +648,7 @@ namespace Chummer
             }
         }
 
-        [JsonIgnore]
-        [XmlIgnore]
-        [IgnoreDataMember]
-        public SafeAsyncEventHandler<TreeViewEventArgs> OnMyAfterSelect
-        {
-            get
-            {
-                using (LockObject.EnterReadLock())
-                    return _onMyAfterSelect;
-            }
-        }
 
-        [JsonIgnore]
-        [XmlIgnore]
-        [IgnoreDataMember]
-        public SafeAsyncEventHandler<ValueTuple<KeyEventArgs, TreeNode>> OnMyKeyDown
-        {
-            get
-            {
-                using (LockObject.EnterReadLock())
-                    return _onMyKeyDown;
-            }
-        }
 
         public async Task OnDefaultDoubleClick(object sender, EventArgs e, CancellationToken token = default)
         {
@@ -1110,23 +1061,6 @@ namespace Chummer
             return strReturn;
         }
 
-        public async Task OnDefaultKeyDown(object sender, ValueTuple<KeyEventArgs, TreeNode> args, CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            if (args.Item1.KeyCode == Keys.Delete)
-            {
-                switch (args.Item2.Parent.Tag.ToString())
-                {
-                    case "Recent":
-                        await GlobalSettings.MostRecentlyUsedCharacters.RemoveAsync(await GetFilePathAsync(token).ConfigureAwait(false), token).ConfigureAwait(false);
-                        break;
-
-                    case "Favorite":
-                        await GlobalSettings.FavoriteCharacters.RemoveAsync(await GetFilePathAsync(token).ConfigureAwait(false), token).ConfigureAwait(false);
-                        break;
-                }
-            }
-        }
 
         private int _intIsDisposed;
 

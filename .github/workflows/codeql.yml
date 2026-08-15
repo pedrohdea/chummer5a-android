@@ -63,7 +63,16 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    # Fixa a versão do SDK em vez de depender do que vem pré-instalado na imagem do
+    # runner, espelhando o nightly-build.yml. Sem isto, a seleção de SDK fica à mercê da
+    # imagem e do rollForward do global.json, e o job passa a falhar sozinho quando a
+    # imagem muda.
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
@@ -90,10 +99,23 @@ jobs:
     #   If the Autobuild fails above, remove it and uncomment the following three lines.
     #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
 
+    # O Chummer legado precisa do MSBuild completo do Visual Studio, e não do `dotnet build`.
+    #
+    # Motivo: Chummer.csproj tem alvo net48 e 108 arquivos .resx com recursos binários
+    # (ícones e imagens). A tarefa GenerateResource do MSBuild que vem no dotnet CLI não
+    # serializa recursos não-string sem GenerateResourceUsePreserializedResources, e falha
+    # com MSB3823. O MSBuild do Visual Studio processa esses recursos nativamente.
+    #
+    # O passo original já usava o MSBuild do Visual Studio, mas por caminho fixo
+    #   C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\...\MSBuild.exe
+    # que deixou de existir nas imagens atuais do runner. setup-msbuild localiza o MSBuild
+    # via vswhere e o coloca no PATH, preservando a intenção original sem a fragilidade.
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
     - run: |
         echo "Run, Build Application using script"
-        dotnet msbuild /t:Restore /p:configuration=Release ./Chummer.sln
-        & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\bin\MSBuild.exe" /t:Build /p:configuration=Release ./Chummer.sln
+        msbuild -restore -t:Build -p:Configuration=Release -verbosity:minimal ./Chummer.sln
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

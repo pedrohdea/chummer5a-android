@@ -1,4 +1,4 @@
-/*  This file is part of Chummer5a.
+﻿/*  This file is part of Chummer5a.
  *
  *  Chummer5a is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -332,8 +332,8 @@ namespace Chummer
                     try
                     {
                         Task tskAutosave = Task.CompletedTask; // Separate out the autosave task so that we can work on it while the UI is drawing
-                        using (CustomActivity op_load_frm_career = Timekeeper.StartSyncron(
-                                   "load_frm_career", null, CustomActivity.OperationType.RequestOperation,
+                        using (CustomActivity op_load_frm_career = (CustomActivity)Timekeeper.StartSyncron(
+                                   "load_frm_career", null, TelemetryOperationType.RequestOperation,
                                    CharacterObject != null ? await CharacterObject.GetFileNameAsync(GenericToken).ConfigureAwait(false) : string.Empty))
                         {
                             await this.DoThreadSafeAsync(x => x.SuspendLayout(), GenericToken).ConfigureAwait(false);
@@ -1653,7 +1653,7 @@ namespace Chummer
                                     }
 
                                     using (CustomActivity op_load_frm_career_longloads
-                                           = Timekeeper.StartSyncron("load_frm_career_longloads",
+                                           = (CustomActivity)Timekeeper.StartSyncron("load_frm_career_longloads",
                                                op_load_frm_career))
                                     {
                                         using (Timekeeper.StartSyncron(
@@ -1859,7 +1859,7 @@ namespace Chummer
                                 }
 
                                 using (CustomActivity op_load_frm_career_finishingStuff =
-                                       Timekeeper.StartSyncron("load_frm_career_finishingStuff", op_load_frm_career))
+                                       (CustomActivity)Timekeeper.StartSyncron("load_frm_career_finishingStuff", op_load_frm_career))
                                 {
                                     // Directly awaiting here so that we can properly unset the dirty flag after the update
                                     await RequestAndProcessCharacterUpdate(GenericToken).ConfigureAwait(false);
@@ -2643,8 +2643,14 @@ namespace Chummer
 
                                 SetupCommonCollectionDatabindings(false);
 
-                                // Clear the mugshot image so that we don't get crashes from disposal ordering (image can get disposed before its picturebox does)
-                                await picMugshot.DoThreadSafeAsync(x => x.Image = null, CancellationToken.None).ConfigureAwait(false);
+                                // Clear the mugshot image so that we don't get crashes from disposal ordering (image can get disposed before its picturebox does).
+                                // The image is decoded by this form and belongs to it alone, so this is also where it gets disposed of (DEC-034).
+                                await picMugshot.DoThreadSafeAsync(x =>
+                                {
+                                    Image imgOld = x.Image;
+                                    x.Image = null;
+                                    imgOld?.Dispose();
+                                }, CancellationToken.None).ConfigureAwait(false);
 
                                 await Task.WhenAll(RefreshAttributesClearBindings(pnlAttributes, CancellationToken.None),
                                     RefreshMartialArtsClearBindings(treMartialArts, CancellationToken.None),
@@ -5593,7 +5599,7 @@ namespace Chummer
                                 await objMerge.SetBurntStreetCredAsync(await objVessel.GetBurntStreetCredAsync(GenericToken).ConfigureAwait(false), GenericToken).ConfigureAwait(false);
                                 await objMerge.SetNotorietyAsync(await objVessel.GetNotorietyAsync(GenericToken).ConfigureAwait(false), GenericToken).ConfigureAwait(false);
                                 await objMerge.SetPublicAwarenessAsync(await objVessel.GetPublicAwarenessAsync(GenericToken).ConfigureAwait(false), GenericToken).ConfigureAwait(false);
-                                ThreadSafeList<Image> lstMergeMugshots = await objMerge.GetMugshotsAsync(GenericToken).ConfigureAwait(false);
+                                ThreadSafeList<byte[]> lstMergeMugshots = await objMerge.GetMugshotsAsync(GenericToken).ConfigureAwait(false);
                                 await (await objVessel.GetMugshotsAsync(GenericToken).ConfigureAwait(false)).ForEachWithSideEffectsAsync(objMugshot =>
                                     lstMergeMugshots.AddAsync(objMugshot, GenericToken), GenericToken).ConfigureAwait(false);
                             }

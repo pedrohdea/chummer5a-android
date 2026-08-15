@@ -1,0 +1,82 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    SONDAGEM EXECUTÁVEL — o spike de DEC-037 levado até o fim.
+
+    android.csproj.in mede se o domínio COMPILA no alvo do Android. Esta sondagem vai além:
+    produz um executável que CARREGA um .chum5 de verdade e imprime dados do personagem.
+    A pergunta que só a execução responde é a de DEC-037: carregar uma ficha toca algum
+    diálogo de seleção?
+
+    Diferenças em relação a android.csproj.in:
+      - OutputType Exe, com o Main de scripts/probe/CarregarChum5.cs
+      - inclui Chummer/Controls/Dominio/** — as metades de UI ainda contêm método de
+        DOMÍNIO chamado pelo Backend (Character.ClearInitiations, os métodos de atributo de
+        matriz). Sem elas o conjunto não vincula, e stubá-las mudaria regra de negócio.
+      - inclui scripts/probe/RuntimeShims/** — os tipos de plataforma que sobram
+  -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Chummer</RootNamespace>
+    <AssemblyName>CarregarChum5</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>disable</Nullable><ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS0067;CS0169;CS0414;CS1998;CS0618;CS0612;CS0649;CS8981</NoWarn>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Deterministic>true</Deterministic>
+    <!--
+      Utils.CurrentChummerVersion sai de typeof(Program).Assembly.GetName().Version, e o
+      domínio RECUSA carregar ficha salva por versão mais nova. Sem versão, a sondagem é
+      0.0.0.0 e toda ficha é "do futuro". Espelha Chummer/Chummer.csproj.
+    -->
+    <AssemblyVersion>5.226.0.0</AssemblyVersion>
+    <FileVersion>5.226.0.0</FileVersion>
+    <Version>5.226.0.0</Version>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Ben.Demystifier" Version="0.4.1" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="10.0.9" />
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="18.7.23" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="NLog" Version="6.1.4" />
+    <PackageReference Include="RtfPipe" Version="2.0.7677.4303" />
+    <PackageReference Include="XoshiroPRNG.Net" Version="1.6.0" />
+    <PackageReference Include="itext" Version="9.7.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.0" />
+    <!--
+      Só pelos tipos Image/Bitmap/Icon das assinaturas de mugshot. Desde o .NET 7 este
+      pacote lança PlatformNotSupportedException fora do Windows, o que é o comportamento
+      DESEJADO aqui: se a carga tocar imagem, a exceção diz isso com todas as letras em vez
+      de esconder o acoplamento atrás de uma implementação de mentira.
+    -->
+    <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(R)/Chummer/Backend/**/*.cs" />
+    <Compile Include="$(R)/Chummer/7zip/**/*.cs" />
+    <!--
+      As metades de UI entram porque ainda contêm método de DOMÍNIO. Três delas não:
+      LanguageManager.UI.cs traduz formulários e CommonFunctions.UI.cs trata roda do mouse
+      em abas. São UI pura, nada do Backend as chama, e sozinhas exigiriam sombra para mais
+      de trinta tipos de WinForms.
+    -->
+    <Compile Include="$(R)/Chummer/Controls/Dominio/**/*.cs"
+             Exclude="$(R)/Chummer/Controls/Dominio/LanguageManager.UI.cs;$(R)/Chummer/Controls/Dominio/CommonFunctions.UI.cs" />
+    <!--
+      MatrixAttributesControlExtensions.cs foi para Controls/Extensions/ mas é DOMÍNIO:
+      GetTotalMatrixAttribute e companhia são regra de matriz, chamadas de Character.cs.
+      Anotado como achado do spike; não é lugar de corrigir isso aqui.
+    -->
+    <Compile Include="$(R)/Chummer/Controls/Extensions/**/*.cs" />
+    <Compile Include="$(R)/Chummer/Controls/Infrastructure/ImageExtensions.cs" />
+    <Compile Include="$(R)/Chummer/Properties/Annotations.cs" />
+    <Compile Include="$(R)/src/Chummer.Core/**/*.cs" Exclude="$(R)/src/Chummer.Core/bin/**/*.cs;$(R)/src/Chummer.Core/obj/**/*.cs" />
+    <Compile Include="$(R)/src/Chummer.Compat/**/*.cs" />
+    <Compile Include="$(R)/scripts/probe/RuntimeShims/**/*.cs" />
+    <Compile Include="$(R)/scripts/probe/CarregarChum5.cs" />
+  </ItemGroup>
+</Project>

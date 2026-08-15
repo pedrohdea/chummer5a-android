@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+#
+# Ponto de entrada único do desenvolvimento. Tudo se faz por aqui.
+#
+#   ./scripts/dev.sh check      ANTES DE TODO COMMIT — roda o que precisa passar
+#   ./scripts/dev.sh setup      instala o SDK .NET e o que mais for preciso
+#   ./scripts/dev.sh build      compila o porte (src/)
+#   ./scripts/dev.sh legado     compila o app legado INTEIRO em Linux (~30 s)
+#   ./scripts/dev.sh ui         valida o código extraído para Controls/
+#   ./scripts/dev.sh censo      mede o acoplamento restante (relatório)
+#   ./scripts/dev.sh carga      EXECUTA o domínio: abre os .chum5 de teste (~25 min)
+#   ./scripts/dev.sh carga Skink   idem, filtrado por nome de ficha
+#   ./scripts/dev.sh erros      os primeiros erros do censo, ~1 s (laço interno)
+#   ./scripts/dev.sh erros Gear    idem, filtrado por arquivo
+#   ./scripts/dev.sh apk        gera o APK e informa o tamanho
+#   ./scripts/dev.sh spikes     roda as medições de plataforma no desktop (controle)
+#   ./scripts/dev.sh tela [png] renderiza a UI para PNG (prova que desenha, sem tela)
+#   ./scripts/dev.sh status     onde o porte está, em números
+#   ./scripts/dev.sh progresso  mede, registra no histórico e diagnostica se parou
+#
+# Por que existe: as ferramentas do projeto medem coisas diferentes e é fácil rodar a
+# errada. `check` é a resposta para "o que eu preciso rodar antes de commitar" — e ela
+# inclui `legado`, que é a única que enxerga erro dentro de corpo de método (DEC-032).
+
+set -euo pipefail
+
+RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
+export PATH="${DOTNET_ROOT:-/usr/share/dotnet}:$PATH"
+export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1
+
+titulo() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
+erro()   { printf '\n\033[1;31m%s\033[0m\n' "$*" >&2; }
+
+# A Chummer.Port.sln agora contém o Chummer.Android, então até `build` precisa do SDK do
+# Google. O setup instala em ~/android-sdk; adota-se automaticamente se estiver lá, para
+# que ninguém precise lembrar de exportar a variável antes de compilar a solução.
+if [ -z "${ANDROID_HOME:-}" ] && [ -d "$HOME/android-sdk/platforms" ]; then
+    export ANDROID_HOME="$HOME/android-sdk" ANDROID_SDK_ROOT="$HOME/android-sdk"
+fi
+
+cmd="${1:-check}"; shift || true
+
+case "$cmd" in
+
+  setup)
+    exec "$RAIZ/scripts/setup-dev.sh" "$@"
+    ;;
+
+  build)
+    titulo "Compilando o porte"
+    # De dentro de src/: o dotnet resolve o global.json pelo diretório de trabalho, e o da
+    # raiz fixa o SDK 8 do build legado (DEC-012). Compilar da raiz quebra com MSB3823.
+    cd "$RAIZ/src" && dotnet build Chummer.Port.sln --nologo "$@"
+    ;;
+
+  legado)
+    exec "$RAIZ/scripts/verificar-legado.sh" "$@"
+    ;;
+
+  ui)
+    exec "$RAIZ/scripts/verificar-ui.sh" "$@"
+    ;;
+
+  censo)
+    exec "$RAIZ/scripts/censo-erros.sh" "$@"
+    ;;
+
+  # A única que EXECUTA em vez de só compilar. Fora do `check` de propósito: leva ~25 min
+  # na rodada completa. Rode filtrado ao iterar. Ver DEC-050.
+  carga)
+    exec "$RAIZ/scripts/testar-carga.sh" "$@"
+    ;;
+
+  erros)
+    exec "$RAIZ/scripts/censo-erros.sh" --rapido "$@"
+    ;;
+
+  check)
+    # A ordem é do mais barato para o mais caro, para falhar cedo.
+    titulo "1/3 · auditoria estrutural das parciais extraídas"
+    python3 "$RAIZ/scripts/probe/auditar-parciais.py" "$RAIZ"
+
+    titulo "2/3 · código extraído para Controls/"
+    "$RAIZ/scripts/verificar-ui.sh"
+
+    titulo "3/3 · build legado completo (o único que vê corpo de método)"
+    "$RAIZ/scripts/verificar-legado.sh"
+
+    printf '\n\033[1mTudo passou.\033[0m Pode commitar.\n'
+    ;;
+
+  apk)
+    if [ -z "${ANDROID_HOME:-}${ANDROID_SDK_ROOT:-}" ]; then
+      erro "Android SDK não encontrado (ANDROID_HOME/ANDROID_SDK_ROOT vazios)."
+      cat >&2 <<'FIM'
+
+Empacotar um APK exige o SDK do Google (platform + build-tools) além do workload
+.NET de Android. Rode:
+
+    ./scripts/setup-dev.sh --android
+
+Ele instala em ~/android-sdk, que o dev.sh adota sozinho. Medido: o APK sai deste
+contêiner em 1 min 38 s do zero, ~50 s incremental — sem CI.
+
+Ver docs/DESENVOLVIMENTO.md, seção "APK".
+FIM
+      exit 1
+    fi
+    titulo "Gerando APK"
+    cd "$RAIZ/src"
+    dotnet publish Chummer.Android/Chummer.Android.csproj -c Release --nologo "$@"
+    # Anunciar o caminho e o TAMANHO: o tamanho do APK é uma das medições da Etapa 2.5, e
+    # deixá-lo visível a cada build é o que impede que ele cresça sem ninguém notar.
+    find Chummer.Android/bin/Release -name '*-Signed.apk' -printf '%s\t%p\n' 2>/dev/null |
+      sort -rn | head -1 |
+      while IFS=$'\t' read -r bytes caminho; do
+        printf '\nAPK: %s\n     %s bytes (%.2f MiB)\n' "$caminho" "$bytes" "$(echo "$bytes/1048576" | bc -l)"
+      done
+    ;;
+
+  tela)
+    # Prova que a UI DESENHA, e não só que compila. O contêiner não tem tela nem ferramenta
+    # de captura, então o próprio app rasteriza a janela para PNG; o Xvfb entra porque o
+    # Avalonia exige uma plataforma de runtime, e usar a de verdade faz esta execução provar
+    # também que o backend X11 sobe.
+    destino="${1:-/tmp/chummer-tela.png}"; shift || true
+    titulo "Renderizando a UI para $destino"
+    cd "$RAIZ/src" && CHUMMER_ASSETS="$RAIZ/Chummer" \
+      xvfb-run -a dotnet run --project Chummer.Desktop/Chummer.Desktop.csproj --nologo \
+        -- --screenshot "$destino" "$@"
+    ;;
+
+  spikes)
+    # Medição de CONTROLE: as mesmas medições que o APK faz no aparelho, rodadas aqui.
+    # Sem esta comparação, um número ruim no celular não distingue "o Android é lento" de
+    # "o código é lento".
+    titulo "Spikes de plataforma (controle, no desktop)"
+    cd "$RAIZ/src" && CHUMMER_ASSETS="$RAIZ/Chummer" \
+      dotnet run --project Chummer.Desktop/Chummer.Desktop.csproj -c Release --nologo -- --spikes "$@"
+    ;;
+
+  progresso)
+    exec "$RAIZ/scripts/progresso.sh" "$@"
+    ;;
+
+  status)
+    titulo "Onde o porte está"
+    printf '%-46s %s\n' "erros de DECLARAÇÃO restantes (censo)" \
+      "$("$RAIZ/scripts/censo-erros.sh" --rapido --limite 0 2>/dev/null | grep -oE 'Total: [0-9]+' | grep -oE '[0-9]+' || echo '?')"
+    printf '%-46s %s\n' "ThreadSafeForm no Backend (corpo, não medido pelo censo)" \
+      "$(grep -ro 'ThreadSafeForm' --include=*.cs "$RAIZ/Chummer/Backend" | wc -l)"
+    printf '%-46s %s\n' "arquivos Backend/ com using WinForms" \
+      "$(grep -rl 'using System.Windows.Forms' --include=*.cs "$RAIZ/Chummer/Backend" | wc -l)"
+    printf '%-46s %s\n' "linhas ainda em Chummer/Backend/" \
+      "$(find "$RAIZ/Chummer/Backend" -name '*.cs' -exec cat {} + | wc -l)"
+    printf '%-46s %s\n' "linhas já em src/Chummer.Core/" \
+      "$(find "$RAIZ/src/Chummer.Core" -name '*.cs' -not -path '*/obj/*' -exec cat {} + 2>/dev/null | wc -l)"
+    ;;
+
+  -h|--help|help)
+    sed -n '2,20p' "$0"
+    ;;
+
+  *)
+    erro "subcomando desconhecido: $cmd"
+    sed -n '2,20p' "$0" >&2
+    exit 2
+    ;;
+esac

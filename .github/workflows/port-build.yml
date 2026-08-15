@@ -1,0 +1,232 @@
+name: Port Build (Linux)
+
+# Build do porte para Android. Roda em Linux, ao contrário do build legado, que exige
+# Windows (net48 + WinForms). É este workflow que garante mecanicamente a regra inviolável
+# do projeto: Chummer.Core tem alvo net9.0 e não net9.0-windows, então qualquer código
+# acoplado a WinForms arrastado para dentro dele falha na compilação.
+
+on:
+  push:
+    branches:
+      - master
+      - 'claude/**'
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'global.json'
+      - '.github/workflows/port-build.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'global.json'
+      - '.github/workflows/port-build.yml'
+  workflow_dispatch:
+
+concurrency:
+  # head_ref ANTES de ref, e isso economiza metade do CI: num branch com PR aberto, cada push
+  # dispara DOIS eventos — `push` e `pull_request` — e `github.ref` difere entre eles
+  # (refs/heads/x contra refs/pull/N/merge). Grupos distintos, nada é cancelado, e o job de
+  # emulador roda duas vezes por push. Com head_ref os dois caem no mesmo grupo.
+  group: port-build-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+
+jobs:
+  # Sinal rápido. Compila só os projetos que não precisam do workload de Android, para que
+  # um erro de C# apareça em ~1 minuto em vez de esperar a instalação do workload.
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-port-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: ${{ runner.os }}-nuget-port-
+
+      # Os passos rodam com src/ como diretório de trabalho de propósito: o dotnet resolve
+      # o global.json a partir do diretório de trabalho, não do caminho do projeto.
+      # src/global.json exige o SDK 9; o da raiz exige o SDK 8 do build legado.
+      - name: Build (núcleo, UI e head de desktop)
+        working-directory: src
+        run: |
+          dotnet build Chummer.Core/Chummer.Core.csproj --configuration Release
+          dotnet build Chummer.UI/Chummer.UI.csproj --configuration Release
+          dotnet build Chummer.Desktop/Chummer.Desktop.csproj --configuration Release
+
+      # A UI precisa provar que DESENHA, não só que compila. O runner não tem tela, então o
+      # próprio app rasteriza a janela para PNG sob Xvfb. Ver DEC-040.
+      - name: A UI desenha
+        working-directory: src
+        env:
+          CHUMMER_ASSETS: ${{ github.workspace }}/Chummer
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
+          xvfb-run -a dotnet run --project Chummer.Desktop/Chummer.Desktop.csproj \
+            --configuration Release -- --screenshot "$RUNNER_TEMP/tela.png"
+
+      - name: Publicar a captura
+        uses: actions/upload-artifact@v4
+        with:
+          name: tela-desktop
+          path: ${{ runner.temp }}/tela.png
+          if-no-files-found: error
+
+      # Medição de controle: os mesmos spikes que o APK roda no aparelho, rodados aqui. É o
+      # que separa "o Android é lento" de "o código é lento" quando os números do PO chegarem.
+      - name: Spikes de plataforma (controle)
+        working-directory: src
+        env:
+          CHUMMER_ASSETS: ${{ github.workspace }}/Chummer
+        run: dotnet run --project Chummer.Desktop/Chummer.Desktop.csproj --configuration Release -- --spikes
+
+  # O APK que o PO instala no aparelho. Separado do job acima porque instalar o workload de
+  # Android custa minutos e não deve atrasar o sinal de compilação.
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-apk-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: ${{ runner.os }}-nuget-apk-
+
+      - name: Instalar o workload de Android
+        # De dentro de src/, e isso NÃO é detalhe: o dotnet resolve o global.json pelo
+        # diretório de trabalho, e o da raiz fixa o SDK 8 do build legado (DEC-012). Rodando
+        # da raiz, o workload é instalado para a banda 8.0.x enquanto o publish usa o SDK 9 —
+        # e o build falha com NETSDK1147 dizendo que o workload não está instalado, mesmo
+        # tendo acabado de instalá-lo. Foi exatamente o que aconteceu na primeira execução.
+        working-directory: src
+        run: dotnet workload install android
+
+      - name: Gerar o APK
+        working-directory: src
+        run: dotnet publish Chummer.Android/Chummer.Android.csproj --configuration Release
+
+      # O tamanho do APK é uma das medições da Etapa 2.5. Imprimi-lo a cada execução é o que
+      # transforma "o APK cresceu" de descoberta tardia em fato visível no log.
+      - name: Tamanho do APK
+        working-directory: src
+        run: |
+          find Chummer.Android/bin/Release -name '*-Signed.apk' \
+            -printf '%s bytes\t%f\n' | sort -rn
+
+      - name: Publicar o APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: chummer-android-apk
+          path: src/Chummer.Android/bin/Release/**/publish/*-Signed.apk
+          if-no-files-found: error
+
+  # A pergunta que nenhum outro job responde: o app ABRE?
+  #
+  # Os jobs acima provam que o código compila, que a UI desenha NO DESKTOP e que o APK
+  # empacota. Nada disso toca o runtime do Android — ABI, carregamento das .so nativas,
+  # ciclo de vida da Activity — que é justamente onde um app que compila sem um arranhão
+  # morre na inicialização. Até 15/08 a única resposta possível era o PO instalar no
+  # aparelho, o que fazia de cada verificação uma espera de horas ou dias.
+  #
+  # O contêiner de desenvolvimento não consegue: não tem /dev/kvm, e o emulador por software
+  # sobe mas não aguenta o `adb install` (medido). O runner Linux do GitHub TEM KVM, e é essa
+  # a diferença que destrava tudo. Receita conferida em home-assistant/android. Ver DEC-052.
+  emulador:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # O publish de Android mais a imagem do emulador enchem o disco do runner, e o sintoma
+      # não é "disco cheio": é `adb install` falhando com "Failed to commit install".
+      - name: Liberar espaço em disco
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          android: false
+          tool-cache: true
+          docker-images: false
+          large-packages: false
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-apk-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: ${{ runner.os }}-nuget-apk-
+
+      - name: Instalar o workload de Android
+        # De dentro de src/ — mesma razão do job acima (DEC-012).
+        working-directory: src
+        run: dotnet workload install android
+
+      # EmulatorAbi=true acrescenta android-x64. É obrigatório: o APK padrão é arm64 apenas,
+      # e NENHUM emulador x86_64 o executa. O interruptor existe porque passar
+      # RuntimeIdentifiers direto vaza para o Chummer.UI e dá NETSDK1083.
+      - name: Gerar o APK com a ABI do emulador
+        working-directory: src
+        run: dotnet publish Chummer.Android/Chummer.Android.csproj --configuration Release -p:EmulatorAbi=true
+
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm
+
+      - name: Instalar, abrir e exigir que fique de pé
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          force-avd-creation: false
+          disable-animations: true
+          disk-size: 2G
+          heap-size: 1G
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          # UMA linha, e isso não é estilo: o android-emulator-runner executa cada linha de
+          # `script` num `sh -c` SEPARADO. Uma variável atribuída numa linha não existe na
+          # seguinte — foi assim que a primeira execução falhou, com o caminho do APK vazio.
+          script: ./scripts/verificar-apk.sh "$(find src/Chummer.Android/bin/Release -name '*-Signed.apk' | head -1)" "${RUNNER_TEMP}/aparelho.png"
+
+      # Sai mesmo quando o job falha: numa falha a captura É o diagnóstico. Tela branca
+      # aponta a armadilha do TopLevel do Avalonia; tela preta aponta outra coisa.
+      - name: Publicar a captura do aparelho
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tela-emulador
+          path: ${{ runner.temp }}/aparelho.png
+          if-no-files-found: warn

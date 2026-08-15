@@ -1540,6 +1540,30 @@ namespace Chummer
         }
 
         /// <summary>
+        /// ValueToInt for callers written once for both paths (the "blnSync core" pattern).
+        /// Despacha para o par já existente; não muda o comportamento de nenhum dos dois.
+        /// </summary>
+        public static Task<int> ValueToIntCoreAsync(bool blnSync, Character objCharacter, string strValue, int intRating, CancellationToken token = default)
+        {
+            return blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? Task.FromResult(ValueToInt(objCharacter, strValue, intRating, token))
+                : ValueToIntAsync(objCharacter, strValue, intRating, token);
+        }
+
+        /// <summary>
+        /// ValueToDec for callers written once for both paths (the "blnSync core" pattern).
+        /// Despacha para o par já existente; não muda o comportamento de nenhum dos dois.
+        /// </summary>
+        public static Task<decimal> ValueToDecCoreAsync(bool blnSync, Character objCharacter, string strValue, int intRating, CancellationToken token = default)
+        {
+            return blnSync
+                // ReSharper disable once MethodHasAsyncOverload
+                ? Task.FromResult(ValueToDec(objCharacter, strValue, intRating, token))
+                : ValueToDecAsync(objCharacter, strValue, intRating, token);
+        }
+
+        /// <summary>
         /// Shows a skill selection dialog and returns the selected skill name.
         /// </summary>
         /// <param name="xmlBonusNode">XML node (e.g. a selectskill element) defining filters: skillcategory, limittoskill, skillcategories, excludecategory, knowledgeskills, etc.</param>
@@ -2863,7 +2887,7 @@ namespace Chummer
             //So far it is just a slower Dictionary<string, Action> but should (in theory...) be able to leverage this in the future to do it smarter with methods that are the same but
             //getting a different parameter injected
 
-            AddImprovementAsyncCollection container = new AddImprovementAsyncCollection(objCharacter,
+            AddImprovementCollection container = new AddImprovementCollection(objCharacter,
                 objImprovementSource,
                 strSourceName, strUnique, GetForcedValue(objCharacter),
                 GetLimitSelection(objCharacter), GetSelectedValue(objCharacter),

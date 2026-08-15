@@ -215,7 +215,7 @@ namespace Chummer
     /// <summary>
     /// Global Settings. A static class since these settings are common across all characters, reducing execution time and memory usage.
     /// </summary>
-    public static class GlobalSettings
+    public static partial class GlobalSettings
     {
         private static readonly Lazy<Logger> s_ObjLogger = new Lazy<Logger>(LogManager.GetCurrentClassLogger);
         private static Logger Log => s_ObjLogger.Value;
@@ -316,9 +316,13 @@ namespace Chummer
         /// </summary>
         public static bool LoadBoolFromRegistry(ref bool blnStorage, string strBoolName, string strSubKey = "", bool blnDeleteAfterFetch = false)
         {
+            // s_ObjBaseChummerKey é nulo quando não há registro do Windows — o próprio
+            // construtor estático já prevê isso e desiste cedo. Faltava a proteção aqui:
+            // com sub-chave, o acesso ao registro estourava NullReferenceException em vez
+            // de devolver "não achei". No Windows o valor nunca é nulo, então nada muda lá.
             RegistryKey objKey = string.IsNullOrWhiteSpace(strSubKey)
                 ? s_ObjBaseChummerKey
-                : s_ObjBaseChummerKey.OpenSubKey(strSubKey);
+                : s_ObjBaseChummerKey?.OpenSubKey(strSubKey);
             if (objKey == null)
                 return false;
             try
@@ -348,9 +352,13 @@ namespace Chummer
         public static bool LoadInt32FromRegistry(ref int intStorage, string strIntName, string strSubKey = "",
                                                  bool blnDeleteAfterFetch = false)
         {
+            // s_ObjBaseChummerKey é nulo quando não há registro do Windows — o próprio
+            // construtor estático já prevê isso e desiste cedo. Faltava a proteção aqui:
+            // com sub-chave, o acesso ao registro estourava NullReferenceException em vez
+            // de devolver "não achei". No Windows o valor nunca é nulo, então nada muda lá.
             RegistryKey objKey = string.IsNullOrWhiteSpace(strSubKey)
                 ? s_ObjBaseChummerKey
-                : s_ObjBaseChummerKey.OpenSubKey(strSubKey);
+                : s_ObjBaseChummerKey?.OpenSubKey(strSubKey);
             if (objKey == null)
                 return false;
             try
@@ -379,9 +387,13 @@ namespace Chummer
         /// </summary>
         public static bool LoadDecFromRegistry(ref decimal decStorage, string strDecName, string strSubKey = "", bool blnDeleteAfterFetch = false)
         {
+            // s_ObjBaseChummerKey é nulo quando não há registro do Windows — o próprio
+            // construtor estático já prevê isso e desiste cedo. Faltava a proteção aqui:
+            // com sub-chave, o acesso ao registro estourava NullReferenceException em vez
+            // de devolver "não achei". No Windows o valor nunca é nulo, então nada muda lá.
             RegistryKey objKey = string.IsNullOrWhiteSpace(strSubKey)
                 ? s_ObjBaseChummerKey
-                : s_ObjBaseChummerKey.OpenSubKey(strSubKey);
+                : s_ObjBaseChummerKey?.OpenSubKey(strSubKey);
             if (objKey == null)
                 return false;
             try
@@ -410,9 +422,13 @@ namespace Chummer
         /// </summary>
         public static bool LoadStringFromRegistry(ref string strStorage, string strStringName, string strSubKey = "", bool blnDeleteAfterFetch = false)
         {
+            // s_ObjBaseChummerKey é nulo quando não há registro do Windows — o próprio
+            // construtor estático já prevê isso e desiste cedo. Faltava a proteção aqui:
+            // com sub-chave, o acesso ao registro estourava NullReferenceException em vez
+            // de devolver "não achei". No Windows o valor nunca é nulo, então nada muda lá.
             RegistryKey objKey = string.IsNullOrWhiteSpace(strSubKey)
                 ? s_ObjBaseChummerKey
-                : s_ObjBaseChummerKey.OpenSubKey(strSubKey);
+                : s_ObjBaseChummerKey?.OpenSubKey(strSubKey);
             if (objKey == null)
                 return false;
             try
@@ -516,11 +532,11 @@ namespace Chummer
                 }
                 catch (System.Security.SecurityException)
                 {
-                    Program.ShowScrollableMessageBox(LanguageManager.GetString("Message_Insufficient_Permissions_Warning_Registry"));
+                    UserInteraction.ShowScrollableMessage(LanguageManager.GetString("Message_Insufficient_Permissions_Warning_Registry"));
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    Program.ShowScrollableMessageBox(LanguageManager.GetString("Message_Insufficient_Permissions_Warning_Registry"));
+                    UserInteraction.ShowScrollableMessage(LanguageManager.GetString("Message_Insufficient_Permissions_Warning_Registry"));
                 }
             }
 
@@ -672,7 +688,7 @@ namespace Chummer
                 *#else
                 *                string msg = "Error while loading PluginOptions from registry: " + Environment.NewLine;
                 *                msg += e.Message;
-                *                Program.ShowScrollableMessageBox(msg);
+                *                UserInteraction.ShowScrollableMessage(msg);
                 */
 #endif
             }
@@ -724,14 +740,14 @@ namespace Chummer
                                 = new CustomDataDirectoryInfo(strDirectoryName, strPath);
                             if (objCustomDataDirectory.XmlException != default)
                             {
-                                Program.ShowScrollableMessageBox(
+                                UserInteraction.ShowScrollableMessage(
                                     string.Format(CultureInfo, LanguageManager.GetString("Message_FailedLoad"),
                                         objCustomDataDirectory.XmlException.Message),
                                     string.Format(CultureInfo,
                                         LanguageManager.GetString("MessageTitle_FailedLoad") +
                                         LanguageManager.GetString("String_Space") + objCustomDataDirectory.Name +
-                                        Path.DirectorySeparatorChar + "manifest.xml"), MessageBoxButtons.OK,
-                                    MessageBoxIcon.Error);
+                                        Path.DirectorySeparatorChar + "manifest.xml"), PromptButtons.OK,
+                                    PromptIcon.Error);
                             }
 
                             if (s_SetCustomDataDirectoryInfos.Contains(objCustomDataDirectory))
@@ -744,13 +760,13 @@ namespace Chummer
                                     {
                                         if (objExistingInfo.HasManifest)
                                         {
-                                            Program.ShowScrollableMessageBox(
+                                            UserInteraction.ShowScrollableMessage(
                                                 string.Format(
                                                     GlobalSettings.CultureInfo,
                                                     LanguageManager.GetString("Message_Duplicate_CustomDataDirectory"),
                                                     objExistingInfo.Name, objCustomDataDirectory.Name),
                                                 LanguageManager.GetString("MessageTitle_Duplicate_CustomDataDirectory"),
-                                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                                PromptButtons.OK, PromptIcon.Error);
                                             continue;
                                         }
 
@@ -792,14 +808,14 @@ namespace Chummer
                         = new CustomDataDirectoryInfo(Path.GetFileName(strLoopDirectoryPath), strLoopDirectoryPath);
                     if (objCustomDataDirectory.XmlException != default)
                     {
-                        Program.ShowScrollableMessageBox(
+                        UserInteraction.ShowScrollableMessage(
                             string.Format(CultureInfo, LanguageManager.GetString("Message_FailedLoad"),
                                 objCustomDataDirectory.XmlException.Message),
                             string.Format(CultureInfo,
                                 LanguageManager.GetString("MessageTitle_FailedLoad") +
                                 LanguageManager.GetString("String_Space") + objCustomDataDirectory.Name +
-                                Path.DirectorySeparatorChar + "manifest.xml"), MessageBoxButtons.OK,
-                            MessageBoxIcon.Error);
+                                Path.DirectorySeparatorChar + "manifest.xml"), PromptButtons.OK,
+                            PromptIcon.Error);
                     }
 
                     if (s_SetCustomDataDirectoryInfos.Contains(objCustomDataDirectory))
@@ -812,13 +828,13 @@ namespace Chummer
                             {
                                 if (objExistingInfo.HasManifest)
                                 {
-                                    Program.ShowScrollableMessageBox(
+                                    UserInteraction.ShowScrollableMessage(
                                         string.Format(
                                             GlobalSettings.CultureInfo,
                                             LanguageManager.GetString("Message_Duplicate_CustomDataDirectory"),
                                             objExistingInfo.Name, objCustomDataDirectory.Name),
                                         LanguageManager.GetString("MessageTitle_Duplicate_CustomDataDirectory"),
-                                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        PromptButtons.OK, PromptIcon.Error);
                                     continue;
                                 }
 
@@ -1002,17 +1018,17 @@ namespace Chummer
             }
             catch (System.Security.SecurityException)
             {
-                await Program.ShowScrollableMessageBoxAsync(
+                await UserInteraction.ShowScrollableMessageAsync(
                     await LanguageManager.GetStringAsync("Message_Insufficient_Permissions_Warning_Registry", token: token).ConfigureAwait(false), token: token).ConfigureAwait(false);
             }
             catch (UnauthorizedAccessException)
             {
-                await Program.ShowScrollableMessageBoxAsync(
+                await UserInteraction.ShowScrollableMessageAsync(
                     await LanguageManager.GetStringAsync("Message_Insufficient_Permissions_Warning_Registry", token: token).ConfigureAwait(false), token: token).ConfigureAwait(false);
             }
             catch (ArgumentNullException e) when (e.ParamName == nameof(Registry))
             {
-                await Program.ShowScrollableMessageBoxAsync(
+                await UserInteraction.ShowScrollableMessageAsync(
                     await LanguageManager.GetStringAsync("Message_Insufficient_Permissions_Warning_Registry", token: token).ConfigureAwait(false), token: token).ConfigureAwait(false);
             }
         }
@@ -1188,9 +1204,6 @@ namespace Chummer
             set => _blnNestWeaponMountsUnderWeaponsCategory = value;
         }
 
-        public static NumericUpDownEx.InterceptMouseWheelMode InterceptMode => AllowHoverIncrement
-            ? NumericUpDownEx.InterceptMouseWheelMode.WhenMouseOver
-            : NumericUpDownEx.InterceptMouseWheelMode.WhenFocus;
 
         /// <summary>
         /// Whether dice rolling is allowed for Skills.
@@ -2397,32 +2410,7 @@ namespace Chummer
             set => _intSavedImageQuality = value;
         }
 
-        /// <summary>
-        /// Converts an image to its Base64 string equivalent with compression settings specified by <see cref="SavedImageQuality"/>.
-        /// </summary>
-        /// <param name="objImageToSave">Image whose Base64 string should be created.</param>
-        /// <param name="token">Cancellation token to listen to.</param>
-        public static string ImageToBase64StringForStorage(Image objImageToSave, CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            return SavedImageQuality == int.MaxValue
-                ? objImageToSave.ToBase64String(token: token)
-                : objImageToSave.ToBase64StringAsJpeg(SavedImageQuality, token);
-        }
 
-        /// <summary>
-        /// Converts an image to its Base64 string equivalent with compression settings specified by <see cref="SavedImageQuality"/>.
-        /// </summary>
-        /// <param name="objImageToSave">Image whose Base64 string should be created.</param>
-        /// <param name="token">Cancellation token to listen to.</param>
-        public static Task<string> ImageToBase64StringForStorageAsync(Image objImageToSave, CancellationToken token = default)
-        {
-            if (token.IsCancellationRequested)
-                return Task.FromCanceled<string>(token);
-            return SavedImageQuality == int.MaxValue
-                ? objImageToSave.ToBase64StringAsync(token: token)
-                : objImageToSave.ToBase64StringAsJpegAsync(SavedImageQuality, token: token);
-        }
 
         /// <summary>
         /// Last folder from which a mugshot was added
@@ -2547,21 +2535,21 @@ namespace Chummer
             }
             catch (System.Security.SecurityException)
             {
-                await Program.ShowScrollableMessageBoxAsync(
+                await UserInteraction.ShowScrollableMessageAsync(
                     await LanguageManager
                         .GetStringAsync("Message_Insufficient_Permissions_Warning_Registry", token: token)
                         .ConfigureAwait(false), token: token).ConfigureAwait(false);
             }
             catch (UnauthorizedAccessException)
             {
-                await Program.ShowScrollableMessageBoxAsync(
+                await UserInteraction.ShowScrollableMessageAsync(
                     await LanguageManager
                         .GetStringAsync("Message_Insufficient_Permissions_Warning_Registry", token: token)
                         .ConfigureAwait(false), token: token).ConfigureAwait(false);
             }
             catch (ArgumentNullException ex) when (ex.ParamName == nameof(Registry))
             {
-                await Program.ShowScrollableMessageBoxAsync(
+                await UserInteraction.ShowScrollableMessageAsync(
                     await LanguageManager
                         .GetStringAsync("Message_Insufficient_Permissions_Warning_Registry", token: token)
                         .ConfigureAwait(false), token: token).ConfigureAwait(false);
@@ -2675,21 +2663,21 @@ namespace Chummer
             }
             catch (System.Security.SecurityException)
             {
-                await Program.ShowScrollableMessageBoxAsync(
+                await UserInteraction.ShowScrollableMessageAsync(
                     await LanguageManager
                         .GetStringAsync("Message_Insufficient_Permissions_Warning_Registry", token: token)
                         .ConfigureAwait(false), token: token).ConfigureAwait(false);
             }
             catch (UnauthorizedAccessException)
             {
-                await Program.ShowScrollableMessageBoxAsync(
+                await UserInteraction.ShowScrollableMessageAsync(
                     await LanguageManager
                         .GetStringAsync("Message_Insufficient_Permissions_Warning_Registry", token: token)
                         .ConfigureAwait(false), token: token).ConfigureAwait(false);
             }
             catch (ArgumentNullException ex) when (ex.ParamName == nameof(Registry))
             {
-                await Program.ShowScrollableMessageBoxAsync(
+                await UserInteraction.ShowScrollableMessageAsync(
                     await LanguageManager
                         .GetStringAsync("Message_Insufficient_Permissions_Warning_Registry", token: token)
                         .ConfigureAwait(false), token: token).ConfigureAwait(false);

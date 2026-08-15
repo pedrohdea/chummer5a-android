@@ -113,12 +113,12 @@ namespace Chummer
         }
 
         /// <summary>
-        /// Gets an AddImprovementAsyncCollection function based on its name.
+        /// Gets an asynchronous AddImprovementCollection function based on its name.
         /// </summary>
         /// <param name="strMethodName">Name of the function, in all uppercase.</param>
         /// <param name="objImprovementAsyncAdder">Container for the function (since they're not static, we need a container).</param>
         /// <returns>Function pointer to the named function if one is found. If none are found, returns a null pointer.</returns>
-        public static Func<XmlNode, CancellationToken, Task> GetAsyncMethod(string strMethodName, [Annotations.NotNull] AddImprovementAsyncCollection objImprovementAsyncAdder)
+        public static Func<XmlNode, CancellationToken, Task> GetAsyncMethod(string strMethodName, [Annotations.NotNull] AddImprovementCollection objImprovementAsyncAdder)
         {
             if (objImprovementAsyncAdder == null)
                 throw new ArgumentNullException(nameof(objImprovementAsyncAdder));
@@ -127,13 +127,14 @@ namespace Chummer
             {
 <#
         // Modus operandi is to take the .cs file containing all the methods we want, parse it line-by-line, and each time we find a method name, we add it to a list of method names.
-        // Once we have all the method names, we construct a giant switch-case block that functions as a static Dictionary for AddImprovementAsyncCollection methods.
+        // Once we have all the method names, we construct a giant switch-case block that functions as a static Dictionary for the asynchronous AddImprovementCollection methods.
         // The main reason for this is performance, ease of debugging, and making code easier to read, none of which applied to the older method that relied on reflection.
         // Having to re-run this template is a small price to pay compared to what is gained from having this much more straightforward structure.
+        // Note that both halves now live in the same file: the asynchronous twin of "foo" is called "fooAsync", and the case label drops that suffix.
 
         List<string> lststrAsyncMethodNames = new List<string>();
         List<string> lststrStaticAsyncMethodNames = new List<string>();
-        string strAddImprovementAsyncCollectionFilePath = System.IO.Path.Combine(dte.ActiveDocument.Path, "AddImprovementAsyncCollection.cs");
+        string strAddImprovementAsyncCollectionFilePath = strAddImprovementCollectionFilePath;
         if (File.Exists(strAddImprovementAsyncCollectionFilePath))
         {
             StreamReader objReader = File.OpenText(strAddImprovementAsyncCollectionFilePath);
@@ -162,7 +163,7 @@ namespace Chummer
             foreach (string strMethodName in lststrAsyncMethodNames)
             {
 #>
-                case "<#= strMethodName.ToUpperInvariant() #>":
+                case "<#= strMethodName.Substring(0, strMethodName.Length - "Async".Length).ToUpperInvariant() #>":
                     return objImprovementAsyncAdder.<#= strMethodName #>;
 <#
             }
@@ -170,8 +171,8 @@ namespace Chummer
             foreach (string strMethodName in lststrStaticAsyncMethodNames)
             {
 #>
-                case "<#= strMethodName.ToUpperInvariant() #>":
-                    return AddImprovementAsyncCollection.<#= strMethodName #>;
+                case "<#= strMethodName.Substring(0, strMethodName.Length - "Async".Length).ToUpperInvariant() #>":
+                    return AddImprovementCollection.<#= strMethodName #>;
 <#
             }
 #>
@@ -199,7 +200,7 @@ namespace Chummer
                 blnFoundMatch = false;
                 foreach (string strSyncMethodName in lststrSyncMethodNames)
                 {
-                    if (strAsyncMethodName == strSyncMethodName)
+                    if (strAsyncMethodName == strSyncMethodName + "Async")
                     {
                         blnFoundMatch = true;
                         break;
@@ -207,7 +208,7 @@ namespace Chummer
                 }
                 if (blnFoundMatch)
                 {
-                    lststrSyncMethodNames.Remove(strAsyncMethodName);
+                    lststrSyncMethodNames.Remove(strAsyncMethodName.Substring(0, strAsyncMethodName.Length - "Async".Length));
                 }
                 else
                 {
@@ -219,7 +220,7 @@ namespace Chummer
             foreach (string strSyncMethodName in lststrSyncMethodNames)
             {
 #>
-#error Synchronous improvement adder is missing asynchronous version: <#= strSyncMethodName #>. Please add one to AddImprovementAsyncCollection.cs.
+#error Synchronous improvement adder is missing asynchronous version: <#= strSyncMethodName #>. Please add a <#= strSyncMethodName #>Async to AddImprovementCollection.cs.
 <#
             }
         }
@@ -231,7 +232,7 @@ namespace Chummer
                 blnFoundMatch = false;
                 foreach (string strSyncMethodName in lststrStaticSyncMethodNames)
                 {
-                    if (strAsyncMethodName == strSyncMethodName)
+                    if (strAsyncMethodName == strSyncMethodName + "Async")
                     {
                         blnFoundMatch = true;
                         break;
@@ -239,7 +240,7 @@ namespace Chummer
                 }
                 if (blnFoundMatch)
                 {
-                    lststrStaticSyncMethodNames.Remove(strAsyncMethodName);
+                    lststrStaticSyncMethodNames.Remove(strAsyncMethodName.Substring(0, strAsyncMethodName.Length - "Async".Length));
                 }
                 else
                 {
@@ -251,7 +252,7 @@ namespace Chummer
             foreach (string strSyncMethodName in lststrStaticSyncMethodNames)
             {
 #>
-#error Static synchronous improvement adder is missing static asynchronous version: <#= strSyncMethodName #>. Please add one to AddImprovementAsyncCollection.cs.
+#error Static synchronous improvement adder is missing static asynchronous version: <#= strSyncMethodName #>. Please add a <#= strSyncMethodName #>Async to AddImprovementCollection.cs.
 <#
             }
         }

@@ -1,0 +1,9 @@
+# ATENÇÃO à coluna `censo`: em 2026-08-12 ela MUDOU DE SIGNIFICADO.
+# Até os retratos serem convertidos, ela media acoplamento de DECLARAÇÃO e valia 20.
+# Zerada a declaração, o compilador passou a vincular corpos de método (DEC-032) e a
+# mesma coluna passou a medir acoplamento de CORPO, valendo 1.584. O salto 20 -> 1.584
+# NÃO é regressão: é a régua trocando. Ver docs/codebase/15-acoplamento-de-corpo.md.
+data,commits,backend_linhas,core_linhas,censo,android,threadsafeform,ui_linhas,apk
+2026-08-12,107,321901,747,20,25,327,0,nao
+2026-08-12,113,322125,747,1584,5,327,0,nao
+2026-08-13,121,322125,747,1584,5,327,756,sim

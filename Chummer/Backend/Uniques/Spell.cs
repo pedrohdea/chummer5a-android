@@ -26,7 +26,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using Chummer.Backend.Attributes;
@@ -40,7 +39,7 @@ namespace Chummer
     /// </summary>
     [HubClassTag("SourceID", true, "Name", "Extra")]
     [DebuggerDisplay("{DisplayName(\"en-us\")}")]
-    public sealed class Spell : IHasInternalId, IHasName, IHasSourceId, IHasXmlDataNode, IHasNotes, ICanRemove, IHasSource, IHasLockObject, IHasCharacterObject
+    public sealed partial class Spell : IHasInternalId, IHasName, IHasSourceId, IHasXmlDataNode, IHasNotes, ICanRemove, IHasSource, IHasLockObject, IHasCharacterObject
     {
         private static readonly Lazy<Logger> s_ObjLogger = new Lazy<Logger>(LogManager.GetCurrentClassLogger);
         private static Logger Log => s_ObjLogger.Value;
@@ -2784,52 +2783,6 @@ namespace Chummer
 
         #region UI Methods
 
-        public async Task<TreeNode> CreateTreeNode(ContextMenuStrip cmsSpell, bool blnForInitiationsTab = false, CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            IAsyncDisposable objLocker = await LockObject.EnterReadLockAsync(token).ConfigureAwait(false);
-            try
-            {
-                token.ThrowIfCancellationRequested();
-                if ((blnForInitiationsTab ? Grade < 0 : Grade != 0) && !string.IsNullOrEmpty(Source) && !await (await _objCharacter.GetSettingsAsync(token).ConfigureAwait(false)).BookEnabledAsync(Source, token).ConfigureAwait(false))
-                    return null;
-
-                string strText = await GetCurrentDisplayNameAsync(token).ConfigureAwait(false);
-                if (blnForInitiationsTab)
-                {
-                    switch (Category)
-                    {
-                        case "Rituals":
-                            strText = await LanguageManager.GetStringAsync("Label_Ritual", token: token)
-                                      + await LanguageManager.GetStringAsync("String_Space", token: token) + strText;
-                            break;
-
-                        case "Enchantments":
-                            strText = await LanguageManager.GetStringAsync("Label_Enchantment", token: token)
-                                      + await LanguageManager.GetStringAsync("String_Space", token: token) + strText;
-                            break;
-                    }
-                }
-
-                TreeNode objNode = new TreeNode
-                {
-                    Name = InternalId,
-                    Text = strText,
-                    Tag = this,
-                    ContextMenuStrip = cmsSpell,
-                    ForeColor = blnForInitiationsTab
-                        ? await GetPreferredColorForInitiationsTabAsync(token).ConfigureAwait(false)
-                        : await GetPreferredColorAsync(token).ConfigureAwait(false),
-                    ToolTipText = (await GetNotesAsync(token).ConfigureAwait(false)).WordWrap()
-                };
-
-                return objNode;
-            }
-            finally
-            {
-                await objLocker.DisposeAsync().ConfigureAwait(false);
-            }
-        }
 
         public Color PreferredColor
         {
@@ -2982,31 +2935,7 @@ namespace Chummer
             return blnReturn;
         }
 
-        public void SetSourceDetail(Control sourceControl)
-        {
-            using (LockObject.EnterReadLock())
-            {
-                if (_objCachedSourceDetail.Language != GlobalSettings.Language)
-                    _objCachedSourceDetail = default;
-                SourceDetail.SetControl(sourceControl);
-            }
-        }
 
-        public async Task SetSourceDetailAsync(Control sourceControl, CancellationToken token = default)
-        {
-            IAsyncDisposable objLocker = await LockObject.EnterReadLockAsync(token).ConfigureAwait(false);
-            try
-            {
-                token.ThrowIfCancellationRequested();
-                if (_objCachedSourceDetail.Language != GlobalSettings.Language)
-                    _objCachedSourceDetail = default;
-                await (await GetSourceDetailAsync(token).ConfigureAwait(false)).SetControlAsync(sourceControl, token).ConfigureAwait(false);
-            }
-            finally
-            {
-                await objLocker.DisposeAsync().ConfigureAwait(false);
-            }
-        }
 
         /// <inheritdoc />
         public void Dispose()

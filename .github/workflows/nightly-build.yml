@@ -27,6 +27,9 @@ jobs:
       with:
         fetch-depth: 0 # Need full history for version calculation
     
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
@@ -241,7 +244,12 @@ jobs:
     
     - name: Build solution
       if: steps.check_commit.outputs.skip != 'true'
-      run: dotnet build Chummer.sln --configuration Release --no-restore --verbosity minimal
+      # MSBuild do Visual Studio, e não `dotnet build`: o Chummer.csproj tem alvo net48 e
+      # 108 arquivos .resx com recursos binários. A tarefa GenerateResource que vem no
+      # dotnet CLI não os serializa sem GenerateResourceUsePreserializedResources e falha
+      # com MSB3823. Confirmado no CI: o CodeQL só passou a compilar a solução depois de
+      # trocar para o MSBuild do Visual Studio.
+      run: msbuild Chummer.sln -t:Build -p:Configuration=Release -verbosity:minimal
     
     - name: Run tests
       if: steps.check_commit.outputs.skip != 'true'

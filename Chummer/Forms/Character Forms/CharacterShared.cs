@@ -11428,21 +11428,15 @@ namespace Chummer
                             }
                         }
 
-                        // Convert the image to a string using Base64.
                         GlobalSettings.RecentImageFolder = Path.GetDirectoryName(strFileName);
 
-                        if (bmpMugshot.PixelFormat == PixelFormat.Format32bppPArgb)
-                        {
-                            await (await CharacterObject.GetMugshotsAsync(GenericToken).ConfigureAwait(false)).AddAsync(
-                                    bmpMugshot.Clone() as Bitmap, token)
-                                .ConfigureAwait(false); // Clone makes sure file handle is closed
-                        }
-                        else
-                        {
-                            await (await CharacterObject.GetMugshotsAsync(GenericToken).ConfigureAwait(false)).AddAsync(
-                                    bmpMugshot.ConvertPixelFormat(PixelFormat.Format32bppPArgb), token)
-                                .ConfigureAwait(false);
-                        }
+                        // Ingestion is where the portrait is encoded, and where SavedImageQuality is applied: the domain
+                        // keeps the bytes and writes back exactly what it read, so compressing once here replaces
+                        // compressing again on every single save (DEC-034).
+                        byte[] abytMugshot = await GlobalSettings.ImageToBytesForStorageAsync(bmpMugshot, token)
+                            .ConfigureAwait(false);
+                        await (await CharacterObject.GetMugshotsAsync(GenericToken).ConfigureAwait(false))
+                            .AddAsync(abytMugshot, token).ConfigureAwait(false);
                     }
                     finally
                     {
@@ -11479,25 +11473,28 @@ namespace Chummer
                 return;
             if (intCurrentMugshotIndexInList < 0)
             {
-                await picMugshot.DoThreadSafeAsync(x => x.Image = null, token: token).ConfigureAwait(false);
+                await ClearMugshot(picMugshot, token).ConfigureAwait(false);
                 return;
             }
 
-            ThreadSafeList<Image> lstMugshots = await CharacterObject.GetMugshotsAsync(token).ConfigureAwait(false);
+            ThreadSafeList<byte[]> lstMugshots = await CharacterObject.GetMugshotsAsync(token).ConfigureAwait(false);
             if (intCurrentMugshotIndexInList >= await lstMugshots.GetCountAsync(token).ConfigureAwait(false))
             {
-                await picMugshot.DoThreadSafeAsync(x => x.Image = null, token: token).ConfigureAwait(false);
+                await ClearMugshot(picMugshot, token).ConfigureAwait(false);
                 return;
             }
 
-            Image imgMugshot = await lstMugshots.GetValueAtAsync(intCurrentMugshotIndexInList, token)
+            byte[] abytMugshot = await lstMugshots.GetValueAtAsync(intCurrentMugshotIndexInList, token)
                 .ConfigureAwait(false);
-            if (imgMugshot == null)
+            if (abytMugshot == null || abytMugshot.Length == 0)
             {
-                await picMugshot.DoThreadSafeAsync(x => x.Image = null, token: token).ConfigureAwait(false);
+                await ClearMugshot(picMugshot, token).ConfigureAwait(false);
                 return;
             }
 
+            // The domain hands out bytes, so the decoded image belongs to this PictureBox alone and this form is what
+            // has to dispose of the one it replaces (DEC-034).
+            Image imgMugshot = await abytMugshot.ToImageAsync(PixelFormat.Format32bppPArgb, token).ConfigureAwait(false);
             await picMugshot.DoThreadSafeAsync(x =>
             {
                 try
@@ -11511,8 +11508,23 @@ namespace Chummer
                     x.SizeMode = PictureBoxSizeMode.Zoom;
                 }
 
+                Image imgOld = x.Image;
                 x.Image = imgMugshot;
+                imgOld?.Dispose();
             }, token: token).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Empty a mugshot PictureBox, disposing of the image it was showing.
+        /// </summary>
+        private static Task ClearMugshot(PictureBox picMugshot, CancellationToken token = default)
+        {
+            return picMugshot.DoThreadSafeAsync(x =>
+            {
+                Image imgOld = x.Image;
+                x.Image = null;
+                imgOld?.Dispose();
+            }, token: token);
         }
 
         /// <summary>
@@ -11524,7 +11536,7 @@ namespace Chummer
             if (intCurrentMugshotIndexInList < 0)
                 return;
 
-            ThreadSafeList<Image> lstMugshots = await CharacterObject.GetMugshotsAsync(token).ConfigureAwait(false);
+            ThreadSafeList<byte[]> lstMugshots = await CharacterObject.GetMugshotsAsync(token).ConfigureAwait(false);
             if (intCurrentMugshotIndexInList >= await lstMugshots.GetCountAsync(token).ConfigureAwait(false))
                 return;
 

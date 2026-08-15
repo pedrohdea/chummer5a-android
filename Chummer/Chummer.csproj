@@ -39,6 +39,28 @@
       <_Parameter1>Chummer.Tests</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
+  <!--
+    Código já migrado para Chummer.Core, compilado aqui por link.
+
+    Durante o porte, um arquivo migrado tem UMA fonte da verdade (src/Chummer.Core/) e DUAS
+    compilações: net9.0 no Chummer.Core e net48 aqui. Isso mantém o build legado intacto —
+    é ele que gera os artefatos dourados do teste diferencial — enquanto o núcleo cresce.
+
+    Um arquivo só pode migrar quando compila nos dois alvos. O alvo net9.0 sem sufixo
+    -windows do Chummer.Core garante que nada acoplado a WinForms atravesse.
+
+    Este ItemGroup encolhe até desaparecer, quando o projeto legado for removido.
+    Ver docs/po/decisoes.md, DEC-013.
+  -->
+  <ItemGroup>
+    <!--
+      Exclui bin e obj de propósito: sem isso o glob arrasta o AssemblyInfo gerado do
+      Chummer.Core e o build legado quebra com atributos de assembly duplicados.
+    -->
+    <Compile Include="..\src\Chummer.Core\**\*.cs"
+             Exclude="..\src\Chummer.Core\bin\**\*.cs;..\src\Chummer.Core\obj\**\*.cs"
+             LinkBase="CoreLinked" />
+  </ItemGroup>
   <PropertyGroup>
     <StartupObject>Chummer.Program</StartupObject>
   </PropertyGroup>
